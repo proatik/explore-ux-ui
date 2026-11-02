@@ -6,7 +6,7 @@
 
 A hands-on journey into UX/UI for engineers moving into product and project roles.
 
-<img src="docs/screenshots/journey-map.png" alt="The journey map" width="100%">
+<img src="assets/screenshots/journey-map.png" alt="The journey map" width="100%">
 
 </div>
 
@@ -37,7 +37,7 @@ Plain HTML, CSS and JavaScript. No install, no build.
 **1. Get the code**
 
 ```bash
-git clone https://github.com/<your-username>/explore-ux-ui.git
+git clone https://github.com/proatik/explore-ux-ui.git
 cd explore-ux-ui
 ```
 
