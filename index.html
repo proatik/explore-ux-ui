@@ -11,7 +11,7 @@
   <meta property="og:image" content="https://explore-ux-ui.netlify.app/assets/screenshots/journey-map.png">
   <meta property="og:url" content="https://explore-ux-ui.netlify.app/">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="assets/style.css?v=2">
+  <link rel="stylesheet" href="assets/style.css?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -47,15 +47,6 @@
     // Only show "Coming soon" in the legend while some chapters are still locked
     if (CHAPTERS.every((c) => c.ready)) document.querySelector(".l-locked")?.remove();
 
-    if (getDone().length) {
-      const reset = document.createElement("button");
-      reset.className = "jm-reset";
-      reset.textContent = "↺ Reset progress";
-      reset.addEventListener("click", () => {
-        if (confirm("Reset progress for every chapter?")) { resetDone(); location.reload(); }
-      });
-      document.querySelector(".jm-legend").appendChild(reset);
-    }
 
     const map = document.getElementById("map");
     const done = getDone();
@@ -104,7 +95,19 @@
         </div>`;
       map.appendChild(el);
     });
+    if (getDone().length) {
+      document.getElementById("map").insertAdjacentHTML("afterend",
+        `<div class="jm-restart"><div>Want to start over?</div><button type="button">Reset progress</button></div>`);
+      document.querySelector(".jm-restart button").addEventListener("click", async () => {
+        const ok = await confirmDialog({
+          title: "Reset your progress?",
+          body: `This clears the completed mark on all ${CHAPTERS.length} chapters. It can't be undone.`,
+          confirmLabel: "Reset progress",
+        });
+        if (ok) { resetDone(); location.reload(); }
+      });
+    }
   </script>
-  <script src="assets/app.js?v=2"></script>
+  <script src="assets/app.js?v=3"></script>
 </body>
 </html>

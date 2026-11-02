@@ -198,6 +198,51 @@ document.addEventListener("click", (e) => {
   }
 });
 
+/* ===================== Confirm dialog ===================== */
+
+// Styled replacement for window.confirm; resolves true only on the confirm button
+function confirmDialog({ title, body, confirmLabel = "Confirm", cancelLabel = "Cancel" }) {
+  return new Promise((resolve) => {
+    const prevFocus = document.activeElement;
+    const wrap = document.createElement("div");
+    wrap.className = "dlg-backdrop";
+    wrap.innerHTML = `
+      <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body">
+        <h3 id="dlg-title">${title}</h3>
+        <p id="dlg-body">${body}</p>
+        <div class="dlg-actions">
+          <button class="btn" data-dlg="cancel">${cancelLabel}</button>
+          <button class="btn dlg-danger" data-dlg="ok">${confirmLabel}</button>
+        </div>
+      </div>`;
+    const close = (ok) => {
+      document.removeEventListener("keydown", onKey);
+      wrap.classList.remove("open");
+      setTimeout(() => wrap.remove(), 150);
+      prevFocus?.focus?.();
+      resolve(ok);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close(false);
+      if (e.key === "Tab") {
+        const btns = [...wrap.querySelectorAll("button")];
+        const i = btns.indexOf(document.activeElement);
+        e.preventDefault();
+        btns[(i + (e.shiftKey ? btns.length - 1 : 1)) % btns.length].focus();
+      }
+    };
+    wrap.addEventListener("click", (e) => {
+      if (e.target === wrap) close(false);
+      const b = e.target.closest("[data-dlg]");
+      if (b) close(b.dataset.dlg === "ok");
+    });
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add("open"));
+    wrap.querySelector('[data-dlg="cancel"]').focus();
+  });
+}
+
 /* ===================== Footer ===================== */
 
 // One footer for every page, built from AUTHOR. It's outside #app, so page swaps keep it.
