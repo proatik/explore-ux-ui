@@ -18,14 +18,14 @@
     .meter i { display: block; height: 100%; background: var(--bad); transition: width .6s, background .6s; }
     .meter-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
     .meter-lbl b { color: var(--text); }
-    .weeks { display: flex; flex-direction: column; gap: 8px; min-height: 230px; }
+    .weeks { display: flex; flex-direction: column; gap: 8px; }
     .wk { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; animation: pop .35s ease; }
     .wk .n { flex: none; font-size: 11px; font-weight: 800; color: var(--accent); width: 34px; padding-top: 2px; }
     .wk.ghost { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); animation: none; }
     .wk.result { background: var(--bad-soft); }
     .wk.result.win { background: var(--good-soft); }
     @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
-    .race-controls { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+    .race-controls { display: flex; flex-direction: column; gap: 14px; align-items: center; margin-top: 24px; }
     .wk-dots { display: flex; gap: 6px; }
     .wk-dots i { width: 28px; height: 6px; border-radius: 999px; background: var(--line); }
     .wk-dots i.on { background: var(--accent); }
@@ -81,7 +81,7 @@
     .bucket h4 small { color: var(--muted); font-weight: 600; }
     .bucket .chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .sort-bar { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 16px; flex-wrap: wrap; }
-    .sort-msg { font-weight: 700; }
+    .sort-msg { font-weight: 700; flex-basis: 100%; text-align: center; min-height: 1.5em; }
 
     /* ---------- Try: hypothesis builder ---------- */
     .hypo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
