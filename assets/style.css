@@ -164,70 +164,70 @@ a { color: var(--accent); }
 @keyframes view-out { to { opacity: 0; transform: translateY(-8px); } }
 
 /* ===== Journey map ===== */
-.map { position: relative; margin: 24px auto 40px; max-width: 760px; }
-.map svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.map path.trail { fill: none; stroke: var(--line); stroke-width: 6; stroke-dasharray: 2 14; stroke-linecap: round; }
-.map path.trail-done { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; }
-.stop {
+.jm-map { position: relative; margin: 24px auto 40px; max-width: 760px; }
+.jm-map svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.jm-map path.trail { fill: none; stroke: var(--line); stroke-width: 6; stroke-dasharray: 2 14; stroke-linecap: round; }
+.jm-map path.trail-done { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; }
+.jm-stop {
   position: absolute; transform: translate(-50%, -50%);
   display: flex; align-items: center; gap: 16px;
   text-decoration: none; color: var(--text); width: max-content; max-width: 360px;
 }
-.stop.right { flex-direction: row-reverse; text-align: right; }
-.node {
+.jm-stop.right { flex-direction: row-reverse; text-align: right; }
+.jm-node {
   flex: none; width: 64px; height: 64px; border-radius: 50%;
   display: grid; place-items: center; font-size: 28px;
   background: var(--surface); border: 3px solid var(--line); box-shadow: var(--shadow);
   transition: background .25s, border-color .25s, box-shadow .25s;
 }
-.stop.ready .node { border-color: var(--accent); animation: pulse 2s infinite; }
-.stop.done .node { border-color: var(--good); background: var(--good-soft); animation: none; }
-.stop.locked { opacity: .5; cursor: default; }
-.stop.locked .node { filter: grayscale(1); }
+.jm-stop.ready .jm-node { border-color: var(--accent); animation: pulse 2s infinite; }
+.jm-stop.done .jm-node { border-color: var(--good); background: var(--good-soft); animation: none; }
+.jm-stop.locked { opacity: .5; cursor: default; }
+.jm-stop.locked .jm-node { filter: grayscale(1); }
 
 /* Label sits in a card that is invisible at rest, so hover changes only colors, never size */
-.stop .label {
+.jm-stop .label {
   padding: 8px 14px; border-radius: 14px;
   border: 1px solid transparent; background: transparent;
   transition: background .25s, border-color .25s, box-shadow .25s;
 }
-.stop .ttl { transition: color .25s; }
-.stop:focus-visible { outline: none; }
+.jm-stop .ttl { transition: color .25s; }
+.jm-stop:focus-visible { outline: none; }
 
 /* Hover + keyboard focus */
-.stop:not(.locked):is(:hover, :focus-visible) .node {
+.jm-stop:not(.locked):is(:hover, :focus-visible) .jm-node {
   animation: none;
   background: var(--accent); border-color: var(--accent);
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent),
               0 10px 28px color-mix(in srgb, var(--accent) 45%, transparent);
 }
-.stop.done:is(:hover, :focus-visible) .node {
+.jm-stop.done:is(:hover, :focus-visible) .jm-node {
   background: var(--good); border-color: var(--good);
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--good) 22%, transparent),
               0 10px 28px color-mix(in srgb, var(--good) 40%, transparent);
 }
-.stop:not(.locked):is(:hover, :focus-visible) .label {
+.jm-stop:not(.locked):is(:hover, :focus-visible) .label {
   background: var(--surface); border-color: var(--line); box-shadow: var(--shadow);
 }
-.stop:not(.locked):is(:hover, :focus-visible) .ttl { color: var(--accent); }
-.stop.done:is(:hover, :focus-visible) .ttl { color: var(--good); }
-.stop .num { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: .08em; }
-.stop .ttl { font-weight: 800; font-size: 17px; line-height: 1.2; }
-.stop .tg { font-size: 13px; color: var(--muted); }
-.stop .badge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.jm-stop:not(.locked):is(:hover, :focus-visible) .ttl { color: var(--accent); }
+.jm-stop.done:is(:hover, :focus-visible) .ttl { color: var(--good); }
+.jm-stop .num { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: .08em; }
+.jm-stop .ttl { font-weight: 800; font-size: 17px; line-height: 1.2; }
+.jm-stop .tg { font-size: 13px; color: var(--muted); }
+.jm-stop .badge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
 @keyframes pulse {
   0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
   50% { box-shadow: 0 0 0 12px transparent; }
 }
-.legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
-.legend span::before { content: "●"; margin-right: 6px; }
-.legend .l-ready::before { color: var(--accent); }
-.legend .l-done::before { color: var(--good); }
-.legend .l-locked::before { color: var(--line); }
+.jm-legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.jm-legend span::before { content: "●"; margin-right: 6px; }
+.jm-legend .l-ready::before { color: var(--accent); }
+.jm-legend .l-done::before { color: var(--good); }
+.jm-legend .l-locked::before { color: var(--line); }
 @media (max-width: 600px) {
-  .stop .tg { display: none; }
-  .stop { max-width: 46vw; }
-  .node { width: 52px; height: 52px; font-size: 22px; }
+  .jm-stop .tg { display: none; }
+  .jm-stop { max-width: 46vw; }
+  .jm-node { width: 52px; height: 52px; font-size: 22px; }
   .crumb { display: none; }
 }
 
