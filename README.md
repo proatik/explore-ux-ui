@@ -6,7 +6,7 @@
 
 A hands-on journey into UX/UI for engineers moving into product and project roles.
 
-**[▶ Start the journey](https://explore-ux-ui.netlify.app/)**
+🌐 **Live:** [explore-ux-ui.netlify.app](https://explore-ux-ui.netlify.app/)
 
 <img src="assets/screenshots/journey-map.png" alt="The journey map" width="100%">
 
