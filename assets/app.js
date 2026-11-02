@@ -109,6 +109,30 @@ function runPageScripts(root) {
   refreshProgress();
 }
 
+// Clean URLs only on the live site; Netlify maps them back to files via _redirects
+const CLEAN_URLS = !["localhost", "127.0.0.1", ""].includes(location.hostname)
+  && !/^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(location.hostname);
+const slugOf = (c) => c.file.replace(/^chapters\/\d+-/, "").replace(/\.html$/, "");
+
+function displayUrl(href) {
+  if (!CLEAN_URLS) return href;
+  const u = new URL(href);
+  const rel = u.pathname.slice(new URL(ROOT).pathname.length);
+  const c = CHAPTERS.find((ch) => ch.ready && ch.file === rel);
+  if (rel === "index.html") u.pathname = new URL(ROOT).pathname;
+  else if (c) u.pathname = new URL(ROOT).pathname + "chapters/" + slugOf(c);
+  return u.href;
+}
+
+function fileUrl(href) {
+  const u = new URL(href);
+  const rel = u.pathname.slice(new URL(ROOT).pathname.length);
+  const c = CHAPTERS.find((ch) => ch.ready && "chapters/" + slugOf(ch) === rel);
+  if (rel === "") u.pathname = new URL(ROOT).pathname + "index.html";
+  else if (c) u.pathname = new URL(ROOT).pathname + c.file;
+  return u.href;
+}
+
 async function navigate(url, push = true) {
   let doc;
   try {
@@ -121,7 +145,7 @@ async function navigate(url, push = true) {
   }
 
   const swap = () => {
-    if (push) history.pushState({}, "", url);
+    if (push) history.pushState({}, "", displayUrl(url));
     document.title = doc.title;
     document.querySelectorAll("style[data-page]").forEach((s) => s.remove());
     doc.querySelectorAll("style[data-page]").forEach((s) => document.head.appendChild(s));
@@ -160,7 +184,7 @@ document.addEventListener("click", (e) => {
   }
   if (url.pathname.endsWith(".html") || url.pathname.endsWith("/")) {
     e.preventDefault();
-    if (url.href !== location.href) navigate(url.href);
+    if (displayUrl(url.href) !== location.href) navigate(url.href);
   }
 });
 
@@ -196,6 +220,8 @@ function renderFooter() {
 renderFooter();
 
 // Browser back / forward
-window.addEventListener("popstate", () => navigate(location.href, false));
+window.addEventListener("popstate", () => navigate(fileUrl(location.href), false));
+
+if (displayUrl(location.href) !== location.href) history.replaceState({}, "", displayUrl(location.href));
 
 runPageScripts(document);

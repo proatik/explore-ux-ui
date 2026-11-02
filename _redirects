@@ -1,0 +1,14 @@
+# Clean chapter URLs
+/chapters/foundations  /chapters/00-foundations.html  200
+/chapters/design-thinking  /chapters/01-design-thinking.html  200
+/chapters/user-research  /chapters/02-user-research.html  200
+/chapters/information-architecture  /chapters/03-information-architecture.html  200
+/chapters/wireframes-prototypes  /chapters/04-wireframes-prototypes.html  200
+/chapters/visual-design  /chapters/05-visual-design.html  200
+/chapters/interaction-heuristics  /chapters/06-interaction-heuristics.html  200
+/chapters/accessibility  /chapters/07-accessibility.html  200
+/chapters/design-systems  /chapters/08-design-systems.html  200
+/chapters/handoff  /chapters/09-handoff.html  200
+/chapters/testing-metrics  /chapters/10-testing-metrics.html  200
+/chapters/ux-in-business  /chapters/11-ux-in-business.html  200
+/chapters/capstone  /chapters/12-capstone.html  200
