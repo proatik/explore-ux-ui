@@ -30,7 +30,7 @@ Interactive demos, short bullets, no walls of text.
 | 03 · [Information Architecture](chapters/03-information-architecture.html) | 10 · [Testing & Metrics](chapters/10-testing-metrics.html) |
 | 04 · [Wireframes & Prototypes](chapters/04-wireframes-prototypes.html) | 11 · [UX in Business](chapters/11-ux-in-business.html) |
 | 05 · [Visual Design](chapters/05-visual-design.html) | 12 · [Capstone](chapters/12-capstone.html) |
-| 06 · [Interaction & Heuristics](chapters/06-interaction-heuristics.html) | ▶ [**Start the journey**](https://explore-ux-ui.netlify.app/) |
+| 06 · [Interaction & Heuristics](chapters/06-interaction-heuristics.html) | |
 
 ## Run it
 
