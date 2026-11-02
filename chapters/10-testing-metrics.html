@@ -81,8 +81,8 @@
     .side .why { font-size: 13px; color: var(--muted); margin-top: 6px; }
 
     /* ---------- Learn: metrics ---------- */
-    .mtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .mtabs .btn { min-height: 44px; }
+    .mtabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+    .mtabs .btn { min-height: 44px; flex: 0 1 calc((100% - 24px) / 4); padding-left: 8px; padding-right: 8px; white-space: nowrap; }
     .mtabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .formula { font-family: ui-monospace, Consolas, monospace; background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 10px 0; overflow-x: auto; }
     .m-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
