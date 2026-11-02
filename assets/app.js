@@ -48,6 +48,12 @@ function setDone(id) {
   done.add(id);
   try { localStorage.setItem(STORE_KEY, JSON.stringify([...done])); } catch {}
 }
+function unsetDone(id) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(getDone().filter((d) => d !== id))); } catch {}
+}
+function resetDone() {
+  try { localStorage.removeItem(STORE_KEY); } catch {}
+}
 function refreshProgress() {
   const pill = document.querySelector(".progress-pill");
   if (pill) pill.textContent = `${getDone().length} / ${CHAPTERS.length} completed`;
@@ -93,10 +99,14 @@ function initChapter(id) {
   if (doneBtn) {
     const refresh = () => {
       const isDone = getDone().includes(id);
-      doneBtn.textContent = isDone ? "✅ Chapter completed" : "Mark chapter as complete";
-      doneBtn.disabled = isDone;
+      doneBtn.textContent = isDone ? "✅ Completed · tap to undo" : "Mark chapter as complete";
+      doneBtn.classList.toggle("is-done", isDone);
     };
-    doneBtn.addEventListener("click", () => { setDone(id); refresh(); refreshProgress(); });
+    doneBtn.addEventListener("click", () => {
+      if (getDone().includes(id)) unsetDone(id); else setDone(id);
+      refresh();
+      refreshProgress();
+    });
     refresh();
   }
 }
