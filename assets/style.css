@@ -294,3 +294,7 @@ a.pv:hover .pv-dir, a.pv:focus-visible .pv-dir { color: var(--accent); }
 }
 .linkedin:hover, .linkedin:focus-visible { outline: none; background: #004182; box-shadow: 0 0 0 4px color-mix(in srgb, #0a66c2 30%, transparent); }
 @media (max-width: 520px) { .site-footer { flex-direction: column; gap: 14px; } .footer-divider { display: none; } }
+
+/* TPM Lens: 6 cards always split evenly */
+#lens-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) { #lens-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
