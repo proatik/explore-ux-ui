@@ -298,3 +298,24 @@ a.pv:hover .pv-dir, a.pv:focus-visible .pv-dir { color: var(--accent); }
 /* TPM Lens: 6 cards always split evenly */
 #lens-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 640px) { #lens-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Lens flip cards: one look everywhere. The id selector outranks chapter styles,
+   and both faces share one grid cell so the card grows to fit the longer face. */
+#lens-cards .flip, #lens-cards .flip-inner { height: auto; min-height: 180px; }
+#lens-cards .flip { display: flex; }
+#lens-cards .flip-inner { display: grid; flex: 1 1 auto; width: 100%; }
+#lens-cards .flip-face {
+  position: relative; inset: auto; grid-area: 1 / 1;
+  padding: 18px; border-radius: var(--radius);
+  display: flex; flex-direction: column; justify-content: flex-start;
+}
+#lens-cards .flip-face .say { font-size: 20px; font-weight: 700; line-height: 1.35; }
+#lens-cards .flip-face .hint {
+  margin-top: auto; padding: 12px 0 0; display: block; width: auto;
+  font-size: 12px; color: var(--muted); background: none; border: 0; border-radius: 0;
+  text-align: left; box-shadow: none; min-height: 0;
+}
+#lens-cards .flip-back { padding: 18px; justify-content: center; }
+#lens-cards .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 8px 0 2px; }
+#lens-cards .flip-back .lbl:first-child { margin-top: 0; }
+#lens-cards .flip-back p { font-size: 14px; margin: 2px 0; }
