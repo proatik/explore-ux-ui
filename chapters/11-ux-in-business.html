@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>UX in Business · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    .lbl { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 14px 0 6px; }
+    .lbl:first-child { margin-top: 0; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .note { font-size: 13px; color: var(--muted); margin-top: 12px; }
+
+    /* ---------- Explore: four audiences ---------- */
+    .feature-pill { text-align: center; margin-bottom: 18px; }
+    .feature-pill span { display: inline-block; background: var(--accent-soft); color: var(--text); padding: 10px 16px; border-radius: 12px; font-weight: 700; }
+    .aud-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .aud-btn {
+      font: inherit; cursor: pointer; color: var(--text); text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 14px 8px; min-height: 44px; border-radius: var(--radius);
+      background: var(--surface); border: 2px solid var(--line); transition: border-color .2s, background .2s;
+    }
+    .aud-btn .e { font-size: 28px; }
+    .aud-btn b { font-size: 15px; }
+    .aud-btn small { color: var(--muted); font-size: 12px; }
+    .aud-btn.active { border-color: var(--accent); background: var(--accent-soft); }
+    .aud-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+    .aud-pitch blockquote { margin: 0; font-size: 18px; line-height: 1.55; font-weight: 600; border-left: 4px solid var(--accent); padding-left: 14px; }
+    .aud-pitch .ask { font-size: 17px; font-weight: 700; background: var(--surface-2); border-radius: 12px; padding: 12px 14px; }
+    .wchips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .w { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .w.good { background: var(--good-soft); color: var(--good); }
+    .w.bad { background: var(--bad-soft); color: var(--bad); text-decoration: line-through; }
+    @media (max-width: 700px) {
+      .aud-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .aud-body { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- Value: ROI + cost of late ---------- */
+    .roi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .slider { margin-bottom: 14px; }
+    .slider:last-child { margin-bottom: 0; }
+    .slider .top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+    .slider .top b { color: var(--accent); }
+    .slider input { width: 100%; accent-color: var(--accent); height: 32px; margin: 2px 0 0; }
+    .roi-group { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; padding-top: 14px; border-top: 1px dashed var(--line); }
+    .roi-group:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+    .roi-side { display: grid; gap: 16px; }
+    .roi-total { font-size: clamp(34px, 6vw, 48px); font-weight: 800; letter-spacing: -0.02em; color: var(--good); line-height: 1.1; }
+    .roi-row { margin-top: 16px; }
+    .roi-row .top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+    .bar { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: 999px; transition: width .4s; }
+    .late { display: grid; gap: 14px; }
+    .late-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; align-items: center; }
+    .late-row .name { font-weight: 700; font-size: 14px; }
+    .late-row .name small { display: block; color: var(--muted); font-weight: 500; }
+    .late-bar { height: 34px; border-radius: 10px; background: var(--bad); color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; padding: 0 10px; min-width: 52px; white-space: nowrap; }
+    @media (max-width: 700px) {
+      .roi { grid-template-columns: 1fr; }
+      .late-row { grid-template-columns: 110px minmax(0, 1fr); }
+    }
+
+    /* ---------- Prioritize: tabs, quadrants, RICE, MoSCoW ---------- */
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tabs .btn { min-height: 44px; }
+    .tabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tray { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 44px; margin-bottom: 14px; align-items: center; }
+    .chip { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); transition: border-color .2s, background .2s; }
+    .chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .quad-wrap { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+    .y-axis { writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .x-axis { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 8px 0 0 36px; }
+    .quad { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .zone {
+      border-radius: 14px; padding: 12px; min-height: 150px; cursor: pointer;
+      background: color-mix(in srgb, var(--zc) 12%, var(--surface)); border: 2px solid color-mix(in srgb, var(--zc) 40%, transparent);
+      transition: border-color .2s;
+    }
+    .quad.ready .zone { border-style: dashed; border-color: var(--zc); }
+    .zname { font-weight: 800; }
+    .zhint { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .zchips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .zchips .chip { font-size: 13px; }
+    .pz-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+
+    .rice { display: grid; gap: 12px; }
+    .rice-row { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(4, minmax(0, 1fr)) 90px; gap: 10px; align-items: end; padding: 12px; border-radius: 14px; background: var(--surface-2); }
+    .rice-row .fname { font-weight: 800; align-self: center; }
+    .rice-row label { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .rice-row input, .rice-row select { width: 100%; font: inherit; font-size: 15px; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); }
+    .rice-score { text-align: center; align-self: center; }
+    .rice-score b { display: block; font-size: 22px; color: var(--accent); }
+    .rice-score small { color: var(--muted); font-size: 12px; }
+    .rice-formula { text-align: center; font-weight: 700; margin-bottom: 14px; font-size: 15px; }
+    .rice-formula code { background: var(--accent-soft); padding: 4px 10px; border-radius: 8px; }
+    .rank { display: grid; gap: 8px; margin-top: 16px; }
+    .rank-row { display: grid; grid-template-columns: 28px 160px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14px; }
+    .rank-row .n { font-weight: 800; color: var(--accent); }
+    @media (max-width: 900px) {
+      .rice-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .rice-row .fname { grid-column: 1 / 4; }
+      .rice-score { grid-column: 4; grid-row: 1; display: flex; gap: 8px; align-items: baseline; justify-content: flex-end; }
+    }
+    @media (max-width: 600px) {
+      .rice-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .rice-row .fname { grid-column: 1; }
+      .rice-score { grid-column: 2; }
+      .rank-row { grid-template-columns: 28px 120px minmax(0, 1fr); }
+    }
+
+    .mos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .mos-col { border-radius: 14px; padding: 12px; background: var(--surface-2); min-height: 200px; }
+    .mos-col h4 { margin: 0; font-size: 16px; }
+    .mos-col .muted { font-size: 12px; margin-bottom: 10px; }
+    .mos-col .chip { display: block; width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px; border-radius: 12px; }
+    .mos-msg { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-weight: 600; text-align: center; }
+    .mos-msg.bad { background: var(--bad-soft); color: var(--bad); }
+    .mos-msg.good { background: var(--good-soft); color: var(--good); }
+    @media (max-width: 700px) { .mos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    /* ---------- Deliver: crit, present, dual-track, writing ---------- */
+    .deliver { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .deliver .full { grid-column: 1 / -1; }
+    .deliver h3 { margin: 0 0 10px; }
+    .seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+    .seg button { font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: 0; border-radius: 9px; padding: 8px 14px; min-height: 44px; background: transparent; color: var(--text); }
+    .seg button.active { background: var(--surface); box-shadow: var(--shadow); color: var(--accent); }
+    .say-box { border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; line-height: 1.5; }
+    .say-box.bad { background: var(--bad-soft); }
+    .say-box.good { background: var(--good-soft); }
+    .say-box small { display: block; font-weight: 500; font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .iw { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .iw div { background: var(--surface-2); border-radius: 12px; padding: 10px; font-size: 13px; }
+    .iw b { display: block; color: var(--accent); margin-bottom: 2px; }
+    .steps5 { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .steps5 button { font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); }
+    .steps5 button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step-ex { background: var(--accent-soft); border-radius: 12px; padding: 14px; min-height: 96px; }
+    .step-ex b { display: block; margin-bottom: 4px; }
+
+    .tracks { display: grid; grid-template-columns: 110px repeat(4, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+    .tracks .hd { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; align-self: end; }
+    .tracks .lane { font-weight: 800; font-size: 14px; display: flex; align-items: center; }
+    .blk { font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; color: var(--text); min-height: 64px; padding: 10px; border-radius: 12px; border: 2px solid transparent; transition: border-color .2s, opacity .2s; }
+    .blk.disc { background: var(--accent-soft); }
+    .blk.deliv { background: var(--good-soft); }
+    .blk.on { border-color: var(--accent); }
+    .tracks.focus .blk:not(.on) { opacity: .45; }
+    .track-note { margin-top: 12px; min-height: 48px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); font-size: 14px; }
+    @media (max-width: 700px) {
+      .deliver { grid-template-columns: 1fr; }
+      .tracks { grid-template-columns: 76px repeat(4, minmax(0, 1fr)); gap: 6px; }
+      .blk { font-size: 12px; padding: 8px; }
+      .iw { grid-template-columns: 1fr; }
+    }
+
+    .ux-ex { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .mock { border-radius: 12px; padding: 16px; background: #fff; color: #222; font-family: system-ui; border: 1px solid #ddd; min-height: 130px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+    .mock .tag { align-self: flex-start; font-size: 11px; font-weight: 800; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; }
+    .mock.before .tag { background: #fde4e4; color: #b42318; }
+    .mock.after .tag { background: #dcf5e8; color: #157347; }
+    .mock .err { color: #b42318; font-size: 14px; }
+    .mock .mbtn { align-self: flex-start; background: #5b4bdb; color: #fff; border-radius: 8px; padding: 8px 14px; font-weight: 700; font-size: 14px; }
+    .mock .mbtn.grey { background: #888; }
+    .mock .empty { text-align: center; color: #555; font-size: 14px; }
+    .formula { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; align-items: center; font-size: 13px; }
+    .formula span { background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; font-weight: 700; }
+    @media (max-width: 700px) { .ux-ex { grid-template-columns: 1fr; } }
+
+    /* ---------- Try: scenarios ---------- */
+    .scn { max-width: 720px; margin: 0 auto; }
+    .scn-who { display: flex; align-items: center; gap: 12px; margin: 12px 0 16px; }
+    .scn-who .av { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: var(--surface-2); }
+    .scn-who .bubble { background: var(--surface-2); border-radius: 4px 16px 16px 16px; padding: 12px 16px; font-size: 18px; font-weight: 700; }
+    .scn-who small { display: block; color: var(--muted); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .opts { display: grid; gap: 8px; }
+    .opt { font: inherit; font-size: 15px; text-align: left; cursor: pointer; min-height: 52px; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); transition: border-color .2s; }
+    .opt:hover { border-color: var(--accent); }
+    .opt.best { border-color: var(--good); background: var(--good-soft); }
+    .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+    .opt:disabled { cursor: default; }
+    .scn-fb { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--accent-soft); font-size: 15px; }
+    .scn-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 11 UX in Business</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 11 · UX in Business</div>
+      <h1>Translate.<br>Don't just transmit.</h1>
+      <p>Same design, many audiences. Speak value, prioritize openly, keep design moving through delivery.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#value">💰 Value</a>
+        <a href="#prioritize">⚖️ Prioritize</a>
+        <a href="#deliver">🚚 Deliver</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>One feature, four audiences</h2>
+      <p class="sub">Tap a stakeholder. Watch the same pitch change language.</p>
+      <div class="feature-pill"><span>🆕 Replace the 9-field sign-up form with a 3-step onboarding</span></div>
+      <div class="aud-tabs" id="aud-tabs"></div>
+      <div class="aud-body" id="aud-body"></div>
+    </section>
+
+    <!-- ================= VALUE ================= -->
+    <section class="section" id="value">
+      <span class="step-label">💰 Learn · Value</span>
+      <h2>Put a number on UX</h2>
+      <p class="sub">Leadership funds outcomes. Move the sliders with your own analytics.</p>
+      <div class="roi">
+        <div class="card" id="roi-in"></div>
+        <div class="roi-side">
+        <div class="card" id="roi-out"></div>
+      <div class="card">
+        <h3 style="margin:0 0 4px">⏱️ Fix it early, fix it cheap</h3>
+        <div class="muted" style="margin-bottom:14px">Relative cost of fixing the same usability problem.</div>
+        <div class="late">
+          <div class="late-row"><div class="name">✏️ In design<small>change a frame</small></div><div><div class="late-bar" style="width:1%">1×</div></div></div>
+          <div class="late-row"><div class="name">💻 In development<small>rework code + QA</small></div><div><div class="late-bar" style="width:6%">~6×</div></div></div>
+          <div class="late-row"><div class="name">🚀 After release<small>hotfix, support, churn</small></div><div><div class="late-bar" style="width:100%">up to ~100×</div></div></div>
+        </div>
+        <div class="note">Often-quoted ratio (attributed to IBM Systems Sciences Institute). The exact numbers are debated; the direction is not. Use it as a talking point, not a forecast.</div>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PRIORITIZE ================= -->
+    <section class="section" id="prioritize">
+      <span class="step-label">⚖️ Learn · Prioritize</span>
+      <h2>Prioritize out loud</h2>
+      <p class="sub">A shared framework turns opinion fights into trade-off talks.</p>
+      <div class="tabs" id="pz-tabs"></div>
+      <div class="card" id="pz-body"></div>
+    </section>
+
+    <!-- ================= DELIVER ================= -->
+    <section class="section" id="deliver">
+      <span class="step-label">🚚 Learn · Deliver</span>
+      <h2>Keep design alive in delivery</h2>
+      <p class="sub">Critiques, presentations, two tracks, and words that work.</p>
+      <div class="deliver">
+        <div class="card" id="crit"></div>
+        <div class="card" id="present"></div>
+        <div class="card full" id="dual"></div>
+        <div class="card full" id="writing"></div>
+        <div class="card full">
+          <h3>🧾 Design debt</h3>
+          <div class="grid grid-2" style="gap:12px">
+            <ul class="bullets">
+              <li>5 button styles where 1 should exist</li>
+              <li>One-off colors and spacing</li>
+              <li>Old patterns nobody updated</li>
+            </ul>
+            <ul class="bullets">
+              <li>Track it in the backlog, like tech debt</li>
+              <li>Budget a slice of each sprint to pay it down</li>
+              <li>Prevent it with a design system (Chapter 08)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Handle the stakeholder</h2>
+      <p class="sub">Five real moments. Pick your move.</p>
+      <div class="card scn" id="scn"></div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When you hear…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li><b>Translate</b>: same feature, each stakeholder's language and question.</li>
+          <li>Tie design to <b>outcomes and evidence</b>, not taste.</li>
+          <li>Prioritize with a <b>visible framework</b>. Negotiate scope, not quality.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const $ = (s) => document.querySelector(s);
+    const list = (a) => `<ul class="bullets">${a.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+
+    /* ---------- Explore: four audiences ---------- */
+    const AUD = [
+      { icon: "💼", name: "Client / CEO", role: "Business owner",
+        cares: ["Revenue and growth", "Risk and timeline", "Competitors"],
+        say: ["activation", "conversion", "time-to-value", "phased rollout", "A/B test"],
+        avoid: ["auto layout", "refactor", "design tokens"],
+        pitch: "Many sign-ups drop off before finishing the long form. A 3-step onboarding targets that drop-off. We'll A/B test it on 20% of traffic for 2 weeks, then roll out if it wins.",
+        ask: "What does it cost, and when do we see results?" },
+      { icon: "🎨", name: "Designer", role: "UX / UI",
+        cares: ["The user's real problem", "Research evidence", "Consistency and craft"],
+        say: ["user pain", "journey", "design system", "usability test"],
+        avoid: ["just make it pretty", "quick reskin", "pixel-push this"],
+        pitch: "Analytics show users quit at the company-details step. Can we explore a progressive flow and test it with 5 users before handoff?",
+        ask: "Do we have time to test before dev starts?" },
+      { icon: "🖥️", name: "Frontend dev", role: "UI engineering",
+        cares: ["Components and states", "Responsive behavior", "Clear scope"],
+        say: ["existing components", "empty / error / loading", "breakpoints", "acceptance criteria"],
+        avoid: ["make it feel nicer", "should be simple", "pixel-perfect by Friday"],
+        pitch: "3 steps reusing our Input and Button components. Designs cover error and loading states on phone, tablet, and desktop. One new component: a progress stepper.",
+        ask: "Are all states designed, and which components are new?" },
+      { icon: "🗄️", name: "Backend dev", role: "APIs and data",
+        cares: ["Data model and APIs", "Validation and security", "Performance"],
+        say: ["partial save", "validation rules", "API contract", "analytics events"],
+        avoid: ["it's just UI", "frontend-only change"],
+        pitch: "Splitting sign-up into steps means saving partial profiles. We need a draft-user state, per-step validation, and an event per step to measure drop-off.",
+        ask: "What happens to half-finished accounts?" },
+    ];
+    let aud = 0;
+    function renderAud() {
+      $("#aud-tabs").innerHTML = AUD.map((a, i) => `
+        <button class="aud-btn ${i === aud ? "active" : ""}" data-aud="${i}">
+          <span class="e">${a.icon}</span><b>${a.name}</b><small>${a.role}</small></button>`).join("");
+      const a = AUD[aud];
+      $("#aud-body").innerHTML = `
+        <div class="card aud-pitch">
+          <div class="lbl">🎤 Your pitch</div><blockquote>${a.pitch}</blockquote>
+          <div class="lbl">❓ They'll ask</div><div class="ask">"${a.ask}"</div>
+        </div>
+        <div class="card">
+          <div class="lbl">❤️ They care about</div>${list(a.cares)}
+          <div class="lbl">✅ Words that land</div><div class="wchips">${a.say.map((w) => `<span class="w good">${w}</span>`).join("")}</div>
+          <div class="lbl">🚫 Words to avoid</div><div class="wchips">${a.avoid.map((w) => `<span class="w bad">${w}</span>`).join("")}</div>
+        </div>`;
+    }
+    $("#aud-tabs").onclick = (e) => { const b = e.target.closest("[data-aud]"); if (b) { aud = +b.dataset.aud; renderAud(); } };
+    renderAud();
+
+    /* ---------- Value: ROI calculator ---------- */
+    const money = (v) => "$" + Math.round(v).toLocaleString("en-US");
+    const ROI_IN = [
+      { g: "📈 Conversion" },
+      { k: "visitors", label: "Sign-up page visitors / month", min: 1000, max: 200000, step: 1000, v: 40000, f: (v) => v.toLocaleString("en-US") },
+      { k: "conv", label: "Current conversion", min: 0.5, max: 15, step: 0.5, v: 3, f: (v) => v + "%" },
+      { k: "uplift", label: "Expected relative uplift", min: 0, max: 50, step: 1, v: 15, f: (v) => "+" + v + "%" },
+      { k: "value", label: "Value per new customer", min: 5, max: 500, step: 5, v: 60, f: (v) => "$" + v },
+      { g: "🎧 Support" },
+      { k: "tickets", label: "Support tickets / month", min: 0, max: 3000, step: 50, v: 800, f: (v) => v.toLocaleString("en-US") },
+      { k: "deflect", label: "Tickets avoided by clearer UX", min: 0, max: 60, step: 5, v: 20, f: (v) => v + "%" },
+      { k: "tcost", label: "Cost per ticket", min: 2, max: 60, step: 1, v: 12, f: (v) => "$" + v },
+    ];
+    const roi = {};
+    ROI_IN.forEach((x) => { if (x.k) roi[x.k] = x.v; });
+    $("#roi-in").innerHTML = ROI_IN.map((x) => x.g
+      ? `<div class="roi-group">${x.g}</div>`
+      : `<div class="slider"><div class="top"><span>${x.label}</span><b id="rv-${x.k}">${x.f(x.v)}</b></div>
+         <input type="range" data-roi="${x.k}" min="${x.min}" max="${x.max}" step="${x.step}" value="${x.v}" aria-label="${x.label}"></div>`).join("");
+    function renderRoi() {
+      const extra = roi.visitors * 12 * (roi.conv / 100) * (roi.uplift / 100);
+      const revenue = extra * roi.value;
+      const support = roi.tickets * 12 * (roi.deflect / 100) * roi.tcost;
+      const total = revenue + support, max = Math.max(revenue, support, 1);
+      $("#roi-out").innerHTML = `
+        <div class="lbl">Estimated yearly impact</div>
+        <div class="roi-total">${money(total)}</div>
+        <div class="roi-row"><div class="top"><span>📈 Extra revenue · ${Math.round(extra).toLocaleString("en-US")} new customers</span><b>${money(revenue)}</b></div>
+          <div class="bar"><i style="width:${revenue / max * 100}%;background:var(--good)"></i></div></div>
+        <div class="roi-row"><div class="top"><span>🎧 Support savings</span><b>${money(support)}</b></div>
+          <div class="bar"><i style="width:${support / max * 100}%;background:var(--accent)"></i></div></div>
+        <div class="note">💬 Pitch it as: "If this lifts conversion by ${roi.uplift}%, it's worth about ${money(total)} a year. We'll prove it with an A/B test."</div>
+        <div class="note">Illustrative model. Replace the defaults with your real analytics.</div>`;
+    }
+    $("#roi-in").oninput = (e) => {
+      const k = e.target.dataset.roi;
+      if (!k) return;
+      roi[k] = +e.target.value;
+      $("#rv-" + k).textContent = ROI_IN.find((x) => x.k === k).f(roi[k]);
+      renderRoi();
+    };
+    renderRoi();
+
+    /* ---------- Prioritize ---------- */
+    // Tap-to-place quadrant board, shared by Impact/Effort and the stakeholder map
+    function board(cfg) { return { ...cfg, placed: cfg.items.map(() => null), sel: null }; }
+    const IE = board({
+      y: "Impact", x: "Effort",
+      items: ["Clear error messages", "Social sign-in", "Remove optional fields", "Progress stepper", "Redesign dashboard", "Dark mode", "Rebuild in new framework", "Change button color"],
+      typical: [0, 1, 0, 0, 3, 3, 3, 2],
+      zones: [
+        { name: "⚡ Quick wins", hint: "High impact · low effort → do now", c: "var(--good)" },
+        { name: "🎯 Big bets", hint: "High impact · high effort → plan it", c: "var(--accent)" },
+        { name: "🧹 Fill-ins", hint: "Low impact · low effort → if time allows", c: "var(--muted)" },
+        { name: "🕳️ Time sinks", hint: "Low impact · high effort → avoid", c: "var(--bad)" },
+      ],
+      footnote: "Typical answer for an onboarding goal. Context changes it.",
+    });
+    const SH = board({
+      y: "Power", x: "Interest",
+      items: ["CEO", "Client sponsor", "Lead designer", "Dev team", "Legal / compliance", "Support team", "Marketing", "End users"],
+      typical: [0, 1, 1, 1, 0, 3, 3, 3],
+      zones: [
+        { name: "🤝 Keep satisfied", hint: "High power · low interest → short updates, no surprises", c: "var(--warn)" },
+        { name: "⭐ Manage closely", hint: "High power · high interest → involve in decisions", c: "var(--accent)" },
+        { name: "👀 Monitor", hint: "Low power · low interest → light touch", c: "var(--muted)" },
+        { name: "📣 Keep informed", hint: "Low power · high interest → regular demos and notes", c: "var(--good)" },
+      ],
+      footnote: "A typical starting map. Revisit it as the project changes.",
+    });
+    function boardHtml(b, id) {
+      const chip = (i) => `<button class="chip ${b.sel === i ? "sel" : ""}" data-b="${id}" data-chip="${i}">${b.items[i]}</button>`;
+      const left = b.items.map((_, i) => i).filter((i) => b.placed[i] === null);
+      return `
+        <div class="muted" style="text-align:center;margin-bottom:10px">Tap an item, then tap a box. Tap a placed item to send it back.</div>
+        <div class="tray">${left.length ? left.map(chip).join("") : `<span class="muted">All placed ✓</span>`}</div>
+        <div class="quad-wrap">
+          <div class="y-axis">${b.y} ↑</div>
+          <div class="quad ${b.sel !== null ? "ready" : ""}">${b.zones.map((z, zi) => `
+            <div class="zone" data-b="${id}" data-zone="${zi}" style="--zc:${z.c}">
+              <div class="zname">${z.name}</div><div class="zhint">${z.hint}</div>
+              <div class="zchips">${b.items.map((_, i) => i).filter((i) => b.placed[i] === zi).map(chip).join("")}</div>
+            </div>`).join("")}</div>
+        </div>
+        <div class="x-axis">${b.x} →</div>
+        <div class="pz-bar">
+          <button class="btn" data-b="${id}" data-typical>💡 Show a typical answer</button>
+          <button class="btn" data-b="${id}" data-clear>Reset</button>
+        </div>
+        <div class="note" style="text-align:center">${b.footnote}</div>`;
+    }
+
+    const IMPACT = [[3, "3 · Massive"], [2, "2 · High"], [1, "1 · Medium"], [0.5, "0.5 · Low"], [0.25, "0.25 · Minimal"]];
+    const CONF = [[100, "100% · data"], [80, "80% · some data"], [50, "50% · gut feel"]];
+    const RICE = [
+      { name: "🔑 Social sign-in", r: 4000, i: 2, c: 80, e: 3 },
+      { name: "📶 Progress stepper", r: 6000, i: 1, c: 100, e: 0.5 },
+      { name: "🎬 Welcome video", r: 6000, i: 0.5, c: 50, e: 2 },
+    ];
+    const riceScore = (f) => (f.r * f.i * (f.c / 100)) / Math.max(f.e, 0.1);
+    function riceHtml() {
+      const opt = (arr, v) => arr.map(([val, t]) => `<option value="${val}" ${val === v ? "selected" : ""}>${t}</option>`).join("");
+      return `
+        <div class="rice-formula"><code>RICE = Reach × Impact × Confidence ÷ Effort</code></div>
+        <div class="rice">${RICE.map((f, n) => `
+          <div class="rice-row">
+            <div class="fname">${f.name}</div>
+            <div><label>Reach / quarter</label><input type="number" min="0" step="500" value="${f.r}" data-rice="${n}" data-k="r"></div>
+            <div><label>Impact</label><select data-rice="${n}" data-k="i">${opt(IMPACT, f.i)}</select></div>
+            <div><label>Confidence</label><select data-rice="${n}" data-k="c">${opt(CONF, f.c)}</select></div>
+            <div><label>Effort (months)</label><input type="number" min="0.5" step="0.5" value="${f.e}" data-rice="${n}" data-k="e"></div>
+            <div class="rice-score"><small>Score</small><b id="rs-${n}">0</b></div>
+          </div>`).join("")}</div>
+        <div class="rank" id="rice-rank"></div>
+        <div class="note">From Intercom's RICE framework. The score starts the conversation; it doesn't end it.</div>`;
+    }
+    function renderRiceRank() {
+      const scored = RICE.map((f, n) => ({ ...f, n, s: riceScore(f) }));
+      scored.forEach((f) => { $("#rs-" + f.n).textContent = Math.round(f.s).toLocaleString("en-US"); });
+      const top = Math.max(...scored.map((f) => f.s), 1);
+      $("#rice-rank").innerHTML = scored.sort((a, b) => b.s - a.s).map((f, i) => `
+        <div class="rank-row"><span class="n">#${i + 1}</span><span>${f.name}</span>
+          <div class="bar"><i style="width:${f.s / top * 100}%;background:${i === 0 ? "var(--good)" : "var(--accent)"}"></i></div></div>`).join("");
+    }
+
+    const MOS_COLS = [["🔴 Must", "Launch fails without it"], ["🟠 Should", "Important, not vital"], ["🟢 Could", "Nice if time allows"], ["⚪ Won't", "Not this release"]];
+    const MOS = ["Email + password sign-up", "Field validation messages", "Progress stepper", "Social sign-in", "Save and resume later", "Welcome animation", "Personalized tips", "Dark mode"].map((t) => ({ t, c: 0 }));
+    function mosHtml() {
+      const must = MOS.filter((m) => m.c === 0).length, pct = Math.round(must / MOS.length * 100);
+      const ok = pct <= 60;
+      return `
+        <div class="muted" style="text-align:center;margin-bottom:12px">The client marked everything as Must. Tap an item to move it to the next column.</div>
+        <div class="mos">${MOS_COLS.map(([h, d], ci) => `
+          <div class="mos-col"><h4>${h}</h4><div class="muted">${d}</div>
+            ${MOS.map((m, i) => m.c === ci ? `<button class="chip" data-mos="${i}">${m.t}</button>` : "").join("")}
+          </div>`).join("")}</div>
+        <div class="mos-msg ${ok ? "good" : "bad"}">${ok
+          ? `✅ Musts are ${pct}% of the list. There's room to absorb surprises.`
+          : `⚠️ Musts are ${pct}% of the list. If everything is a Must, nothing is.`}</div>
+        <div class="note">DSDM guideline: keep Musts to about 60% of the effort, so Shoulds and Coulds act as a buffer.</div>`;
+    }
+
+    const PZ = ["⚖️ Impact / Effort", "🧮 RICE", "📋 MoSCoW", "🗺️ Stakeholder map"];
+    let pz = 0;
+    function renderPz() {
+      $("#pz-tabs").innerHTML = PZ.map((t, i) => `<button class="btn ${i === pz ? "active" : ""}" data-pz="${i}">${t}</button>`).join("");
+      $("#pz-body").innerHTML = [boardHtml(IE, "ie"), riceHtml(), mosHtml(), boardHtml(SH, "sh")][pz];
+      if (pz === 1) renderRiceRank();
+    }
+    const boards = { ie: IE, sh: SH };
+    $("#prioritize").addEventListener("click", (e) => {
+      const tab = e.target.closest("[data-pz]");
+      if (tab) { pz = +tab.dataset.pz; renderPz(); return; }
+      const mos = e.target.closest("[data-mos]");
+      if (mos) { const m = MOS[+mos.dataset.mos]; m.c = (m.c + 1) % 4; renderPz(); return; }
+      const el = e.target.closest("[data-b]");
+      if (!el) return;
+      const b = boards[el.dataset.b];
+      if (el.hasAttribute("data-typical")) { b.placed = [...b.typical]; b.sel = null; }
+      else if (el.hasAttribute("data-clear")) { b.placed = b.items.map(() => null); b.sel = null; }
+      else if (el.dataset.chip !== undefined) {
+        const i = +el.dataset.chip;
+        if (b.placed[i] !== null && b.sel === null) b.placed[i] = null;
+        else b.sel = b.sel === i ? null : i;
+      } else if (el.dataset.zone !== undefined && b.sel !== null) {
+        b.placed[b.sel] = +el.dataset.zone; b.sel = null;
+      } else return;
+      renderPz();
+    });
+    $("#prioritize").addEventListener("input", (e) => {
+      const n = e.target.dataset.rice;
+      if (n === undefined) return;
+      const v = parseFloat(e.target.value);
+      RICE[+n][e.target.dataset.k] = isNaN(v) ? 0 : v;
+      renderRiceRank();
+    });
+    renderPz();
+
+    /* ---------- Deliver: critique ---------- */
+    let critMode = "bad";
+    function renderCrit() {
+      const ex = critMode === "bad"
+        ? `<div class="say-box bad">"I don't like it. The blue looks off and it feels busy."<small>❌ Personal taste. No goal, no user, nothing to act on.</small></div>`
+        : `<div class="say-box good">"Our goal is sign-ups. The promo banner competes with the Sign up button. What if the banner were smaller?"<small>✅ Tied to a goal, names the problem, offers a direction.</small></div>`;
+      $("#crit").innerHTML = `
+        <h3>💬 Design critique</h3>
+        <div class="seg"><button class="${critMode === "bad" ? "active" : ""}" data-crit="bad">Unhelpful</button><button class="${critMode === "good" ? "active" : ""}" data-crit="good">Useful</button></div>
+        ${ex}
+        <div class="lbl">Rules</div>
+        ${list(["Critique the work, not the person", "Tie every comment to a goal or a user", "Ask questions before giving solutions", "Ask the designer what feedback they need now"])}
+        <div class="iw"><div><b>I like…</b>the clear progress steps</div><div><b>I wish…</b>errors showed inline</div><div><b>What if…</b>we saved progress?</div></div>`;
+    }
+    $("#crit").onclick = (e) => { const b = e.target.closest("[data-crit]"); if (b) { critMode = b.dataset.crit; renderCrit(); } };
+    renderCrit();
+
+    /* ---------- Deliver: presenting design ---------- */
+    const PRESENT = [
+      ["1 · Problem", "What's broken, for whom", "\"Many new users abandon sign-up at the company-details step.\""],
+      ["2 · Evidence", "Why we believe it", "\"Analytics funnel plus 5 interviews: users don't have that info yet.\""],
+      ["3 · Options", "2–3 real choices", "\"A: shorter form. B: 3-step flow. C: ask company details later.\""],
+      ["4 · Recommend", "Your pick and why", "\"We recommend C. Smallest build, removes the blocker.\""],
+      ["5 · Ask", "The decision you need", "\"We need sign-off today to start dev next sprint.\""],
+    ];
+    let pr = 0;
+    function renderPresent() {
+      const p = PRESENT[pr];
+      $("#present").innerHTML = `
+        <h3>🎤 Presenting design</h3>
+        <div class="steps5">${PRESENT.map((x, i) => `<button class="${i === pr ? "active" : ""}" data-pr="${i}">${x[0]}</button>`).join("")}</div>
+        <div class="step-ex"><b>${p[1]}</b>${p[2]}</div>
+        <div class="lbl">Tips</div>
+        ${list(["Lead with the problem, not the pixels", "Show options so the recommendation is a choice", "End with a clear ask and a deadline"])}`;
+    }
+    $("#present").onclick = (e) => { const b = e.target.closest("[data-pr]"); if (b) { pr = +b.dataset.pr; renderPresent(); } };
+    renderPresent();
+
+    /* ---------- Deliver: dual-track agile ---------- */
+    const DISC = ["🔍 Research sign-up drop-off", "🧪 Prototype + test 3-step flow", "💡 Explore social sign-in", "📊 Test pricing page ideas"];
+    const DELIV = ["🐞 Ship bug fixes", "✍️ Build clearer error messages", "🏗️ Build 3-step onboarding", "🔑 Build social sign-in"];
+    const DESC = {
+      d0: "Discovery finds why users quit. Its findings feed the next sprint's build.",
+      d1: "A validated prototype becomes the build for Sprint 3.",
+      d2: "Only ideas that pass testing move to the delivery track.",
+      d3: "Discovery is always one step ahead of delivery.",
+      v0: "Delivery keeps shipping while discovery explores.",
+      v1: "Built from Sprint 1 research: low risk, already validated.",
+      v2: "Built from the Sprint 2 prototype that tested well.",
+      v3: "Built from Sprint 3 exploration.",
+    };
+    const LINK = { d0: "v1", d1: "v2", d2: "v3", v1: "d0", v2: "d1", v3: "d2" };
+    let trackSel = null;
+    function renderDual() {
+      const blk = (id, t, cls) => `<button class="blk ${cls} ${trackSel && (trackSel === id || LINK[trackSel] === id) ? "on" : ""}" data-trk="${id}">${t}</button>`;
+      $("#dual").innerHTML = `
+        <h3>🛤️ Dual-track agile</h3>
+        <div class="muted" style="margin-bottom:12px">Designers and PMs explore one sprint ahead; developers build what's already validated. Tap a block.</div>
+        <div class="tracks ${trackSel ? "focus" : ""}">
+          <span></span>${[1, 2, 3, 4].map((n) => `<span class="hd">Sprint ${n}</span>`).join("")}
+          <span class="lane">🧭 Discovery</span>${DISC.map((t, i) => blk("d" + i, t, "disc")).join("")}
+          <span class="lane">🚀 Delivery</span>${DELIV.map((t, i) => blk("v" + i, t, "deliv")).join("")}
+        </div>
+        <div class="track-note">${trackSel ? DESC[trackSel] : "👆 Tap any block to see how the two tracks connect."}</div>`;
+    }
+    $("#dual").onclick = (e) => { const b = e.target.closest("[data-trk]"); if (b) { trackSel = trackSel === b.dataset.trk ? null : b.dataset.trk; renderDual(); } };
+    renderDual();
+
+    /* ---------- Deliver: UX writing ---------- */
+    const WRITE = [
+      { tab: "⚠️ Error message",
+        before: `<div class="err">Error 409: Invalid input</div>`,
+        after: `<div class="err">That email already has an account.</div><div style="font-size:14px">Log in instead, or use a different email.</div><div class="mbtn">Log in</div>`,
+        formula: ["What happened", "Why", "How to fix"] },
+      { tab: "🔘 Button label",
+        before: `<div style="font-size:14px">Your details are ready.</div><div class="mbtn grey">Submit</div>`,
+        after: `<div style="font-size:14px">Your details are ready.</div><div class="mbtn">Create account</div>`,
+        formula: ["Verb", "Object", "Says what happens next"] },
+      { tab: "📭 Empty state",
+        before: `<div class="empty">No data</div>`,
+        after: `<div class="empty">🍜 No orders yet.<br>Your first order will show up here.</div><div class="mbtn" style="align-self:center">Browse restaurants</div>`,
+        formula: ["What this is", "Why it's empty", "Next action"] },
+    ];
+    let wr = 0;
+    function renderWriting() {
+      const w = WRITE[wr];
+      $("#writing").innerHTML = `
+        <h3>✍️ UX writing: words are interface</h3>
+        <div class="seg">${WRITE.map((x, i) => `<button class="${i === wr ? "active" : ""}" data-wr="${i}">${x.tab}</button>`).join("")}</div>
+        <div class="ux-ex">
+          <div class="mock before"><span class="tag">BEFORE</span>${w.before}</div>
+          <div class="mock after"><span class="tag">AFTER</span>${w.after}</div>
+        </div>
+        <div class="formula"><b>Formula:</b>${w.formula.map((f) => `<span>${f}</span>`).join("+")}</div>`;
+    }
+    $("#writing").onclick = (e) => { const b = e.target.closest("[data-wr]"); if (b) { wr = +b.dataset.wr; renderWriting(); } };
+    renderWriting();
+
+    /* ---------- Try: handle the stakeholder ---------- */
+    const SCN = [
+      { av: "💼", who: "Client", says: "Make the logo bigger.",
+        opts: ["Sure, done by tomorrow.", "No. The designer knows best.", "What are you hoping a bigger logo will achieve?"], best: 2,
+        why: "Uncover the goal behind the request. It may be brand recognition, which has better solutions than size." },
+      { av: "🖥️", who: "Frontend dev", says: "That animation will take 2 weeks.",
+        opts: ["Cut it quietly to save time.", "Ask the designer what the animation must communicate, and look for a cheaper version.", "Push the dev to do it in 3 days."], best: 1,
+        why: "Separate intent from implementation. A simple CSS transition often delivers most of the value." },
+      { av: "🎨", who: "Designer", says: "We need another round of research.",
+        opts: ["No time. We start building.", "What decision will it unblock? Can we timebox it to one week?", "Sure, take as long as you need."], best: 1,
+        why: "Research should serve a decision. Timeboxing keeps the learning and protects the schedule." },
+      { av: "👔", who: "CEO", says: "I need this feature by Friday.",
+        opts: ["Impossible.", "Yes! (then the team crunches all week)", "Here's the slice we can ship by Friday, and what follows next. Which part matters most?"], best: 2,
+        why: "Negotiate scope, not quality. Offer a real slice and let the CEO choose the priority." },
+      { av: "🧑‍💼", who: "Stakeholder", says: "I just don't like this shade of blue.",
+        opts: ["Change it right away.", "Check it against brand guidelines and the goal. If it might affect conversion, A/B test it.", "Ignore the comment."], best: 1,
+        why: "Move from taste to criteria: brand rules, accessibility, and data. Respect the input without letting taste decide." },
+    ];
+    let si = 0, sres = [], answered = null;
+    function renderScn() {
+      const dots = SCN.map((_, i) => `<i class="${sres[i] === true ? "good" : sres[i] === false ? "bad" : ""}"></i>`).join("");
+      if (si >= SCN.length) {
+        const score = sres.filter(Boolean).length;
+        $("#scn").innerHTML = `<div class="dots">${dots}</div>
+          <div style="text-align:center;padding:24px 0">
+            <div style="font-size:48px">${score >= 4 ? "🏆" : score >= 3 ? "👍" : "🌱"}</div>
+            <h3 style="margin:8px 0">${score} / ${SCN.length} best moves</h3>
+            <div class="muted">Pattern: ask for the goal, offer options, decide with criteria.</div>
+            <button class="btn primary" data-restart style="margin-top:16px">Try again</button>
+          </div>`;
+        return;
+      }
+      const s = SCN[si];
+      $("#scn").innerHTML = `<div class="dots">${dots}</div>
+        <div class="scn-who"><div class="av">${s.av}</div><div class="bubble"><small>${s.who} says</small>"${s.says}"</div></div>
+        <div class="opts">${s.opts.map((o, i) => {
+          const cls = answered === null ? "" : i === s.best ? "best" : i === answered ? "wrong" : "";
+          return `<button class="opt ${cls}" data-opt="${i}" ${answered !== null ? "disabled" : ""}>${o}</button>`;
+        }).join("")}</div>
+        ${answered !== null ? `<div class="scn-fb">${answered === s.best ? "✅ Best move." : "💡 Better move highlighted."} ${s.why}</div>` : ""}
+        <div class="scn-bar"><span class="muted">Scenario ${si + 1} of ${SCN.length}</span>
+          ${answered !== null ? `<button class="btn primary" data-next>${si === SCN.length - 1 ? "See results" : "Next →"}</button>` : ""}</div>`;
+    }
+    $("#scn").onclick = (e) => {
+      const o = e.target.closest("[data-opt]");
+      if (o && answered === null) { answered = +o.dataset.opt; sres[si] = answered === SCN[si].best; renderScn(); return; }
+      if (e.target.closest("[data-next]")) { si++; answered = null; renderScn(); return; }
+      if (e.target.closest("[data-restart]")) { si = 0; sres = []; answered = null; renderScn(); }
+    };
+    renderScn();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"We have a lot of design debt.\"", "Inconsistent, outdated UI that slows design and dev, like tech debt.", "Can we list it, size it, and reserve part of each sprint for it?"],
+      ["\"Let's do a design crit.\"", "A structured session to review work against goals.", "What stage is it at, and what kind of feedback do you need?"],
+      ["\"We need buy-in.\"", "Key stakeholders must agree before we commit.", "Who exactly? What evidence or demo will convince them?"],
+      ["\"That's scope creep.\"", "New asks are sneaking in without trade-offs.", "What do we drop or delay to make room for it?"],
+      ["\"What's the ROI of UX?\"", "Leadership wants value in business terms.", "Which metric moves: conversion, retention, or support cost? How will we measure it?"],
+      ["\"Let's timebox discovery.\"", "Fixed time to learn, then decide.", "What question must we answer by the end, and who decides?"],
+    ];
+    $("#lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(11);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

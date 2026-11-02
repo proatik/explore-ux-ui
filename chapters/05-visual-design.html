@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Visual Design · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* Demo "artboards" use a fixed light palette, so designs read the same in both themes */
+    .artboard { background: #f4f4f7; color: #1d1d1f; border-radius: var(--radius); padding: 24px; border: 1px solid var(--line); }
+    .seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; flex-wrap: wrap; }
+    .seg button { font: inherit; font-size: 14px; font-weight: 700; border: 0; background: transparent; color: var(--muted); padding: 8px 14px; min-height: 44px; border-radius: 9px; cursor: pointer; }
+    .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .controls { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; }
+    .controls .toggle { min-height: 44px; }
+    .range-row input[type=range] { min-height: 44px; }
+    .h3 { font-size: 20px; margin: 36px 0 6px; }
+    .note { font-size: 13px; color: var(--muted); }
+    .range-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) 56px; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
+    .range-row input[type=range] { flex: 1; accent-color: var(--accent); }
+    .range-row output { min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; color: var(--accent); }
+
+    /* ---------- Explore: squint test ---------- */
+    .squint-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    @media (max-width: 700px) { .squint-grid { grid-template-columns: 1fr; } }
+    .squint-grid .lbl { font-weight: 800; margin-bottom: 10px; text-align: center; }
+    .squint-grid > div { display: flex; flex-direction: column; }
+    .squint-grid .artboard { display: grid; place-items: center; min-height: 420px; flex: 1; }
+    .promo { width: 100%; max-width: 300px; background: #fff; border-radius: 16px; overflow: hidden; transition: filter .4s; }
+    .squinted .promo { filter: blur(6px); }
+    .promo .img { height: 120px; display: grid; place-items: center; font-size: 56px; background: #ffe9d6; }
+    .promo .body { padding: 16px; }
+    .promo .tag, .promo .ttl, .promo .rate, .promo .desc, .promo .price { display: block; }
+    .promo .actions { display: flex; gap: 8px; }
+    .promo button { font: inherit; flex: 1; border-radius: 8px; cursor: pointer; }
+    /* flat: everything equal */
+    .promo.flat * { font-size: 14px !important; font-weight: 400 !important; color: #8a8a8a !important; }
+    .promo.flat .img { background: #eee; filter: grayscale(1); }
+    .promo.flat .body > * { margin: 2px 0; }
+    .promo.flat button { background: #fff; border: 1px solid #ccc; padding: 6px; }
+    /* strong: clear hierarchy */
+    .promo.strong .tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #e76f51; margin-bottom: 6px; }
+    .promo.strong .ttl { font-size: 22px; font-weight: 800; color: #111; line-height: 1.2; }
+    .promo.strong .rate { font-size: 13px; color: #555; margin: 4px 0 10px; }
+    .promo.strong .desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 14px; }
+    .promo.strong .price { font-size: 30px; font-weight: 800; color: #111; margin-bottom: 14px; }
+    .promo.strong .price s { font-size: 15px; font-weight: 500; color: #999; margin-left: 6px; }
+    .promo.strong .primary { background: #e76f51; color: #fff; border: 0; padding: 12px; font-weight: 800; flex: 2; }
+    .promo.strong .ghost { background: transparent; color: #555; border: 1px solid #ddd; padding: 12px; }
+    .verdicts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
+    @media (max-width: 700px) { .verdicts { grid-template-columns: 1fr; } }
+    .verdicts .card { padding: 14px 16px; font-size: 14px; min-height: 64px; }
+
+    /* ---------- Hierarchy levers ---------- */
+    .levers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (min-width: 1000px) { .levers { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+    @media (max-width: 520px) { .levers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .lever { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; text-align: center; }
+    .lever .demo { height: 64px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-weight: 500; font-size: 15px; }
+    .lever .demo b { font-weight: 500; }
+    .lever h4 { margin: 8px 0 2px; }
+    .lever p { margin: 0; font-size: 12px; color: var(--muted); }
+
+    /* ---------- Type scale ---------- */
+    .ts-wrap { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .ts-wrap { grid-template-columns: 1fr; } }
+    .ts-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+    .ts-row:last-child { border-bottom: 0; }
+    .ts-row .meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .ts-row .meta b { color: var(--accent); }
+    .ts-row .sample { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; line-height: 1.15; }
+    pre.code { margin: 0; background: #16161c; color: #d6d6f0; border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.6; overflow-x: auto; }
+    pre.code .k { color: #a78bfa; } pre.code .v { color: #7ee2b8; }
+    .read-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 700px) { .read-grid { grid-template-columns: 1fr; } }
+    .read-box { font-size: 15px; margin: 14px auto 0; color: #2a2a2e; transition: max-width .2s, line-height .2s; }
+    .verdict-pill { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 999px; margin-top: 10px; }
+    .verdict-pill.good { background: var(--good-soft); color: var(--good); }
+    .verdict-pill.bad { background: var(--bad-soft); color: var(--bad); }
+
+    /* ---------- Color: 60-30-10 ---------- */
+    .c6-wrap { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 700px) { .c6-wrap { grid-template-columns: 1fr; } }
+    .mock { display: grid; grid-template-columns: 110px 1fr; border-radius: 14px; overflow: hidden; min-height: 260px; border: 1px solid var(--line); transition: background .3s; }
+    .mock .side { padding: 14px 10px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 600; }
+    .mock .side span { padding: 6px 8px; border-radius: 8px; }
+    .mock .main { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .mock .main h5 { margin: 0; font-size: 18px; }
+    .mock .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mock .tile { border-radius: 10px; padding: 12px; font-size: 13px; }
+    .mock .tile b { display: block; font-size: 20px; }
+    .mock .cta { align-self: flex-start; border: 0; border-radius: 9px; padding: 10px 16px; font: inherit; font-weight: 800; }
+    .mock .badge6 { display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+    .ratio-bar { display: flex; height: 18px; border-radius: 999px; overflow: hidden; margin: 12px 0 6px; border: 1px solid var(--line); }
+    .ratio-lbl { display: flex; font-size: 12px; color: var(--muted); }
+    .swatch-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 14px; font-weight: 600; }
+    .swatch-row input[type=color] { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .presets .btn { padding: 6px 12px; font-size: 13px; min-height: 44px; }
+
+    /* ---------- Semantic colors ---------- */
+    .sem-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; transition: filter .3s; }
+    @media (max-width: 700px) { .sem-grid { grid-template-columns: 1fr; } }
+    .sem-grid.gray { filter: grayscale(1); }
+    .sem-col h4 { margin: 0 0 10px; font-size: 14px; }
+    .alert { display: flex; gap: 10px; align-items: center; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; color: #1d1d1f; }
+    .alert i { font-style: normal; font-weight: 900; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 12px; flex: none; }
+    .alert.only { height: 40px; }
+    .a-success { background: #dcf5e8; } .a-success i { background: #1f9d63; }
+    .a-warning { background: #fff1d6; } .a-warning i { background: #c98a0b; }
+    .a-error   { background: #fde4e4; } .a-error i { background: #d64545; }
+    .a-info    { background: #e1ecff; } .a-info i { background: #2563eb; }
+    .alert.only .bar { width: 6px; align-self: stretch; border-radius: 4px; }
+
+    /* ---------- Contrast checker ---------- */
+    .cc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 700px) { .cc { grid-template-columns: 1fr; } }
+    .cc-preview { border-radius: 14px; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border: 1px solid var(--line); }
+    .cc-preview .big { font-size: 24px; font-weight: 700; }
+    .cc-preview .small { font-size: 15px; }
+    .cc-ratio { font-size: 44px; font-weight: 900; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .cc-badges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .cc-badges div { font-size: 13px; padding: 8px 10px; border-radius: 10px; display: flex; justify-content: space-between; gap: 8px; }
+    .cc-badges .pass { background: var(--good-soft); color: var(--good); }
+    .cc-badges .fail { background: var(--bad-soft); color: var(--bad); }
+    .cc-badges small { color: var(--muted); font-weight: 600; }
+
+    /* ---------- Space: 8pt ---------- */
+    .sp-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+    @media (max-width: 700px) { .sp-wrap { grid-template-columns: 1fr; } }
+    .sp-card { background: #fff; border-radius: 14px; max-width: 300px; margin: 0 auto; position: relative; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    .sp-card .img { height: 90px; border-radius: 10px; background: linear-gradient(135deg, #c7d2fe, #fbcfe8); }
+    .sp-card .t { font-size: 18px; font-weight: 800; }
+    .sp-card .m { font-size: 12px; color: #666; }
+    .sp-card .d { font-size: 14px; color: #444; line-height: 1.45; }
+    .sp-card .b { background: #5b4bdb; color: #fff; border-radius: 8px; padding: 10px; text-align: center; font-weight: 800; font-size: 14px; }
+    .gap { position: relative; transition: height .3s; }
+    .show-gaps .gap { background: repeating-linear-gradient(45deg, rgba(236,72,153,.25) 0 4px, rgba(236,72,153,.1) 4px 8px); }
+    .show-gaps .gap::after { content: attr(data-v); position: absolute; right: -40px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 800; color: #db2777; }
+    .show-gaps .sp-card { outline: 2px dashed rgba(236,72,153,.5); }
+    .pad-lbl { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: 800; color: #db2777; opacity: 0; }
+    .show-gaps .pad-lbl { opacity: 1; }
+    .vals { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .vals span { font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); font-variant-numeric: tabular-nums; }
+
+    /* ---------- Grid ---------- */
+    .grid-demo { position: relative; }
+    .grid-demo .cols { position: absolute; inset: 24px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 1; }
+    .grid-demo.show .cols { opacity: 1; }
+    .grid-demo .cols i { background: rgba(236,72,153,.15); border-left: 1px solid rgba(236,72,153,.4); border-right: 1px solid rgba(236,72,153,.4); }
+    .layout { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .layout > div { background: #fff; border-radius: 10px; padding: 12px; font-size: 13px; font-weight: 700; color: #555; min-height: 52px; box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: margin .4s, width .4s; }
+    .layout .l-head { grid-column: span 12; }
+    .layout .l-hero { grid-column: span 8; min-height: 120px; background: linear-gradient(135deg, #e0e7ff, #fff); }
+    .layout .l-aside { grid-column: span 4; }
+    .layout .l-card { grid-column: span 4; min-height: 80px; }
+    .layout.off { display: flex; flex-wrap: wrap; gap: 0; }
+    .layout.off .l-head { width: 97%; margin: 0 0 9px 7px; }
+    .layout.off .l-hero { width: 61%; margin: 0 0 14px 0; }
+    .layout.off .l-aside { width: 31%; margin: 0 0 14px 21px; }
+    .layout.off .l-card:nth-of-type(4) { width: 29%; margin: 0 5px 0 3px; }
+    .layout.off .l-card:nth-of-type(5) { width: 35%; margin: 6px 17px 0 0; }
+    .layout.off .l-card:nth-of-type(6) { width: 26%; margin: 0; }
+
+    /* ---------- Gestalt ---------- */
+    .gestalt { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .gs { display: flex; flex-direction: column; gap: 10px; }
+    .gs h4 { margin: 0; }
+    .gs .stage { background: #f4f4f7; border-radius: 12px; height: 120px; display: grid; place-items: center; overflow: hidden; position: relative; }
+    .gs p { margin: 0; font-size: 13px; color: var(--muted); flex: 1; }
+    .gs .btn { padding: 8px 12px; font-size: 13px; min-height: 44px; }
+    .dots-row { display: flex; gap: 6px; }
+    .dots-row i { width: 10px; height: 10px; border-radius: 50%; background: #5b4bdb; transition: margin .3s; }
+    .g-on .dots-row i:nth-child(4n):not(:last-child) { margin-right: 18px; }
+    .sim { display: grid; grid-template-columns: repeat(5, 14px); gap: 8px; }
+    .sim i { width: 14px; height: 14px; border-radius: 50%; background: #9a9aa5; transition: background .3s, border-radius .3s; }
+    .g-on .sim i:nth-child(5n+2), .g-on .sim i:nth-child(5n+4) { background: #e76f51; border-radius: 3px; }
+    .al { display: flex; flex-direction: column; gap: 8px; width: 150px; }
+    .al div { display: flex; flex-direction: column; gap: 2px; transition: transform .3s; }
+    .al span { font-size: 10px; font-weight: 700; color: #555; }
+    .al u { display: block; height: 12px; border-radius: 4px; background: #fff; border: 1px solid #ccc; text-decoration: none; }
+    .al div:nth-child(1) { transform: translateX(-14px); }
+    .al div:nth-child(2) { transform: translateX(10px); }
+    .al div:nth-child(3) { transform: translateX(-4px); }
+    .g-on .al div { transform: none; }
+    .reg { display: flex; gap: 10px; }
+    .reg > div { display: grid; grid-template-columns: repeat(2, 14px); gap: 6px; padding: 8px; border-radius: 10px; transition: background .3s, box-shadow .3s; }
+    .reg i { width: 14px; height: 14px; border-radius: 50%; background: #5b4bdb; }
+    .g-on .reg > div { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .fg-bg { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .fg-bg u { display: block; height: 10px; border-radius: 4px; background: #d6d6e0; text-decoration: none; }
+    .fg-scrim { position: absolute; inset: 0; background: rgba(15,15,30,0); transition: background .3s; }
+    .fg-modal { position: relative; background: #fff; border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 800; color: #1d1d1f; transition: box-shadow .3s; }
+    .g-on .fg-scrim { background: rgba(15,15,30,.55); }
+    .g-on .fg-modal { box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+
+    /* ---------- Try: fix the card ---------- */
+    .fix { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    /* Preview stays in view while you adjust the controls */
+    .fix > .artboard { position: sticky; top: 72px; }
+    @media (max-width: 700px) { .fix { grid-template-columns: 1fr; } }
+    .fix .artboard { display: grid; place-items: center; min-height: 360px; }
+    .fx-card { background: #fff; border-radius: 14px; width: 100%; max-width: 300px; display: flex; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,.08); transition: all .25s; }
+    .fx-card .t { font-weight: 800; color: #111; line-height: 1.2; }
+    .fx-card .d { font-size: 14px; line-height: 1.5; }
+    .fx-card .acts { display: flex; gap: 8px; }
+    .fx-card .acts span { flex: 1; text-align: center; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 700; }
+    .fx-controls { display: flex; flex-direction: column; gap: 14px; }
+    .fx-controls .lbl { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .checks li { font-size: 14px; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); display: flex; gap: 8px; }
+    .checks li.ok { background: var(--good-soft); }
+    .checks li small { color: var(--muted); margin-left: auto; white-space: nowrap; }
+    .score-bar { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 6px 0 12px; }
+    .score-bar i { display: block; height: 100%; background: var(--accent); transition: width .4s, background .4s; }
+    .score-head { display: flex; justify-content: space-between; font-weight: 800; }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+    #lens .flip, #lens .flip-inner { min-height: 240px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 05 Visual Design</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 05 · Visual Design</div>
+      <h1>Design is a system,<br>not taste.</h1>
+      <p>Hierarchy, type, color, space. The rules behind "it just looks right".</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#hierarchy">🔠 Hierarchy &amp; Type</a>
+        <a href="#color">🎨 Color</a>
+        <a href="#space">📐 Space &amp; Grid</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>The squint test</h2>
+      <p class="sub">Same content, two designs. Turn on squint mode: whatever survives the blur is what users see first.</p>
+
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="squint"><span class="track"></span>😑 Squint (blur)</label>
+      </div>
+
+      <div class="squint-grid" id="squint-grid">
+        <div>
+          <div class="lbl">😐 Flat: everything equal</div>
+          <div class="artboard"><div class="promo flat"></div></div>
+        </div>
+        <div>
+          <div class="lbl">🎯 Strong hierarchy</div>
+          <div class="artboard"><div class="promo strong"></div></div>
+        </div>
+      </div>
+      <div class="verdicts" id="squint-verdicts"></div>
+    </section>
+
+    <!-- ================= HIERARCHY & TYPE ================= -->
+    <section class="section" id="hierarchy">
+      <span class="step-label">💡 Learn · Hierarchy &amp; Type</span>
+      <h2>6 levers of visual hierarchy</h2>
+      <p class="sub">Each tile changes one thing only. Designers combine 2–3 at a time.</p>
+      <div class="levers" id="levers"></div>
+
+      <h3 class="h3">Type scale playground</h3>
+      <p class="sub">Every size comes from one base and one ratio. That's how "random font sizes" become a system.</p>
+      <div class="ts-wrap">
+        <div class="card">
+          <div class="controls" style="justify-content:flex-start;margin-bottom:12px">
+            <div class="range-row" style="flex:1;grid-template-columns:48px minmax(0,1fr) 56px">Base <input type="range" id="ts-base" min="12" max="20" value="16"><output id="ts-base-out">16px</output></div>
+          </div>
+          <div class="seg" id="ts-ratios" style="margin-bottom:14px"></div>
+          <div id="ts-rows"></div>
+        </div>
+        <div>
+          <pre class="code" id="ts-code"></pre>
+          <ul class="bullets note" style="margin-top:12px">
+            <li>Small ratios (1.125–1.2) suit dense apps and dashboards</li>
+            <li>Large ratios (1.333+) suit marketing pages</li>
+            <li>Ask for sizes as <b>tokens</b> (<code>--fs-h2</code>), not raw px</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="h3">Readability: line length and line height</h3>
+      <p class="sub">Two settings that decide whether people actually read your text.</p>
+      <div class="read-grid">
+        <div class="card">
+          <div class="range-row">Line length <input type="range" id="ll" min="20" max="120" value="100"><output id="ll-out"></output></div>
+          <div class="artboard" style="padding:16px;margin-top:12px"><p class="read-box" id="ll-box"></p></div>
+          <span class="verdict-pill" id="ll-verdict"></span>
+          <div class="note" style="margin-top:6px">Sweet spot: <b>45–75 characters</b> per line</div>
+        </div>
+        <div class="card">
+          <div class="seg" id="lh-seg"></div>
+          <div class="artboard" style="padding:16px;margin-top:12px"><p class="read-box" id="lh-box" style="max-width:60ch"></p></div>
+          <span class="verdict-pill" id="lh-verdict"></span>
+          <div class="note" style="margin-top:6px">Body text: <b>1.4–1.6</b> · Headings: <b>1.1–1.25</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COLOR ================= -->
+    <section class="section" id="color">
+      <span class="step-label">💡 Learn · Color</span>
+      <h2>The 60-30-10 rule</h2>
+      <p class="sub">60% dominant, 30% secondary, 10% accent. The accent is rare, so it pulls the eye to the action.</p>
+      <div class="c6-wrap">
+        <div class="mock" id="mock"></div>
+        <div class="card">
+          <div class="swatch-row"><input type="color" id="c-d" value="#f5f3ee"> 60% Dominant <span class="note">backgrounds</span></div>
+          <div class="swatch-row"><input type="color" id="c-s" value="#2f3e46"> 30% Secondary <span class="note">sidebar, cards</span></div>
+          <div class="swatch-row"><input type="color" id="c-a" value="#e76f51"> 10% Accent <span class="note">buttons, highlights</span></div>
+          <div class="ratio-bar" id="ratio-bar"></div>
+          <div class="ratio-lbl"><span style="width:60%">60</span><span style="width:30%">30</span><span>10</span></div>
+          <div class="presets" id="presets"></div>
+        </div>
+      </div>
+
+      <h3 class="h3">Semantic colors: never color alone</h3>
+      <p class="sub">About 1 in 12 men has some color blindness. Turn on grayscale and compare.</p>
+      <div class="controls" style="justify-content:flex-start">
+        <label class="toggle"><input type="checkbox" id="gray"><span class="track"></span>👁️ Grayscale view</label>
+      </div>
+      <div class="sem-grid" id="sem-grid"></div>
+
+      <h3 class="h3">Contrast checker (WCAG)</h3>
+      <p class="sub">Contrast is math, not opinion. Pick colors or try a preset.</p>
+      <div class="cc">
+        <div class="cc-preview" id="cc-preview">
+          <div class="big">Large text (24px)</div>
+          <div class="small">Body text at 15px. Can everyone read this comfortably, even on a sunny phone screen?</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div class="swatch-row"><input type="color" id="cc-fg" value="#999999"> Text</div>
+            <div class="swatch-row"><input type="color" id="cc-bg" value="#ffffff"> Background</div>
+          </div>
+          <div class="cc-ratio" id="cc-ratio"></div>
+          <div class="cc-badges" id="cc-badges"></div>
+          <div class="presets" id="cc-presets"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SPACE & GRID ================= -->
+    <section class="section" id="space">
+      <span class="step-label">💡 Learn · Space, Grid &amp; Gestalt</span>
+      <h2>The 8-point spacing system</h2>
+      <p class="sub">All spacing uses multiples of 8 (4 for tight spots). Fewer choices, consistent rhythm, easier handoff.</p>
+      <div class="sp-wrap">
+        <div class="artboard" id="sp-board">
+          <div class="sp-card" id="sp-card"></div>
+        </div>
+        <div class="card">
+          <div class="seg" id="sp-seg"></div>
+          <div class="controls" style="justify-content:flex-start;margin:14px 0 0">
+            <label class="toggle"><input type="checkbox" id="sp-show" checked><span class="track"></span>Show spacing</label>
+          </div>
+          <div class="note" style="margin-top:12px">Spacing values used:</div>
+          <div class="vals" id="sp-vals"></div>
+          <ul class="bullets note" id="sp-notes"></ul>
+        </div>
+      </div>
+
+      <h3 class="h3">The 12-column grid</h3>
+      <p class="sub">12 divides by 2, 3, 4 and 6, so it fits almost any layout. Toggle the columns and snapping.</p>
+      <div class="controls" style="justify-content:flex-start">
+        <label class="toggle"><input type="checkbox" id="g-cols" checked><span class="track"></span>Show columns</label>
+        <label class="toggle"><input type="checkbox" id="g-snap"><span class="track"></span>Snap to grid</label>
+      </div>
+      <div class="artboard grid-demo show" id="grid-demo">
+        <div class="cols"></div>
+        <div class="layout off" id="layout">
+          <div class="l-head">Header · 12 cols</div>
+          <div class="l-hero">Hero · 8 cols</div>
+          <div class="l-aside">Aside · 4 cols</div>
+          <div class="l-card">Card · 4</div>
+          <div class="l-card">Card · 4</div>
+          <div class="l-card">Card · 4</div>
+        </div>
+      </div>
+      <p class="note" id="grid-note" style="text-align:center;margin-top:10px"></p>
+
+      <h3 class="h3">Gestalt: how brains group things</h3>
+      <p class="sub">Five perception rules behind every layout. Press "Apply" on each.</p>
+      <div class="gestalt" id="gestalt"></div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Fix this card</h2>
+      <p class="sub">It's broken in 5 ways. Use the controls until every check passes.</p>
+      <div class="fix">
+        <div class="artboard"><div class="fx-card" id="fx-card"></div></div>
+        <div class="card fx-controls">
+          <div class="range-row">Title size <input type="range" id="fx-title" min="12" max="32" value="14"><output id="fx-title-out"></output></div>
+          <div class="range-row">Spacing <input type="range" id="fx-space" min="0" max="32" value="6" step="2"><output id="fx-space-out"></output></div>
+          <div class="range-row">Text darkness <input type="range" id="fx-dark" min="0" max="80" value="20"><output id="fx-dark-out"></output></div>
+          <div><div class="lbl">Alignment</div><div class="seg" id="fx-align"></div></div>
+          <div><div class="lbl">Actions</div><div class="seg" id="fx-acts"></div></div>
+          <div>
+            <div class="score-head"><span>Design check</span><span id="fx-score"></span></div>
+            <div class="score-bar"><i id="fx-bar"></i></div>
+            <ul class="checks" id="fx-checks"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li><b>Hierarchy</b> guides the eye. Use the squint test in every review.</li>
+          <li><b>Systems beat taste</b>: type scale, 8-pt spacing, grid, color roles.</li>
+          <li><b>Contrast is measurable</b>: body text needs 4.5:1 (WCAG AA).</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const $ = id => document.getElementById(id);
+    const seg = (el, items, active, onPick) => {
+      el.innerHTML = items.map((t, i) => `<button class="${i === active ? "on" : ""}" data-i="${i}">${t}</button>`).join("");
+      el.onclick = e => { const b = e.target.closest("button"); if (b) onPick(+b.dataset.i); };
+    };
+
+    /* ---------- Contrast math (WCAG 2.x relative luminance) ---------- */
+    const hexToRgb = h => { h = h.replace("#", ""); if (h.length === 3) h = [...h].map(c => c + c).join(""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+    const lum = rgb => { const [r, g, b] = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const contrast = (a, b) => { const [x, y] = [lum(hexToRgb(a)), lum(hexToRgb(b))].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    const readableOn = bg => contrast("#ffffff", bg) >= contrast("#111111", bg) ? "#ffffff" : "#111111";
+
+    /* ---------- Explore: squint ---------- */
+    const promoHtml = `
+      <div class="img">🍕</div>
+      <div class="body">
+        <span class="tag">WEEKEND DEAL</span>
+        <span class="ttl">Two large pizzas</span>
+        <span class="rate">★ 4.8 · 2.1k reviews · 30 min</span>
+        <span class="desc">Any toppings. Delivered hot, or it's free.</span>
+        <span class="price">$19.99 <s>$32.00</s></span>
+        <div class="actions"><button class="primary">Order now</button><button class="ghost">Menu</button></div>
+      </div>`;
+    document.querySelectorAll(".promo").forEach(p => p.innerHTML = promoHtml);
+    function renderSquint() {
+      const on = $("squint").checked;
+      $("squint-grid").classList.toggle("squinted", on);
+      $("squint-verdicts").innerHTML = on
+        ? `<div class="card">😶 One gray blur. Nothing leads, so the eye wanders and the user leaves.</div>
+           <div class="card">👀 The image, price and orange button survive the blur. That's the reading path: <b>what → how much → act</b>.</div>`
+        : `<div class="card note">Turn on squint and ask: <b>what do I see first?</b></div>
+           <div class="card note">Designers literally squint (or blur a screenshot) to test this.</div>`;
+    }
+    $("squint").onchange = renderSquint;
+    renderSquint();
+
+    /* ---------- Hierarchy levers ---------- */
+    const LEVERS = [
+      ["Size", "Bigger reads first", i => i === 2 ? "font-size:28px" : ""],
+      ["Weight", "Bold pops out", i => i === 2 ? "font-weight:900;color:var(--text)" : ""],
+      ["Color", "Accent hue grabs attention", i => i === 2 ? "color:var(--accent);font-weight:700" : ""],
+      ["Contrast", "Fade the rest", i => i === 2 ? "color:var(--text);font-weight:700" : "opacity:.3"],
+      ["Space", "Isolation = importance", i => i === 2 ? "margin:0 18px" : ""],
+      ["Position", "Top-left reads first", i => i === 0 ? "color:var(--text);font-weight:700;align-self:flex-start" : ""],
+    ];
+    $("levers").innerHTML = LEVERS.map(([name, desc, st]) => `
+      <div class="lever">
+        <div class="demo">${[0, 1, 2, 3, 4].map(i => `<b style="${st(i)}">Aa</b>`).join("")}</div>
+        <h4>${name}</h4><p>${desc}</p>
+      </div>`).join("");
+
+    /* ---------- Type scale ---------- */
+    const RATIOS = [[1.125, "Major 2nd"], [1.2, "Minor 3rd"], [1.25, "Major 3rd"], [1.333, "Perfect 4th"], [1.5, "Perfect 5th"], [1.618, "Golden"]];
+    const STEPS = [["H1", 4], ["H2", 3], ["H3", 2], ["H4", 1], ["Body", 0], ["Small", -1]];
+    let ratioIdx = 2;
+    function renderScale() {
+      const base = +$("ts-base").value, r = RATIOS[ratioIdx][0];
+      $("ts-base-out").textContent = base + "px";
+      seg($("ts-ratios"), RATIOS.map(([v, n]) => `${v} <span class="note">${n}</span>`), ratioIdx, i => { ratioIdx = i; renderScale(); });
+      const sizes = STEPS.map(([n, s]) => [n, base * r ** s]);
+      $("ts-rows").innerHTML = sizes.map(([n, px]) => `
+        <div class="ts-row"><div class="meta"><b>${n}</b> · ${px.toFixed(1)}px</div>
+        <div class="sample" style="font-size:${px}px;${n === "Body" || n === "Small" ? "font-weight:400" : ""}">Speak design</div></div>`).join("");
+      $("ts-code").innerHTML = `<span class="k">:root</span> {\n  <span class="note">/* ratio ${r} · base ${base}px */</span>\n` +
+        sizes.map(([n, px]) => `  <span class="k">--fs-${n.toLowerCase()}</span>: <span class="v">${(px / 16).toFixed(3)}rem</span>;`).join("\n") + "\n}";
+    }
+    $("ts-base").oninput = renderScale;
+    renderScale();
+
+    /* ---------- Readability ---------- */
+    const SAMPLE = "Good typography is invisible. When line length and spacing are right, readers glide from one line to the next without thinking about it. When they're wrong, people skim, lose their place, and give up long before your message lands.";
+    $("ll-box").textContent = SAMPLE;
+    $("lh-box").textContent = SAMPLE;
+    function renderLL() {
+      const ch = +$("ll").value;
+      $("ll-out").textContent = ch + " ch";
+      $("ll-box").style.maxWidth = ch + "ch";
+      $("ll-box").style.lineHeight = 1.5;
+      const v = $("ll-verdict");
+      if (ch < 45) { v.className = "verdict-pill bad"; v.textContent = "✗ Too short: choppy, eyes jump constantly"; }
+      else if (ch <= 75) { v.className = "verdict-pill good"; v.textContent = "✓ Comfortable reading"; }
+      else { v.className = "verdict-pill bad"; v.textContent = "✗ Too long: eyes lose the next line"; }
+    }
+    $("ll").oninput = renderLL;
+    renderLL();
+    const LH = [[1, "1.0", "bad", "✗ Cramped: lines collide"], [1.5, "1.5", "good", "✓ Just right for body text"], [2.2, "2.2", "bad", "✗ Loose: lines drift apart"]];
+    let lhIdx = 0;
+    function renderLH() {
+      seg($("lh-seg"), LH.map(l => "Line height " + l[1]), lhIdx, i => { lhIdx = i; renderLH(); });
+      $("lh-box").style.lineHeight = LH[lhIdx][0];
+      $("lh-verdict").className = "verdict-pill " + LH[lhIdx][2];
+      $("lh-verdict").textContent = LH[lhIdx][3];
+    }
+    renderLH();
+
+    /* ---------- 60-30-10 ---------- */
+    const PALETTES = [
+      ["Calm", "#f5f3ee", "#2f3e46", "#e76f51"],
+      ["Fresh", "#ffffff", "#e8f1ff", "#2563eb"],
+      ["Night", "#14141a", "#26263a", "#a78bfa"],
+      ["❌ No rule", "#ff4d6d", "#4cc9f0", "#ffd60a"],
+    ];
+    function renderMock() {
+      const d = $("c-d").value, s = $("c-s").value, a = $("c-a").value;
+      const td = readableOn(d), ts = readableOn(s), ta = readableOn(a);
+      $("mock").style.background = d;
+      $("mock").innerHTML = `
+        <div class="side" style="background:${s};color:${ts}">
+          <span style="background:${a};color:${ta}">🏠 Home</span><span>📦 Orders</span><span>⭐ Saved</span><span>⚙️ Settings</span>
+        </div>
+        <div class="main" style="color:${td}">
+          <h5>Good evening <span class="badge6" style="background:${a};color:${ta}">NEW</span></h5>
+          <div class="tiles">
+            <div class="tile" style="background:${s};color:${ts}">Orders<b>24</b></div>
+            <div class="tile" style="background:${s};color:${ts}">Saved<b>8</b></div>
+          </div>
+          <button class="cta" style="background:${a};color:${ta}">Order again</button>
+        </div>`;
+      $("ratio-bar").innerHTML = `<i style="width:60%;background:${d}"></i><i style="width:30%;background:${s}"></i><i style="width:10%;background:${a}"></i>`;
+    }
+    ["c-d", "c-s", "c-a"].forEach(id => $(id).oninput = renderMock);
+    $("presets").innerHTML = PALETTES.map((p, i) => `<button class="btn" data-p="${i}">${p[0]}</button>`).join("");
+    $("presets").onclick = e => {
+      const b = e.target.closest("[data-p]"); if (!b) return;
+      const p = PALETTES[+b.dataset.p];
+      [$("c-d").value, $("c-s").value, $("c-a").value] = [p[1], p[2], p[3]];
+      renderMock();
+    };
+    renderMock();
+
+    /* ---------- Semantic colors ---------- */
+    const SEM = [["success", "✓", "Payment received"], ["warning", "!", "Your card expires in 3 days"], ["error", "✕", "Payment failed. Try another card."], ["info", "i", "New: split the bill with friends"]];
+    $("sem-grid").innerHTML = `
+      <div class="card sem-col"><h4>❌ Color only</h4>${SEM.map(([k]) => `<div class="alert only a-${k}"><span class="bar" style="background:currentColor"></span></div>`).join("")}</div>
+      <div class="card sem-col"><h4>✅ Color + icon + words</h4>${SEM.map(([k, ic, t]) => `<div class="alert a-${k}"><i>${ic}</i>${t}</div>`).join("")}</div>`;
+    document.querySelectorAll(".alert.only .bar").forEach((b, i) => b.style.background = ["#1f9d63", "#c98a0b", "#d64545", "#2563eb"][i]);
+    $("gray").onchange = () => $("sem-grid").classList.toggle("gray", $("gray").checked);
+
+    /* ---------- Contrast checker ---------- */
+    const CC_PRESETS = [["Light gray on white", "#999999", "#ffffff"], ["Brand blue on white", "#2563eb", "#ffffff"], ["White on orange", "#ffffff", "#f4a261"], ["Body text", "#333333", "#ffffff"], ["Dark mode", "#a0a0ab", "#1c1c22"]];
+    function renderCC() {
+      const fg = $("cc-fg").value, bg = $("cc-bg").value, r = contrast(fg, bg);
+      $("cc-preview").style.background = bg;
+      $("cc-preview").style.color = fg;
+      $("cc-ratio").textContent = r.toFixed(2) + " : 1";
+      const rows = [["AA · body text", 4.5, "most products"], ["AA · large text", 3, "18px bold / 24px+"], ["AAA · body text", 7, "strictest"], ["UI parts & icons", 3, "borders, inputs"]];
+      $("cc-badges").innerHTML = rows.map(([n, min, why]) => `<div class="${r >= min ? "pass" : "fail"}"><span>${r >= min ? "✓" : "✗"} ${n}<br><small>${why}</small></span><b>${min}:1</b></div>`).join("");
+    }
+    ["cc-fg", "cc-bg"].forEach(id => $(id).oninput = renderCC);
+    $("cc-presets").innerHTML = CC_PRESETS.map((p, i) => `<button class="btn" data-c="${i}">${p[0]}</button>`).join("");
+    $("cc-presets").onclick = e => {
+      const b = e.target.closest("[data-c]"); if (!b) return;
+      const p = CC_PRESETS[+b.dataset.c];
+      $("cc-fg").value = p[1]; $("cc-bg").value = p[2];
+      renderCC();
+    };
+    renderCC();
+
+    /* ---------- 8-point spacing ---------- */
+    const SPACING = [
+      { name: "🎲 Random", pad: 13, gaps: [7, 19, 3, 11], notes: ["5 different values, chosen by eye", "Developers guess, so every screen drifts", "Rhythm feels slightly 'off'"] },
+      { name: "📏 8-pt scale", pad: 16, gaps: [16, 4, 8, 24], notes: ["Only values from the scale: 4, 8, 16, 24", "Matches tokens: --space-1, --space-2…", "Related items close, groups further apart"] },
+    ];
+    let spIdx = 0;
+    function renderSpace() {
+      const s = SPACING[spIdx];
+      seg($("sp-seg"), SPACING.map(x => x.name), spIdx, i => { spIdx = i; renderSpace(); });
+      const g = (v) => `<div class="gap" style="height:${v}px" data-v="${v}"></div>`;
+      $("sp-card").style.padding = s.pad + "px";
+      $("sp-card").innerHTML = `<span class="pad-lbl">padding ${s.pad}</span>
+        <div class="img"></div>${g(s.gaps[0])}
+        <div class="t">Cozy cabin weekend</div>${g(s.gaps[1])}
+        <div class="m">★ 4.9 · Lake Tahoe</div>${g(s.gaps[2])}
+        <div class="d">Wood fire, lake view, and total silence.</div>${g(s.gaps[3])}
+        <div class="b">Book now</div>`;
+      const vals = [...new Set([s.pad, ...s.gaps])].sort((a, b) => a - b);
+      $("sp-vals").innerHTML = vals.map(v => `<span style="${v % 4 ? "color:var(--bad)" : "color:var(--good)"}">${v}px</span>`).join("");
+      $("sp-notes").innerHTML = s.notes.map(n => `<li>${n}</li>`).join("");
+    }
+    $("sp-show").onchange = () => $("sp-board").classList.toggle("show-gaps", $("sp-show").checked);
+    $("sp-board").classList.add("show-gaps");
+    renderSpace();
+
+    /* ---------- Grid ---------- */
+    document.querySelector("#grid-demo .cols").innerHTML = "<i></i>".repeat(12);
+    function renderGrid() {
+      $("grid-demo").classList.toggle("show", $("g-cols").checked);
+      $("layout").classList.toggle("off", !$("g-snap").checked);
+      $("grid-note").textContent = $("g-snap").checked
+        ? "✓ Every edge lines up with a column. Calm, scannable, easy to build with CSS Grid."
+        : "✗ Widths and margins picked by eye. Edges don't line up, and it feels messy without knowing why.";
+    }
+    $("g-cols").onchange = $("g-snap").onchange = renderGrid;
+    renderGrid();
+
+    /* ---------- Gestalt ---------- */
+    const GESTALT = [
+      ["Proximity", `<div class="dots-row">${"<i></i>".repeat(12)}</div>`, "Close items read as a group. In UI: spacing groups form fields and menu sections."],
+      ["Similarity", `<div class="sim">${"<i></i>".repeat(25)}</div>`, "Same look = same function. In UI: all links one color, all buttons one style."],
+      ["Alignment", `<div class="al">${["Name", "Email", "Phone"].map(l => `<div><span>${l}</span><u></u></div>`).join("")}</div>`, "Shared edges create order. In UI: one left edge for labels and inputs."],
+      ["Common region", `<div class="reg"><div>${"<i></i>".repeat(4)}</div><div>${"<i></i>".repeat(4)}</div></div>`, "A shared container makes a group. In UI: cards and panels."],
+      ["Figure / ground", `<div class="fg-bg">${"<u></u>".repeat(6)}</div><div class="fg-scrim"></div><div class="fg-modal">Delete file?</div>`, "We split foreground from background. In UI: dim the page behind a modal."],
+    ];
+    $("gestalt").innerHTML = GESTALT.map(([n, demo, p], i) => `
+      <div class="card gs" data-g="${i}">
+        <h4>${n}</h4>
+        <div class="stage">${demo}</div>
+        <p>${p}</p>
+        <button class="btn" data-gbtn>Apply</button>
+      </div>`).join("");
+    $("gestalt").onclick = e => {
+      const b = e.target.closest("[data-gbtn]"); if (!b) return;
+      const card = b.closest(".gs"), on = card.classList.toggle("g-on");
+      b.textContent = on ? "Reset" : "Apply";
+    };
+
+    /* ---------- Try: fix the card ---------- */
+    const ALIGNS = ["Mixed", "Left", "Center"], ACTS = ["Two equal buttons", "One primary"];
+    let fxAlign = 0, fxActs = 0;
+    function grayHex(darkness) { const v = Math.round(255 * (1 - darkness / 100) * 0.85); const h = v.toString(16).padStart(2, "0"); return "#" + h + h + h; }
+    function renderFix() {
+      const title = +$("fx-title").value, space = +$("fx-space").value, dark = +$("fx-dark").value;
+      const textColor = grayHex(dark), ratio = contrast(textColor, "#ffffff");
+      $("fx-title-out").textContent = title + "px";
+      $("fx-space-out").textContent = space + "px";
+      $("fx-dark-out").textContent = ratio.toFixed(1) + ":1";
+      seg($("fx-align"), ALIGNS, fxAlign, i => { fxAlign = i; renderFix(); });
+      seg($("fx-acts"), ACTS, fxActs, i => { fxActs = i; renderFix(); });
+
+      const al = fxAlign === 0 ? ["center", "right", "left"] : fxAlign === 1 ? ["left", "left", "left"] : ["center", "center", "center"];
+      const card = $("fx-card");
+      card.style.padding = space + "px";
+      card.style.gap = space + "px";
+      card.innerHTML = `
+        <div class="t" style="font-size:${title}px;text-align:${al[0]}">Upgrade to Pro</div>
+        <div class="d" style="color:${textColor};text-align:${al[1]}">Unlimited projects, team sharing, and priority support. Cancel anytime.</div>
+        <div class="acts" style="justify-content:${al[2] === "left" ? "flex-start" : al[2] === "right" ? "flex-end" : "center"}">
+          ${fxActs === 0
+            ? `<span style="background:#e4e4ea;color:#333">Upgrade</span><span style="background:#e4e4ea;color:#333">Maybe later</span>`
+            : `<span style="background:#5b4bdb;color:#fff;flex:2">Upgrade</span><span style="color:#555">Maybe later</span>`}
+        </div>`;
+
+      const checks = [
+        [title >= 20, "Hierarchy", "Title at least ~1.4× body (≥ 20px)"],
+        [space >= 16 && space % 8 === 0, "Spacing", "On the 8-pt scale and ≥ 16px"],
+        [ratio >= 4.5, "Contrast", "Body text ≥ 4.5:1 (WCAG AA)"],
+        [fxAlign !== 0, "Alignment", "One consistent alignment"],
+        [fxActs === 1, "Focus", "One clear primary action"],
+      ];
+      const score = checks.filter(c => c[0]).length;
+      $("fx-score").textContent = score === 5 ? "🏆 5 / 5 · Ship it" : `${score} / 5`;
+      $("fx-bar").style.width = score * 20 + "%";
+      $("fx-bar").style.background = score === 5 ? "var(--good)" : "var(--accent)";
+      $("fx-checks").innerHTML = checks.map(([ok, n, rule]) => `<li class="${ok ? "ok" : ""}">${ok ? "✅" : "⬜"} <b>${n}</b><small>${rule}</small></li>`).join("");
+    }
+    ["fx-title", "fx-space", "fx-dark"].forEach(id => $(id).oninput = renderFix);
+    renderFix();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"The hierarchy is off.\"", "Users can't tell what matters most on the screen.", "What should the user see first, second, third? Does the squint test agree?"],
+      ["\"It needs more whitespace.\"", "Elements are crowded, so groups and priorities blur.", "Which spacing tokens change? Does it push key content below the fold?"],
+      ["\"That's not on the grid.\"", "Edges don't line up with the layout columns.", "Is it the design or the implementation? Can we fix it with CSS Grid tokens?"],
+      ["\"The contrast fails AA.\"", "Text is below 4.5:1, which is hard to read and an accessibility risk.", "Which color token fails? Is it a legal requirement for this client?"],
+      ["\"Use the type scale.\"", "Pick font sizes from the defined set, not custom px values.", "Are the sizes exported as tokens the frontend can use directly?"],
+      ["\"It feels too busy.\"", "Too many competing colors, sizes or elements.", "What can we remove or hide? Which element is the one primary action?"],
+    ];
+    $("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(5);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

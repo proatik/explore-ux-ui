@@ -1,0 +1,201 @@
+// Shared data + seamless page navigation for the whole journey.
+//
+// Every page is a real HTML file (index.html, chapters/*.html) and works on its own.
+// Clicking a link fetches the next file and swaps its content in place, while
+// the address bar changes to that file. No full reload, no flash.
+//
+// Page-specific code lives in <script type="text/page-script"> and page-specific
+// CSS in <style data-page>, so both can be swapped in and out cleanly.
+
+const CHAPTERS = [
+  { id: 0,  emoji: "🧭", title: "Foundations",               tag: "UX vs UI & who does what",        file: "chapters/00-foundations.html", ready: true },
+  { id: 1,  emoji: "🔄", title: "Design Thinking",           tag: "Double Diamond, sprints, Lean UX", file: "chapters/01-design-thinking.html", ready: true },
+  { id: 2,  emoji: "🔍", title: "User Research",             tag: "Interviews, personas, journeys", file: "chapters/02-user-research.html", ready: true },
+  { id: 3,  emoji: "🗂️", title: "Information Architecture",  tag: "Sitemaps, card sorting, flows", file: "chapters/03-information-architecture.html", ready: true },
+  { id: 4,  emoji: "✏️", title: "Wireframes & Prototypes",   tag: "Lo-fi → hi-fi, Figma basics", file: "chapters/04-wireframes-prototypes.html", ready: true },
+  { id: 5,  emoji: "🎨", title: "Visual Design",             tag: "Hierarchy, type, color, grids", file: "chapters/05-visual-design.html", ready: true },
+  { id: 6,  emoji: "👆", title: "Interaction & Heuristics",  tag: "Nielsen, Fitts, Hick", file: "chapters/06-interaction-heuristics.html", ready: true },
+  { id: 7,  emoji: "♿", title: "Accessibility",             tag: "WCAG, contrast, keyboard", file: "chapters/07-accessibility.html", ready: true },
+  { id: 8,  emoji: "🧱", title: "Design Systems",            tag: "Tokens, components, atomic", file: "chapters/08-design-systems.html", ready: true },
+  { id: 9,  emoji: "🤝", title: "Design → Dev Handoff",      tag: "Specs, states, responsive", file: "chapters/09-handoff.html", ready: true },
+  { id: 10, emoji: "📊", title: "Testing & Metrics",         tag: "Usability tests, A/B, SUS", file: "chapters/10-testing-metrics.html", ready: true },
+  { id: 11, emoji: "💼", title: "UX in Business",            tag: "Stakeholders, ROI, presenting", file: "chapters/11-ux-in-business.html", ready: true },
+  { id: 12, emoji: "🏁", title: "Capstone",                  tag: "Run a feature end-to-end", file: "chapters/12-capstone.html", ready: true },
+];
+
+// Author info for the shared footer on every page. Leave a field empty to hide it.
+const AUTHOR = {
+  name: "Atik Ullah Khan",
+  role: "Full-Stack Software Engineer",
+  linkedin: "https://www.linkedin.com/in/proatik/",
+};
+
+// Project root, worked out from where this script lives (…/assets/app.js)
+const ROOT = new URL("..", document.currentScript.src);
+const urlFor = (path) => new URL(path, ROOT).href;
+const chapterUrl = (c) => urlFor(c.ready ? c.file : "index.html");
+
+/* ===================== Progress ===================== */
+
+const STORE_KEY = "uxui-journey-done";
+
+function getDone() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { return []; }
+}
+function setDone(id) {
+  const done = new Set(getDone());
+  done.add(id);
+  try { localStorage.setItem(STORE_KEY, JSON.stringify([...done])); } catch {}
+}
+function refreshProgress() {
+  const pill = document.querySelector(".progress-pill");
+  if (pill) pill.textContent = `${getDone().length} / ${CHAPTERS.length} completed`;
+}
+
+/* ===================== Chapter helpers ===================== */
+
+// Called by each chapter's page script: builds prev / map / next + "mark complete"
+function initChapter(id) {
+  const prev = CHAPTERS[id - 1];
+  const next = CHAPTERS[id + 1];
+  const nav = document.querySelector(".chapter-nav");
+  // Preview card for the previous / next chapter.
+  // At either end of the journey, a start / finish card keeps both sides filled.
+  const preview = (c, dir) => {
+    const label = dir === "prev" ? "← Previous" : "Next →";
+    const card = (emoji, num, title, tag) => `
+      <span class="pv-dir">${label}</span>
+      <span class="pv-main"><span class="pv-emoji">${emoji}</span>
+        <span><span class="pv-num">${num}</span>
+        <span class="pv-title">${title}</span>
+        <span class="pv-tag">${tag}</span></span></span>`;
+    if (!c) {
+      const end = dir === "prev"
+        ? card("🚩", "JOURNEY START", "Overview", `All ${CHAPTERS.length} chapters at a glance`)
+        : card("🎉", "FINISH LINE", "Journey complete", "Back to the map");
+      return `<a class="pv ${dir}" href="${urlFor("index.html")}">${end}</a>`;
+    }
+    const inner = card(c.emoji, `CHAPTER ${String(c.id).padStart(2, "0")}`, c.title, c.ready ? c.tag : "Coming soon");
+    return c.ready
+      ? `<a class="pv ${dir}" href="${chapterUrl(c)}">${inner}</a>`
+      : `<div class="pv ${dir} locked">${inner}</div>`;
+  };
+  if (nav) {
+    nav.innerHTML = `
+      ${preview(prev, "prev")}
+      <a class="pv-map" href="${urlFor("index.html")}" title="Journey map">🗺️<span>Map</span></a>
+      ${preview(next, "next")}
+    `;
+  }
+
+  const doneBtn = document.getElementById("mark-done");
+  if (doneBtn) {
+    const refresh = () => {
+      const isDone = getDone().includes(id);
+      doneBtn.textContent = isDone ? "✅ Chapter completed" : "Mark chapter as complete";
+      doneBtn.disabled = isDone;
+    };
+    doneBtn.addEventListener("click", () => { setDone(id); refresh(); refreshProgress(); });
+    refresh();
+  }
+}
+
+/* ===================== Page swapping ===================== */
+
+// Each page script runs in its own function scope, so revisiting a page is safe
+function runPageScripts(root) {
+  root.querySelectorAll('script[type="text/page-script"]').forEach((s) => new Function(s.textContent)());
+  refreshProgress();
+}
+
+async function navigate(url, push = true) {
+  let doc;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    doc = new DOMParser().parseFromString(await res.text(), "text/html");
+  } catch {
+    location.href = url; // fall back to a normal page load
+    return;
+  }
+
+  const swap = () => {
+    if (push) history.pushState({}, "", url);
+    document.title = doc.title;
+    document.querySelectorAll("style[data-page]").forEach((s) => s.remove());
+    doc.querySelectorAll("style[data-page]").forEach((s) => document.head.appendChild(s));
+    // Header is swapped too, because its relative links depend on the current file
+    document.querySelector(".topbar").replaceWith(doc.querySelector(".topbar"));
+    document.getElementById("app").replaceWith(doc.getElementById("app"));
+    runPageScripts(doc);
+
+    const hash = new URL(url).hash;
+    if (hash) document.querySelector(hash)?.scrollIntoView();
+    else window.scrollTo(0, 0);
+  };
+
+  if (document.startViewTransition) document.startViewTransition(swap);
+  else {
+    swap();
+    document.getElementById("app").classList.add("enter");
+  }
+}
+
+document.addEventListener("click", (e) => {
+  // Flip cards: click to toggle
+  const flip = e.target.closest(".flip");
+  if (flip) flip.classList.toggle("flipped");
+
+  const a = e.target.closest("a[href]");
+  if (!a || a.target || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+  const url = new URL(a.href, location.href);
+  if (url.origin !== location.origin) return;
+
+  // Same page + #section: smooth scroll
+  if (url.pathname === location.pathname && url.hash) {
+    e.preventDefault();
+    document.querySelector(url.hash)?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  if (url.pathname.endsWith(".html") || url.pathname.endsWith("/")) {
+    e.preventDefault();
+    if (url.href !== location.href) navigate(url.href);
+  }
+});
+
+/* ===================== Footer ===================== */
+
+// One footer for every page, built from AUTHOR. It's outside #app, so page swaps keep it.
+function renderFooter() {
+  let footer = document.querySelector("body > footer.footer");
+  if (!footer) {
+    footer = document.createElement("footer");
+    footer.className = "footer";
+    document.body.insertBefore(footer, document.querySelector("body > script"));
+  }
+  // First + last name initials, e.g. "Atik Ullah Khan" → "AK"
+  const words = AUTHOR.name.split(/\s+/).filter(Boolean);
+  const initials = (words[0]?.[0] + (words.length > 1 ? words.at(-1)[0] : "")).toUpperCase();
+  footer.innerHTML = `
+    <div class="wrap"><div class="site-footer">
+      ${AUTHOR.name ? `
+      <div class="author">
+        <span class="avatar" aria-hidden="true">${initials}</span>
+        <span><span class="author-name">${AUTHOR.name}</span>
+        ${AUTHOR.role ? `<span class="author-role">${AUTHOR.role}</span>` : ""}</span>
+      </div>` : `<div class="author-role">Built step by step</div>`}
+      ${AUTHOR.linkedin ? `
+      <span class="footer-divider" aria-hidden="true"></span>
+      <a class="linkedin" href="${AUTHOR.linkedin}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+        Connect on LinkedIn
+      </a>` : ""}
+    </div></div>`;
+}
+renderFooter();
+
+// Browser back / forward
+window.addEventListener("popstate", () => navigate(location.href, false));
+
+runPageScripts(document);

@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Testing &amp; Metrics · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    .tap { min-height: 44px; }
+    .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .two.wide-split { grid-template-columns: 1fr; } }
+    .card h3 { margin: 0 0 6px; }
+    .muted { color: var(--muted); }
+    .kv { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+    .kv span { font-size: 13px; background: var(--surface-2); padding: 4px 12px; border-radius: 999px; }
+    .kv b { color: var(--accent); }
+
+    /* ---------- Explore: usability test playback ---------- */
+    .task-card { display: flex; gap: 12px; align-items: center; padding: 14px 18px; border-radius: 14px; background: var(--accent-soft); font-weight: 600; margin-bottom: 16px; }
+    .task-card .e { font-size: 26px; }
+    .ptabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .ptabs .btn { min-height: 44px; }
+    .ptabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .ptabs .btn .st { font-size: 12px; margin-left: 4px; }
+    .lab { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 700px) { .lab { grid-template-columns: 1fr; } }
+    .phone { border: 3px solid var(--line); border-radius: 28px; padding: 14px 12px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 260px; text-align: center; }
+    .phone .scr-e { font-size: 54px; line-height: 1; }
+    .phone .scr-n { font-weight: 800; }
+    .phone .clock { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); }
+    .bubble { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 18px; font-style: italic; margin-bottom: 12px; }
+    .ev { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 12px; }
+    .ev.ok { background: var(--good-soft); color: var(--good); }
+    .ev.hes { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+    .ev.err, .ev.fail { background: var(--bad-soft); color: var(--bad); }
+    .tip { font-size: 14px; background: var(--surface-2); border-radius: 12px; padding: 10px 14px; }
+    .tip b { color: var(--accent); }
+    .lab-ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .lab-ctrl .btn { min-height: 44px; }
+    .sdots { display: flex; gap: 6px; margin-right: auto; }
+    .sdots i { width: 22px; height: 6px; border-radius: 999px; background: var(--line); }
+    .sdots i.on { background: var(--accent); }
+    .notes { margin-top: 16px; }
+    .notes h4 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+    .notes ul { margin: 0; padding-left: 18px; }
+    .results { margin-top: 20px; display: none; }
+    .results.show { display: block; animation: pop .35s ease; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 14px 0; }
+    .stat { background: var(--surface-2); border-radius: 14px; padding: 14px; text-align: center; }
+    .stat .v { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+    .stat .l { font-size: 13px; color: var(--muted); }
+    table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.t th, table.t td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    table.t th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .table-wrap { overflow-x: auto; }
+
+    /* ---------- Learn: formats ---------- */
+    .fmt { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; align-items: stretch; }
+    .fmt .h { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: grid; place-items: center; padding: 6px; }
+    .fmt .h.row { writing-mode: vertical-rl; transform: rotate(180deg); }
+    .cell { font: inherit; text-align: left; cursor: pointer; color: var(--text); background: var(--surface-2); border: 2px solid transparent; border-radius: 14px; padding: 14px; min-height: 92px; transition: border-color .2s, background .2s; }
+    .cell:hover { border-color: var(--accent); }
+    .cell.active { border-color: var(--accent); background: var(--accent-soft); }
+    .cell .e { font-size: 24px; }
+    .cell .t { font-weight: 800; }
+    .cell .s { font-size: 13px; color: var(--muted); }
+    .fmt-panel { margin-top: 14px; }
+    .guerrilla { margin-top: 10px; width: 100%; min-height: 64px; }
+    .pairs { display: grid; gap: 12px; }
+    .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .pair { grid-template-columns: 1fr; } }
+    .side { border-radius: 14px; padding: 14px 16px; font-size: 15px; }
+    .side .tg { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .side.bad { background: var(--bad-soft); }
+    .side.bad .tg { color: var(--bad); }
+    .side.good { background: var(--good-soft); }
+    .side.good .tg { color: var(--good); }
+    .side .why { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+    /* ---------- Learn: metrics ---------- */
+    .mtabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .mtabs .btn { min-height: 44px; }
+    .mtabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .formula { font-family: ui-monospace, Consolas, monospace; background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 10px 0; overflow-x: auto; }
+    .m-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .m-grid h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+
+    .sus-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; margin-bottom: 14px; }
+    .sus-score { font-size: 44px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+    .sus-score small { font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: 0; }
+    .sus-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sus-presets .btn { min-height: 44px; }
+    .gauge { position: relative; height: 18px; border-radius: 999px; overflow: hidden; display: flex; gap: 2px; margin: 8px 0 26px; }
+    .gauge span { height: 100%; }
+    .gauge-wrap { position: relative; }
+    .gauge-mark { position: absolute; top: -6px; width: 4px; height: 30px; background: var(--text); border-radius: 4px; transform: translateX(-50%); transition: left .35s; }
+    .gauge-avg { position: absolute; top: 24px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+    .gauge-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .gauge-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+    .sus-q { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 10px 20px; }
+    .q { padding: 10px 0; border-top: 1px dashed var(--line); }
+    .q .qt { font-size: 14px; margin-bottom: 8px; }
+    .q .qt b { color: var(--accent); margin-right: 4px; }
+    .q .qt .pol { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; margin-left: 6px; }
+    .pol.pos { background: var(--good-soft); color: var(--good); }
+    .pol.neg { background: var(--bad-soft); color: var(--bad); }
+    .likert { display: flex; gap: 6px; align-items: center; }
+    .likert button { font: inherit; font-weight: 700; width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+    .likert button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .likert .end { font-size: 11px; color: var(--muted); width: 54px; }
+    .likert .end:last-child { text-align: right; }
+
+    input[type=range] { width: 100%; accent-color: var(--accent); height: 32px; }
+    .rng label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-top: 10px; }
+    .rng label b { color: var(--accent); font-variant-numeric: tabular-nums; }
+    .nps-big { font-size: 48px; font-weight: 800; letter-spacing: -.03em; line-height: 1; text-align: center; margin: 6px 0; }
+    .stack { display: flex; height: 34px; border-radius: 10px; overflow: hidden; gap: 2px; margin: 12px 0 6px; }
+    .stack span { display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; min-width: 0; overflow: hidden; white-space: nowrap; transition: flex-basis .3s; }
+    .stack-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); gap: 8px; flex-wrap: wrap; }
+    .heart-sel { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .heart-sel .btn { min-height: 44px; }
+    .heart-sel .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .heart-row { display: grid; grid-template-columns: 56px repeat(3, minmax(0, 1fr)); gap: 10px; align-items: stretch; padding: 10px 0; border-top: 1px solid var(--line); }
+    .heart-row.head { border-top: 0; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-bottom: 0; }
+    .heart-row .L { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--accent); color: #fff; font-size: 22px; font-weight: 800; }
+    .heart-row .L small { display: block; font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+    .heart-row div { font-size: 14px; }
+    @media (max-width: 700px) {
+      .heart-row { grid-template-columns: 48px minmax(0, 1fr); }
+      .heart-row.head { display: none; }
+      .heart-row div:not(.L) { grid-column: 2; }
+      .heart-row div:not(.L)::before { content: attr(data-k); display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    }
+
+    /* ---------- A/B ---------- */
+    .ab-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .ab-out .stat .v { font-size: 26px; }
+    .ab-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .ab-btns .btn { min-height: 44px; flex: 1 1 auto; }
+    .bars { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+    .bar-row { display: grid; grid-template-columns: 82px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 14px; }
+    .bar-track { height: 26px; background: var(--surface-2); border-radius: 0 6px 6px 0; overflow: hidden; }
+    .bar-track i { display: block; height: 100%; border-radius: 0 4px 4px 0; transition: width .5s; }
+    .bar-row .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+    .verdict { border-radius: 14px; padding: 12px 14px; margin-top: 10px; font-weight: 600; }
+    .verdict.yes { background: var(--good-soft); }
+    .verdict.no { background: var(--surface-2); }
+    .truth { margin-top: 10px; font-size: 14px; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed var(--line); }
+    .empty-state { color: var(--muted); text-align: center; padding: 30px 10px; }
+    .fp-table td:nth-child(n+2), .fp-table th:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+    .pit { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .pit .card { padding: 16px; }
+    .pit .e { font-size: 26px; }
+    .pit b { display: block; margin: 4px 0 2px; }
+    .pit span { font-size: 14px; color: var(--muted); }
+
+    /* ---------- Funnel ---------- */
+    .funnel { display: flex; flex-direction: column; gap: 6px; }
+    .fstep { font: inherit; color: var(--text); text-align: left; cursor: pointer; display: grid; grid-template-columns: 170px minmax(0, 1fr) 70px; gap: 10px; align-items: center; background: none; border: 2px solid transparent; border-radius: 12px; padding: 6px 8px; min-height: 48px; }
+    .fstep:hover { border-color: var(--line); }
+    .fstep.active { border-color: var(--accent); background: var(--accent-soft); }
+    .fstep .nm { font-size: 14px; font-weight: 600; }
+    .fstep .trk { height: 28px; border-radius: 0 6px 6px 0; background: var(--surface-2); overflow: hidden; }
+    .fstep .trk i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; transition: width .5s; }
+    .fstep .n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; }
+    .drop { margin-left: 178px; font-size: 12px; font-weight: 700; color: var(--muted); padding-left: 10px; }
+    .drop.worst { color: var(--bad); }
+    @media (max-width: 700px) {
+      .fstep { grid-template-columns: 1fr 60px; }
+      .fstep .trk { grid-column: 1 / -1; grid-row: 2; }
+      .drop { margin-left: 8px; }
+    }
+    .funnel-panel { margin-top: 14px; }
+    .funnel-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+
+    /* ---------- Try ---------- */
+    .quiz-card { text-align: center; max-width: 720px; margin: 0 auto; }
+    .quiz-q { font-size: 21px; font-weight: 700; min-height: 70px; display: grid; place-items: center; margin: 12px 0 18px; }
+    .quiz-btns { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    @media (max-width: 700px) { .quiz-btns { grid-template-columns: 1fr; } }
+    .quiz-btns .btn { min-height: 56px; }
+    .quiz-fb { min-height: 52px; margin-top: 16px; font-weight: 600; }
+    .quiz-fb.good { color: var(--good); }
+    .quiz-fb.bad { color: var(--bad); }
+    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 10 Testing &amp; Metrics</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 10 · Testing &amp; Metrics</div>
+      <h1>Opinions are cheap.<br>Evidence wins.</h1>
+      <p>How teams prove a design works: watch users, measure, experiment.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Testing</a>
+        <a href="#metrics">📏 Metrics</a>
+        <a href="#ab">⚖️ A/B &amp; Funnels</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Sit in on a usability test</h2>
+      <p class="sub">You're the moderator. Watch 3 participants. Tap "📝 Log issue" whenever you spot a problem.</p>
+
+      <div class="task-card"><span class="e">📝</span><span>Task: "You're meeting 3 friends this Friday at 7pm. Book a table at Luigi's."</span></div>
+      <div class="ptabs" id="ptabs"></div>
+
+      <div class="card">
+        <div class="lab">
+          <div class="phone" id="phone"></div>
+          <div>
+            <div class="ev" id="ev"></div>
+            <div class="bubble" id="bubble"></div>
+            <div class="tip" id="tip"></div>
+            <div class="lab-ctrl">
+              <div class="sdots" id="sdots"></div>
+              <button class="btn" id="log-btn">📝 Log issue</button>
+              <button class="btn primary" id="next-btn">Next ▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <h4>Your notes</h4>
+          <ul id="notes"><li class="muted">Nothing logged yet.</li></ul>
+        </div>
+      </div>
+
+      <div class="card results" id="results">
+        <h3>📊 Session results</h3>
+        <div class="stats" id="stats"></div>
+        <div class="table-wrap"><table class="t" id="res-table"></table></div>
+        <div class="tip" style="margin-top:14px" id="res-tip"></div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: TESTING ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>Usability testing formats</h2>
+      <p class="sub">Two choices define a test: is someone guiding it, and where does it happen? Tap a cell.</p>
+
+      <div class="card">
+        <div class="fmt" id="fmt"></div>
+        <button class="cell guerrilla" id="guerrilla"><span class="t">☕ Guerrilla testing</span> <span class="s">· grab people in a café, 5–10 min each</span></button>
+        <div class="fmt-panel" id="fmt-panel"></div>
+      </div>
+
+      <h2 style="margin-top:40px">Write tasks, not instructions</h2>
+      <p class="sub">The task wording decides whether you learn anything.</p>
+      <div class="pairs" id="pairs"></div>
+
+      <h2 style="margin-top:40px">During the session</h2>
+      <div class="grid grid-3">
+        <div class="card"><div style="font-size:28px">🗣️</div><h3>Think aloud</h3><ul class="bullets"><li>Ask users to say what they're thinking</li><li>Reveals <b>why</b> they get stuck</li></ul></div>
+        <div class="card"><div style="font-size:28px">🤐</div><h3>Don't rescue</h3><ul class="bullets"><li>Silence is data</li><li>Answer questions with "What would you expect?"</li></ul></div>
+        <div class="card"><div style="font-size:28px">👀</div><h3>Watch, don't ask</h3><ul class="bullets"><li>What users <b>do</b> beats what they <b>say</b></li><li>Note hesitations, not just failures</li></ul></div>
+      </div>
+    </section>
+
+    <!-- ================= METRICS ================= -->
+    <section class="section" id="metrics">
+      <span class="step-label">📏 Metrics</span>
+      <h2>The UX metrics you'll hear</h2>
+      <p class="sub">Tap a metric to see the formula and benchmark.</p>
+      <div class="mtabs" id="mtabs"></div>
+      <div class="card" id="mpanel"></div>
+
+      <h2 style="margin-top:40px">Try it: SUS calculator</h2>
+      <p class="sub">System Usability Scale: 10 standard questions, 1 = strongly disagree, 5 = strongly agree.</p>
+      <div class="card">
+        <div class="sus-head">
+          <div><div class="sus-score" id="sus-score">50</div><div class="muted" id="sus-grade"></div></div>
+          <div class="sus-presets">
+            <button class="btn" data-preset="happy">😀 Happy user</button>
+            <button class="btn" data-preset="meh">😐 Neutral</button>
+            <button class="btn" data-preset="sad">😣 Frustrated user</button>
+          </div>
+        </div>
+        <div class="gauge-wrap">
+          <div class="gauge" id="gauge"></div>
+          <div class="gauge-mark" id="gauge-mark"></div>
+          <div class="gauge-avg" style="left:68%">▲ 68 = average</div>
+        </div>
+        <div class="gauge-legend" id="gauge-legend"></div>
+        <div class="formula" id="sus-formula"></div>
+        <div class="sus-q" id="sus-q"></div>
+      </div>
+
+      <div class="two wide-split" style="margin-top:20px">
+        <div class="card">
+          <h3>📣 Net Promoter Score</h3>
+          <div class="muted" style="font-size:14px">"How likely are you to recommend us?" (0–10)</div>
+          <div class="nps-big" id="nps-big"></div>
+          <div class="stack" id="nps-stack"></div>
+          <div class="stack-legend"><span>😠 Detractors 0–6</span><span>😐 Passives 7–8</span><span>🤩 Promoters 9–10</span></div>
+          <div class="rng">
+            <label>Promoters <b id="np-v"></b></label>
+            <input type="range" id="np" min="0" max="100" value="45" aria-label="Promoters percent">
+            <label>Detractors <b id="nd-v"></b></label>
+            <input type="range" id="nd" min="0" max="100" value="20" aria-label="Detractors percent">
+          </div>
+          <div class="formula">NPS = %promoters − %detractors  (−100 … +100)</div>
+        </div>
+        <div class="card">
+          <h3>❤️ Google's HEART framework</h3>
+          <div class="muted" style="font-size:14px">Goals → Signals → Metrics, for 5 dimensions. Pick a product.</div>
+          <div class="heart-sel" id="heart-sel" style="margin-top:12px"></div>
+          <div id="heart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= A/B & FUNNELS ================= -->
+    <section class="section" id="ab">
+      <span class="step-label">⚖️ A/B &amp; Funnels</span>
+      <h2>A/B testing simulator</h2>
+      <p class="sub">Plan the test, run it, then see if you fooled yourself.</p>
+
+      <div class="two">
+        <div class="card">
+          <h3>1 · Plan</h3>
+          <div class="rng">
+            <label>Baseline conversion <b id="ab-p-v"></b></label>
+            <input type="range" id="ab-p" min="1" max="30" value="5" aria-label="Baseline conversion percent">
+            <label>Smallest lift worth detecting <b id="ab-l-v"></b></label>
+            <input type="range" id="ab-l" min="5" max="50" step="5" value="10" aria-label="Minimum detectable lift percent">
+            <label>Daily visitors (both groups) <b id="ab-d-v"></b></label>
+            <input type="range" id="ab-d" min="1000" max="50000" step="1000" value="10000" aria-label="Daily visitors">
+          </div>
+          <div class="ab-out">
+            <div class="stat"><div class="v" id="ab-n"></div><div class="l">users per variant</div></div>
+            <div class="stat"><div class="v" id="ab-days"></div><div class="l" id="ab-weeks"></div></div>
+          </div>
+          <div class="formula" style="font-size:12px">95% confidence (α = 0.05) · 80% power · two-sided</div>
+        </div>
+
+        <div class="card">
+          <h3>2 · Run</h3>
+          <div class="muted" style="font-size:14px">The simulator secretly decides if the new design really works (50/50).</div>
+          <div class="ab-btns">
+            <button class="btn primary" id="ab-run">▶ Run full test</button>
+            <button class="btn" id="ab-peek">👀 Peek daily, stop when significant</button>
+          </div>
+          <div id="ab-result"><div class="empty-state">Run a test to see results here.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>3 · Why peeking is dangerous</h3>
+        <div class="muted" style="font-size:14px">Run 200 tests where the new design has <b>zero</b> real effect. Count how often each approach "finds a winner" anyway.</div>
+        <div class="ab-btns"><button class="btn primary" id="ab-aa">🔁 Run 200 no-effect tests</button></div>
+        <div class="table-wrap" id="ab-aa-out"></div>
+      </div>
+
+      <h2 style="margin-top:40px">Common A/B pitfalls</h2>
+      <div class="pit">
+        <div class="card"><div class="e">👀</div><b>Peeking</b><span>Stopping when it "looks significant" inflates false winners.</span></div>
+        <div class="card"><div class="e">🎰</div><b>Too many variants</b><span>Test 20 versions and one will "win" by chance.</span></div>
+        <div class="card"><div class="e">✨</div><b>Novelty effect</b><span>New things get clicks at first. Run full weeks.</span></div>
+        <div class="card"><div class="e">⚖️</div><b>Sample ratio mismatch</b><span>Planned 50/50 but got 52/48? Something's broken. Don't trust the result.</span></div>
+        <div class="card"><div class="e">🐜</div><b>Too little traffic</b><span>Small sites can't detect small lifts. Use qualitative research instead.</span></div>
+        <div class="card"><div class="e">🎯</div><b>No primary metric</b><span>Pick one success metric before launch, plus guardrail metrics.</span></div>
+      </div>
+
+      <h2 style="margin-top:40px">Funnel analysis</h2>
+      <p class="sub">Analytics shows <b>where</b> users leave. Tap a step to see what to investigate.</p>
+      <div class="card">
+        <div class="funnel-top">
+          <div><b id="f-conv"></b> <span class="muted">of visitors pay</span></div>
+          <label class="toggle"><input type="checkbox" id="f-fix"><span class="track"></span>Show fees upfront (after fix)</label>
+        </div>
+        <div class="funnel" id="funnel"></div>
+        <div class="tip funnel-panel" id="f-panel"></div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Pick the right method</h2>
+      <p class="sub">8 real questions from stakeholders. Which tool answers each one best?</p>
+      <div class="card quiz-card" id="quiz"></div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the team says…</h2>
+      <p class="sub">Tap a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Analytics shows <b>what</b> happens. Usability testing shows <b>why</b>.</li>
+          <li>Define the success metric <b>before</b> you ship, not after.</li>
+          <li>Plan an A/B test's sample size upfront, and <b>don't peek</b>.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const $ = id => document.getElementById(id);
+    const list = a => `<ul class="bullets">${a.map(x => `<li>${x}</li>`).join("")}</ul>`;
+
+    /* ================= Explore: usability test playback ================= */
+    const ISSUES = {
+      book: "'Book a table' isn't visible on the home screen",
+      explore: "'Explore' tab label misleads users",
+      weekday: "Date picker shows numbers only, no weekdays",
+      confirm: "Confirmation doesn't restate time and party size",
+      alt: "Full time slots are hidden, with no alternatives offered",
+    };
+    const EV = { ok: ["ok", "✅ On track"], hes: ["hes", "⚠️ Hesitation"], err: ["err", "❌ Error"], done: ["ok", "🏁 Task complete"], fail: ["fail", "🏳️ Gave up"] };
+    const PARTS = [
+      { name: "Maya", steps: [
+        { t: 0,  scr: ["🏠", "Home"], ev: "ok", say: "Okay, Luigi's… I'll just search for it.", tip: "Stay quiet. Let them think aloud." },
+        { t: 12, scr: ["🔍", "Search"], ev: "ok", say: "There it is. Tap.", tip: "Smooth so far. Note the time." },
+        { t: 25, scr: ["📅", "Date & time"], ev: "ok", say: "Friday… 7pm… 4 people. Easy.", tip: "Watch where their eyes and finger go." },
+        { t: 48, scr: ["✅", "Booked"], ev: "done", say: "Done! That was quick.", tip: "Success in 48s, 0 errors." },
+      ] },
+      { name: "Sam", steps: [
+        { t: 0,  scr: ["🏠", "Home"], ev: "hes", issue: "book", say: "Hmm, where do I book? Maybe under 'Explore'?", tip: "Don't point! Ask: \"What are you looking for?\"" },
+        { t: 22, scr: ["🧭", "Explore"], ev: "err", issue: "explore", say: "No… these are food articles. Going back.", tip: "A wrong path is an error. Log it." },
+        { t: 40, scr: ["🔍", "Search"], ev: "ok", say: "Ah, search. Luigi's.", tip: "Recovered on their own." },
+        { t: 58, scr: ["📅", "Date picker"], ev: "hes", issue: "weekday", say: "Which one is Friday? There are only numbers.", tip: "Long pause = hesitation. Note what confused them." },
+        { t: 95, scr: ["✅", "Booked"], ev: "done", issue: "confirm", say: "Got it… I think? Did it keep 7pm?", tip: "Success, but with doubt. Doubt is a finding too." },
+      ] },
+      { name: "Priya", steps: [
+        { t: 0,  scr: ["🏠", "Home"], ev: "ok", say: "I'll search for Luigi's.", tip: "Stay quiet. Let them think aloud." },
+        { t: 15, scr: ["🍝", "Restaurant page"], ev: "ok", say: "Book a table… here.", tip: "Note the path they chose." },
+        { t: 30, scr: ["📅", "Date picker"], ev: "err", issue: "weekday", say: "Friday is… the 14th? Tap.", tip: "They picked the wrong date. Don't correct them!" },
+        { t: 70, scr: ["⏰", "Time slots"], ev: "hes", issue: "alt", say: "Only 5pm and 9pm? Where's 7?", tip: "Ask: \"What did you expect to see?\"" },
+        { t: 110, scr: ["🏳️", "Gave up"], ev: "fail", say: "Honestly, I'd just call them.", tip: "Task failure. That's the most valuable data." },
+      ] },
+    ];
+    let pIdx = 0, sIdx = 0;
+    const seen = PARTS.map(() => 0);          // furthest step reached per participant
+    const logged = new Set();                  // "participant-step" keys logged by the user
+    function renderLab() {
+      const P = PARTS[pIdx], s = P.steps[sIdx];
+      $("ptabs").innerHTML = PARTS.map((p, i) => {
+        const fin = seen[i] === p.steps.length - 1;
+        const st = fin ? (p.steps.at(-1).ev === "fail" ? "🏳️" : "✅") : "";
+        return `<button class="btn ${i === pIdx ? "active" : ""}" data-p="${i}">👤 P${i + 1} · ${p.name}<span class="st">${st}</span></button>`;
+      }).join("");
+      $("phone").innerHTML = `<div class="scr-e">${s.scr[0]}</div><div class="scr-n">${s.scr[1]}</div>
+        <div class="clock">⏱ ${Math.floor(s.t / 60)}:${String(s.t % 60).padStart(2, "0")}</div>`;
+      const [cls, lbl] = EV[s.ev];
+      $("ev").className = `ev ${cls}`; $("ev").textContent = lbl;
+      $("bubble").textContent = `"${s.say}"`;
+      $("tip").innerHTML = `<b>🎙️ Moderator tip:</b> ${s.tip}`;
+      $("sdots").innerHTML = P.steps.map((_, i) => `<i class="${i <= sIdx ? "on" : ""}"></i>`).join("");
+      const key = `${pIdx}-${sIdx}`;
+      $("log-btn").textContent = logged.has(key) ? "✓ Logged" : "📝 Log issue";
+      $("log-btn").disabled = logged.has(key);
+      const last = sIdx === P.steps.length - 1;
+      $("next-btn").textContent = last ? (pIdx < PARTS.length - 1 ? `Next participant ▶` : "📊 See results") : "Next ▶";
+    }
+    function renderNotes() {
+      const items = [...logged].map(k => {
+        const [p, s] = k.split("-").map(Number);
+        const st = PARTS[p].steps[s];
+        return `<li>P${p + 1} · ${st.scr[1]}: ${st.issue ? ISSUES[st.issue] : st.ev === "fail" ? `<span class="muted">task failed. The cause is in earlier steps</span>` : `<span class="muted">nothing wrong here (false alarm)</span>`}</li>`;
+      });
+      $("notes").innerHTML = items.length ? items.join("") : `<li class="muted">Nothing logged yet.</li>`;
+    }
+    function renderResults() {
+      const res = PARTS.map(p => {
+        const last = p.steps.at(-1);
+        return { name: p.name, ok: last.ev !== "fail", time: last.t, errors: p.steps.filter(s => s.ev === "err").length };
+      });
+      const okN = res.filter(r => r.ok).length;
+      const okTimes = res.filter(r => r.ok).map(r => r.time);
+      const avg = Math.round(okTimes.reduce((a, b) => a + b, 0) / okTimes.length);
+      const errs = res.reduce((a, r) => a + r.errors, 0);
+      // Which unique issues exist, how many participants hit each, and which the user caught
+      const hits = {};
+      PARTS.forEach((p, pi) => p.steps.forEach((s, si) => { if (s.issue) (hits[s.issue] ||= { n: 0, caught: false }).n++; if (s.issue && logged.has(`${pi}-${si}`)) hits[s.issue].caught = true; }));
+      const total = Object.keys(hits).length, caught = Object.values(hits).filter(h => h.caught).length;
+      $("stats").innerHTML = `
+        <div class="stat"><div class="v">${Math.round(okN / res.length * 100)}%</div><div class="l">Task success (${okN}/${res.length})</div></div>
+        <div class="stat"><div class="v">${avg}s</div><div class="l">Avg time on task (successful)</div></div>
+        <div class="stat"><div class="v">${errs}</div><div class="l">Errors (wrong paths / picks)</div></div>
+        <div class="stat"><div class="v">${caught}/${total}</div><div class="l">Issues you logged</div></div>`;
+      const rows = Object.entries(hits).sort((a, b) => b[1].n - a[1].n);
+      $("res-table").innerHTML = `<tr><th>Issue</th><th>Participants</th><th>You caught it?</th></tr>` +
+        rows.map(([k, h]) => `<tr><td>${ISSUES[k]}</td><td>${h.n} of 3</td><td>${h.caught ? "✅" : "—"}</td></tr>`).join("");
+      $("res-tip").innerHTML = `<b>💡 Finding:</b> the date picker tripped up 2 of 3 people and caused the only failure. Fix that first. Prioritize by <b>frequency × impact</b>.`;
+      $("results").classList.add("show");
+    }
+    $("explore").addEventListener("click", e => {
+      const tab = e.target.closest("[data-p]");
+      if (tab) { pIdx = +tab.dataset.p; sIdx = 0; renderLab(); return; }
+      if (e.target.closest("#log-btn")) { logged.add(`${pIdx}-${sIdx}`); renderLab(); renderNotes(); return; }
+      if (e.target.closest("#next-btn")) {
+        const P = PARTS[pIdx];
+        if (sIdx < P.steps.length - 1) sIdx++;
+        else if (pIdx < PARTS.length - 1) { pIdx++; sIdx = 0; }
+        else { renderResults(); $("results").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+        seen[pIdx] = Math.max(seen[pIdx], sIdx);
+        renderLab();
+      }
+    });
+    renderLab();
+
+    /* ================= Learn: formats ================= */
+    const FMT = {
+      "mod-person": { e: "🧑‍🤝‍🧑", n: "Lab session", t: "Moderated · In person", s: "Lab or office",
+        b: ["Richest insight: body language, follow-up questions", "Slow and costly: ~1 hour per user", "Best for: early concepts, complex flows"] },
+      "mod-remote": { e: "💻", n: "Video call", t: "Moderated · Remote", s: "Video call + screen share",
+        b: ["Most common format today", "Reach users anywhere, still ask follow-ups", "Best for: most product teams, most of the time"] },
+      "un-person": { e: "🏪", n: "Kiosk / field", t: "Unmoderated · In person", s: "Kiosk, in-store, field",
+        b: ["Rare: users test alone in a set location", "Best for: physical contexts (retail, kiosks)"] },
+      "un-remote": { e: "📹", n: "Recorded test", t: "Unmoderated · Remote", s: "Tools record users alone",
+        b: ["Fast and cheap: results in hours", "No follow-ups, so tasks must be crystal clear", "Best for: validating specific flows at scale"] },
+      guerrilla: { e: "☕", n: "Guerrilla", t: "Guerrilla testing", s: "Informal, in public",
+        b: ["Cheapest possible: a coffee for 10 minutes", "Participants may not be your real users", "Best for: quick gut checks on a prototype"] },
+    };
+    let fmtActive = "mod-remote";
+    function renderFmt() {
+      const cell = k => { const f = FMT[k]; return `<button class="cell ${fmtActive === k ? "active" : ""}" data-f="${k}"><div class="e">${f.e}</div><div class="t">${f.n}</div><div class="s">${f.s}</div></button>`; };
+      $("fmt").innerHTML = `
+        <span></span><span class="h">🎙️ Moderated</span><span class="h">🤖 Unmoderated</span>
+        <span class="h row">In person</span>${cell("mod-person")}${cell("un-person")}
+        <span class="h row">Remote</span>${cell("mod-remote")}${cell("un-remote")}`;
+      $("guerrilla").classList.toggle("active", fmtActive === "guerrilla");
+      const f = FMT[fmtActive];
+      $("fmt-panel").innerHTML = `<h3>${f.e} ${f.t}</h3>${list(f.b)}`;
+    }
+    $("learn").addEventListener("click", e => {
+      const c = e.target.closest("[data-f]");
+      if (c) { fmtActive = c.dataset.f; renderFmt(); }
+      if (e.target.closest("#guerrilla")) { fmtActive = "guerrilla"; renderFmt(); }
+    });
+    renderFmt();
+
+    const PAIRS = [
+      ["Click 'Book a table' and choose Friday.", "Gives away the UI. You only test if they can follow orders.",
+       "You're meeting 3 friends Friday at 7pm. Get a table at Luigi's.", "A real goal. They must find the path themselves."],
+      ["Do you like the new menu design?", "An opinion question, not a task. Users will just be polite.",
+       "Find a vegetarian dish under $15.", "Observable behavior. You see if the menu works."],
+      ["Try the filters and the map and the reviews.", "Three tasks in one, with no goal.",
+       "You want sushi you can get delivered within 30 minutes. Find a place.", "One clear goal with a success condition."],
+    ];
+    $("pairs").innerHTML = PAIRS.map(([b, bw, g, gw]) => `
+      <div class="pair">
+        <div class="side bad"><div class="tg">❌ Instruction</div>"${b}"<div class="why">${bw}</div></div>
+        <div class="side good"><div class="tg">✅ Task scenario</div>"${g}"<div class="why">${gw}</div></div>
+      </div>`).join("");
+
+    /* ================= Metrics ================= */
+    const METRICS = [
+      { k: "Task success", e: "🎯", f: "successful attempts ÷ total attempts",
+        what: ["Can users complete the task at all?", "The most important usability metric"],
+        bench: ["Average across studies: ~78%", "Report with sample size: \"4 of 5\""],
+        use: ["Every usability test", "Before vs after a redesign"] },
+      { k: "Time on task", e: "⏱️", f: "average time of successful attempts (median if skewed)",
+        what: ["How efficient is the flow?", "Exclude failed attempts"],
+        bench: ["Compare against your previous version or a competitor", "No universal \"good\" number"],
+        use: ["Frequent tasks (checkout, search)", "Expert-user tools"] },
+      { k: "Error rate", e: "❌", f: "errors ÷ opportunities for error",
+        what: ["Wrong clicks, wrong paths, wrong inputs", "Shows where the design misleads"],
+        bench: ["Track per step, not just per task", "Severity matters more than count"],
+        use: ["Forms, data entry", "Safety- or money-critical flows"] },
+      { k: "SUS", e: "📋", f: "Σ(odd: score−1) + Σ(even: 5−score), then × 2.5  → 0–100",
+        what: ["10-question survey on perceived usability", "Industry standard since 1986"],
+        bench: ["68 = average", "80+ = excellent (top ~10%)"],
+        use: ["After a usability test", "Track quarter over quarter"] },
+      { k: "NPS", e: "📣", f: "%promoters (9–10) − %detractors (0–6)",
+        what: ["Loyalty: would they recommend you?", "Range −100 to +100"],
+        bench: ["Above 0 is good, above 50 excellent", "Varies a lot by industry"],
+        use: ["Relationship tracking, not single features", "Always read the comments, not just the number"] },
+      { k: "CSAT", e: "😊", f: "% of 4–5 answers on \"How satisfied were you?\" (1–5)",
+        what: ["Satisfaction with one interaction", "Short-term, specific"],
+        bench: ["~75–85% is typical for good products"],
+        use: ["Right after support chats, purchases, onboarding"] },
+      { k: "CES", e: "💪", f: "average of \"How easy was it to…?\" (1–7)",
+        what: ["Customer Effort Score: how hard was it?", "Effort predicts churn well"],
+        bench: ["Higher = easier (on 1–7 scale)", "Compare touchpoints against each other"],
+        use: ["Support flows, account changes, returns"] },
+    ];
+    let mActive = 0;
+    function renderMetric() {
+      $("mtabs").innerHTML = METRICS.map((m, i) => `<button class="btn ${i === mActive ? "active" : ""}" data-m="${i}">${m.e} ${m.k}</button>`).join("");
+      const m = METRICS[mActive];
+      $("mpanel").innerHTML = `<h3>${m.e} ${m.k}</h3><div class="formula">${m.f}</div>
+        <div class="m-grid"><div><h4>What it tells you</h4>${list(m.what)}</div><div><h4>Benchmark</h4>${list(m.bench)}</div><div><h4>Use it for</h4>${list(m.use)}</div></div>`;
+    }
+    $("mtabs").onclick = e => { const b = e.target.closest("[data-m]"); if (b) { mActive = +b.dataset.m; renderMetric(); } };
+    renderMetric();
+
+    /* SUS calculator: the standard 10 items. Odd items are positive, even items negative. */
+    const SUS = [
+      "I think that I would like to use this system frequently.",
+      "I found the system unnecessarily complex.",
+      "I thought the system was easy to use.",
+      "I think that I would need the support of a technical person to be able to use this system.",
+      "I found the various functions in this system were well integrated.",
+      "I thought there was too much inconsistency in this system.",
+      "I would imagine that most people would learn to use this system very quickly.",
+      "I found the system very cumbersome to use.",
+      "I felt very confident using the system.",
+      "I needed to learn a lot of things before I could get going with this system.",
+    ];
+    const BANDS = [[0, 51, "var(--bad)", "Poor"], [51, 68, "var(--warn)", "Below average"], [68, 80.3, "var(--accent)", "Good"], [80.3, 100, "var(--good)", "Excellent"]];
+    let sus = SUS.map(() => 3);
+    const PRESETS = { happy: [5, 1, 5, 2, 4, 1, 5, 1, 5, 2], meh: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3], sad: [2, 5, 2, 4, 2, 4, 2, 5, 1, 4] };
+    function susScore(a) {
+      const sum = a.reduce((s, v, i) => s + (i % 2 === 0 ? v - 1 : 5 - v), 0);
+      return { sum, score: sum * 2.5 };
+    }
+    $("gauge").innerHTML = BANDS.map(([a, b, c]) => `<span style="flex:${b - a};background:${c}"></span>`).join("");
+    $("gauge-legend").innerHTML = BANDS.map(([a, b, c, l]) => `<span><i style="background:${c}"></i>${l} ${a === 0 ? "< 51" : a === 80.3 ? "80.3+" : `${a}–${b}`}</span>`).join("");
+    function renderSus() {
+      const { sum, score } = susScore(sus);
+      $("sus-score").innerHTML = `${score}<small> / 100</small>`;
+      const band = BANDS.find(([a, b]) => score >= a && score <= b) || BANDS[0];
+      $("sus-grade").textContent = `${band[3]} ${score >= 68 ? "(above average)" : "(below average)"}`;
+      $("gauge-mark").style.left = score + "%";
+      $("sus-formula").textContent = `(odd: score−1) + (even: 5−score) = ${sum}  →  ${sum} × 2.5 = ${score}`;
+      $("sus-q").innerHTML = SUS.map((q, i) => `
+        <div class="q"><div class="qt"><b>${i + 1}</b>${q}<span class="pol ${i % 2 ? "neg" : "pos"}">${i % 2 ? "negative" : "positive"}</span></div>
+          <div class="likert"><span class="end">Disagree</span>${[1, 2, 3, 4, 5].map(v => `<button class="${sus[i] === v ? "on" : ""}" data-q="${i}" data-v="${v}" aria-label="Question ${i + 1}: ${v}">${v}</button>`).join("")}<span class="end">Agree</span></div></div>`).join("");
+    }
+    $("metrics").addEventListener("click", e => {
+      const b = e.target.closest("[data-q]");
+      if (b) { sus[+b.dataset.q] = +b.dataset.v; renderSus(); }
+      const p = e.target.closest("[data-preset]");
+      if (p) { sus = [...PRESETS[p.dataset.preset]]; renderSus(); }
+    });
+    renderSus();
+
+    /* NPS */
+    function renderNps(changed) {
+      let P = +$("np").value, D = +$("nd").value;
+      if (P + D > 100) { if (changed === "np") D = 100 - P; else P = 100 - D; $("np").value = P; $("nd").value = D; }
+      const pas = 100 - P - D, nps = P - D;
+      $("np-v").textContent = P + "%"; $("nd-v").textContent = D + "%";
+      $("nps-big").textContent = (nps > 0 ? "+" : "") + nps;
+      $("nps-big").style.color = nps >= 50 ? "var(--good)" : nps >= 0 ? "var(--text)" : "var(--bad)";
+      const seg = (v, c, l) => `<span style="flex-basis:${v}%;background:${c}" title="${l} ${v}%">${v >= 12 ? v + "%" : ""}</span>`;
+      $("nps-stack").innerHTML = seg(D, "var(--bad)", "Detractors") + seg(pas, "#8a8a96", "Passives") + seg(P, "var(--good)", "Promoters");
+    }
+    $("np").oninput = () => renderNps("np");
+    $("nd").oninput = () => renderNps("nd");
+    renderNps();
+
+    /* HEART */
+    const HEART = {
+      "🍔 Food delivery": [
+        ["Users enjoy ordering", "Positive ratings after delivery", "Avg post-order rating; CSAT"],
+        ["Users order regularly", "Repeat orders", "Orders per user per month"],
+        ["New users try the 'Reorder' feature", "First use of Reorder", "% of users using Reorder in week 1"],
+        ["Users keep coming back", "Return visits", "% of users ordering again within 30 days"],
+        ["Ordering is fast and error-free", "Completed checkouts", "Checkout completion rate; time to order"]],
+      "📊 SaaS dashboard": [
+        ["Users find the dashboard useful", "Survey responses", "SUS score; NPS"],
+        ["Users rely on it daily", "Sessions and reports viewed", "Weekly active users; reports per user"],
+        ["Teams adopt new 'Alerts'", "Alerts created", "% of accounts creating 1+ alert"],
+        ["Accounts renew", "Logins over time", "Monthly logo churn; 90-day retention"],
+        ["Users build reports easily", "Report builder completions", "Report creation success rate; time to first report"]],
+      "🏦 Banking app": [
+        ["Users feel safe and in control", "App store reviews, survey", "CSAT on transfers; review sentiment"],
+        ["Users manage money in-app", "Logins, actions per session", "Monthly active users; transfers per user"],
+        ["Users switch to digital cheque deposit", "First mobile deposit", "% of users with 1+ mobile deposit"],
+        ["Users stay with the app", "Monthly logins", "% still active after 6 months"],
+        ["Payments succeed first time", "Failed or abandoned payments", "Payment success rate; CES on transfers"]],
+    };
+    const HEARTL = [["H", "Happiness"], ["E", "Engagement"], ["A", "Adoption"], ["R", "Retention"], ["T", "Task success"]];
+    let heartP = Object.keys(HEART)[0];
+    function renderHeart() {
+      $("heart-sel").innerHTML = Object.keys(HEART).map(k => `<button class="btn ${k === heartP ? "active" : ""}" data-h="${k}">${k}</button>`).join("");
+      $("heart").innerHTML = `<div class="heart-row head"><span></span><div>Goal</div><div>Signal</div><div>Metric</div></div>` +
+        HEART[heartP].map((r, i) => `<div class="heart-row"><div class="L" title="${HEARTL[i][1]}">${HEARTL[i][0]}</div>
+          <div data-k="Goal">${r[0]}</div><div data-k="Signal">${r[1]}</div><div data-k="Metric"><b>${r[2]}</b></div></div>`).join("");
+    }
+    $("heart-sel").onclick = e => { const b = e.target.closest("[data-h]"); if (b) { heartP = b.dataset.h; renderHeart(); } };
+    renderHeart();
+
+    /* ================= A/B testing ================= */
+    const Z_A = 1.959964, Z_B = 0.841621;          // two-sided α = 0.05, power = 0.80
+    function erf(x) {                                // Abramowitz & Stegun 7.1.26
+      const s = Math.sign(x); x = Math.abs(x);
+      const t = 1 / (1 + 0.3275911 * x);
+      return s * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x));
+    }
+    const Phi = z => 0.5 * (1 + erf(z / Math.SQRT2));
+    function sampleSize(p1, lift) {                  // users per variant, two proportions
+      const p2 = p1 * (1 + lift), pb = (p1 + p2) / 2;
+      const num = Z_A * Math.sqrt(2 * pb * (1 - pb)) + Z_B * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2));
+      return Math.ceil(num * num / ((p2 - p1) ** 2));
+    }
+    function zTest(x1, n1, x2, n2) {                 // pooled two-proportion z-test, two-sided p
+      const p = (x1 + x2) / (n1 + n2);
+      const se = Math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2));
+      if (!se) return 1;
+      const z = (x2 / n2 - x1 / n1) / se;
+      return 2 * (1 - Phi(Math.abs(z)));
+    }
+    const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+    const binom = (n, p) => Math.max(0, Math.min(n, Math.round(n * p + Math.sqrt(n * p * (1 - p)) * gauss())));
+    const fmtN = n => n.toLocaleString("en-US");
+    function plan() {
+      const p = +$("ab-p").value / 100, lift = +$("ab-l").value / 100, daily = +$("ab-d").value;
+      const n = sampleSize(p, lift), days = Math.ceil(2 * n / daily);
+      return { p, lift, daily, n, days };
+    }
+    function renderPlan() {
+      const P = plan();
+      $("ab-p-v").textContent = (P.p * 100).toFixed(0) + "%";
+      $("ab-l-v").textContent = `+${(P.lift * 100).toFixed(0)}% (→ ${(P.p * (1 + P.lift) * 100).toFixed(2)}%)`;
+      $("ab-d-v").textContent = fmtN(P.daily);
+      $("ab-n").textContent = fmtN(P.n);
+      $("ab-days").textContent = P.days + (P.days === 1 ? " day" : " days");
+      $("ab-weeks").textContent = `needed · run ${Math.max(1, Math.ceil(P.days / 7))} full week${Math.ceil(P.days / 7) > 1 ? "s" : ""}`;
+    }
+    ["ab-p", "ab-l", "ab-d"].forEach(id => $(id).oninput = renderPlan);
+    renderPlan();
+
+    // One simulated test. peek = check every day and stop at the first p < 0.05.
+    function simulate(P, trueLift, peek) {
+      const perDay = Math.max(1, Math.round(P.daily / 2));
+      const pA = P.p, pB = P.p * (1 + trueLift);
+      const maxDays = Math.min(P.days, 120);
+      let nA = 0, nB = 0, xA = 0, xB = 0, day = 0, pv = 1;
+      if (!peek) {
+        nA = nB = P.n; xA = binom(nA, pA); xB = binom(nB, pB); day = P.days;
+        pv = zTest(xA, nA, xB, nB);
+      } else {
+        while (day < maxDays) {
+          day++;
+          const add = Math.min(perDay, P.n - nA);
+          nA += add; nB += add; xA += binom(add, pA); xB += binom(add, pB);
+          pv = zTest(xA, nA, xB, nB);
+          if (pv < 0.05 || nA >= P.n) break;
+        }
+      }
+      return { nA, nB, xA, xB, pv, day };
+    }
+    function showRun(peek) {
+      const P = plan();
+      const real = Math.random() < 0.5;
+      const r = simulate(P, real ? P.lift : 0, peek);
+      const rA = r.xA / r.nA, rB = r.xB / r.nB, max = Math.max(rA, rB) * 1.15;
+      const sig = r.pv < 0.05;
+      const outcome = sig && real ? ["✅", "Correct: real improvement detected."]
+        : !sig && !real ? ["✅", "Correct: no real effect, none claimed."]
+        : sig && !real ? ["🚨", "False positive! You'd ship a change that does nothing."]
+        : ["😕", "Missed it. The improvement was real but the test didn't detect it."];
+      $("ab-result").innerHTML = `
+        <div class="bars">
+          <div class="bar-row"><span>A · Control</span><div class="bar-track"><i style="width:${rA / max * 100}%;background:#8a8a96"></i></div><span class="val">${(rA * 100).toFixed(2)}%</span></div>
+          <div class="bar-row"><span>B · New</span><div class="bar-track"><i style="width:${rB / max * 100}%;background:var(--accent)"></i></div><span class="val">${(rB * 100).toFixed(2)}%</span></div>
+        </div>
+        <div class="kv"><span><b>Users:</b> ${fmtN(r.nA)} per variant</span><span><b>Stopped:</b> day ${r.day}</span><span><b>Lift:</b> ${((rB / rA - 1) * 100).toFixed(1)}%</span><span><b>p-value:</b> ${r.pv < 0.001 ? "< 0.001" : r.pv.toFixed(3)}</span></div>
+        <div class="verdict ${sig ? "yes" : "no"}">${sig ? "📈 Statistically significant (p < 0.05)" : "➖ Not significant (p ≥ 0.05)"}</div>
+        <div class="truth">🎭 <b>The truth:</b> the new design ${real ? `really was +${(P.lift * 100).toFixed(0)}% better` : "had no real effect"}.<br>${outcome[0]} ${outcome[1]}</div>`;
+    }
+    $("ab-run").onclick = () => showRun(false);
+    $("ab-peek").onclick = () => showRun(true);
+    $("ab-aa").onclick = () => {
+      const P = plan(), N = 200;
+      let fFull = 0, fPeek = 0;
+      for (let i = 0; i < N; i++) {
+        if (simulate(P, 0, false).pv < 0.05) fFull++;
+        if (simulate(P, 0, true).pv < 0.05) fPeek++;
+      }
+      $("ab-aa-out").innerHTML = `<table class="t fp-table" style="margin-top:14px">
+        <tr><th>Approach</th><th>False "winners"</th><th>Rate</th></tr>
+        <tr><td>▶ Wait for the planned sample, check once</td><td>${fFull} / ${N}</td><td><b>${(fFull / N * 100).toFixed(1)}%</b></td></tr>
+        <tr><td>👀 Peek daily, stop when significant (${Math.min(P.days, 120)} peeks max)</td><td>${fPeek} / ${N}</td><td><b style="color:var(--bad)">${(fPeek / N * 100).toFixed(1)}%</b></td></tr>
+        </table><div class="tip" style="margin-top:12px"><b>💡 Expect:</b> about 5% when you check once, since that's what α = 0.05 means. Peeking pushes it far higher.${P.days < 3 ? " (Too few days to peek much. Lower the traffic to see the effect.)" : ""}</div>`;
+    };
+
+    /* ================= Funnel ================= */
+    const STEPS = ["🏠 Opened app", "📖 Viewed a menu", "🛒 Added to cart", "💳 Started checkout", "✅ Paid"];
+    const FUN = { before: [10000, 6200, 3100, 2400, 1150], after: [10000, 6200, 3000, 2100, 1680] };
+    const WHY = [
+      "",
+      ["Is the home screen relevant?", "Slow load times?", "Location or restaurant availability?"],
+      ["Prices, photos, menu clarity", "Missing filters (diet, price)?"],
+      ["Surprise costs at cart?", "Forced sign-up before checkout?"],
+      ["Delivery fee revealed only now", "Payment errors, trust, few payment options"],
+    ];
+    let fSel = 4;
+    function renderFunnel() {
+      const data = FUN[$("f-fix").checked ? "after" : "before"];
+      const drops = data.map((v, i) => i ? 1 - v / data[i - 1] : 0);
+      const worst = drops.indexOf(Math.max(...drops));
+      $("f-conv").textContent = (data.at(-1) / data[0] * 100).toFixed(1) + "%";
+      $("funnel").innerHTML = data.map((v, i) => `
+        ${i ? `<div class="drop ${i === worst ? "worst" : ""}">↓ −${Math.round(drops[i] * 100)}% drop${i === worst ? " · ⚠️ biggest" : ""}</div>` : ""}
+        <button class="fstep ${i === fSel ? "active" : ""}" data-fs="${i}">
+          <span class="nm">${STEPS[i]}</span><span class="trk"><i style="width:${v / data[0] * 100}%"></i></span><span class="n">${fmtN(v)}</span>
+        </button>`).join("");
+      $("f-panel").innerHTML = fSel === 0
+        ? `<b>${STEPS[0]}:</b> the top of the funnel. Every later step is measured against this.`
+        : `<b>${STEPS[fSel - 1]} → ${STEPS[fSel]}:</b> ${Math.round(drops[fSel] * 100)}% leave here.<br>🔍 Investigate: ${WHY[fSel].join(" · ")}<br><span class="muted">Analytics tells you <b>where</b>. A usability test tells you <b>why</b>.</span>`;
+    }
+    $("funnel").onclick = e => { const b = e.target.closest("[data-fs]"); if (b) { fSel = +b.dataset.fs; renderFunnel(); } };
+    $("f-fix").onchange = renderFunnel;
+    renderFunnel();
+
+    /* ================= Try: pick the method ================= */
+    const METHODS = [["usab", "🧪 Usability test"], ["ab", "⚖️ A/B test"], ["ana", "📊 Analytics"], ["survey", "📝 Survey"], ["intv", "🗣️ Interviews"]];
+    const QUIZ = [
+      ["\"Why do users abandon at the payment step?\"", "usab", "Analytics shows where. Watching users shows why."],
+      ["\"Which of two button labels gets more sign-ups?\"", "ab", "Two versions, one metric, lots of traffic: classic A/B test."],
+      ["\"Where in the funnel do we lose the most people?\"", "ana", "Funnel analytics answers 'where' at scale."],
+      ["\"Are users happier with the app than last quarter?\"", "survey", "Track SUS or NPS over time with a survey."],
+      ["\"What problems do restaurant owners face today?\"", "intv", "Open discovery question: talk to them before designing."],
+      ["\"Can new users find the 'Reorder' feature?\"", "usab", "Findability is about behavior. Give them a task and watch."],
+      ["\"Did the new checkout raise conversion for everyone?\"", "ab", "A causal claim at scale needs a controlled experiment."],
+      ["\"How many people use dark mode daily?\"", "ana", "Pure usage counting: check the analytics."],
+    ];
+    let qi = 0, results = [];
+    const quiz = $("quiz");
+    function renderQuiz(fb) {
+      const dots = QUIZ.map((_, i) => `<i class="${results[i] === true ? "good" : results[i] === false ? "bad" : ""}"></i>`).join("");
+      if (qi >= QUIZ.length) {
+        const score = results.filter(Boolean).length;
+        quiz.innerHTML = `<div class="dots">${dots}</div>
+          <div class="quiz-q">${score >= 7 ? "🏆" : score >= 5 ? "👍" : "🌱"} ${score} / ${QUIZ.length}</div>
+          <p class="muted">Rule of thumb: <b>what / how many</b> → numbers. <b>Why / how</b> → watch and talk to people.</p>
+          <button class="btn primary tap" data-retry>Try again</button>`;
+        return;
+      }
+      quiz.innerHTML = `<div class="dots">${dots}</div>
+        <div class="quiz-q">${QUIZ[qi][0]}</div>
+        <div class="quiz-btns">${METHODS.map(([k, l]) => `<button class="btn" data-answer="${k}">${l}</button>`).join("")}</div>
+        <div class="quiz-fb ${fb ? fb.cls : ""}">${fb ? fb.text : ""}</div>`;
+    }
+    quiz.onclick = e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.answer) {
+        const [, correct, why] = QUIZ[qi];
+        const ok = btn.dataset.answer === correct;
+        results[qi] = ok; qi++;
+        const label = METHODS.find(m => m[0] === correct)[1];
+        renderQuiz({ cls: ok ? "good" : "bad", text: `${ok ? "✓ Correct!" : `✗ Best fit: ${label}.`} ${why}` });
+      }
+      if (btn.hasAttribute("data-retry")) { qi = 0; results = []; renderQuiz(); }
+    };
+    renderQuiz();
+
+    /* ================= TPM Lens ================= */
+    const LENS = [
+      ["\"The test wasn't significant.\"", "We can't tell the difference from random noise. It doesn't prove 'no effect'.", "Did we reach the planned sample size? Was the expected lift realistic?"],
+      ["\"Our SUS is 72.\"", "Slightly above the average of 68. Decent, not great.", "What was it last quarter? Which tasks dragged it down?"],
+      ["\"Let's A/B test it.\"", "Ship two versions to random users and compare one metric.", "Do we have enough traffic? What's the primary metric and the stop date?"],
+      ["\"3 of 5 users failed task 3.\"", "A serious usability issue. 5 users is enough to find it.", "What's the severity, and what's the fix's cost? Can we retest after?"],
+      ["\"That's a vanity metric.\"", "A number that looks good but doesn't drive decisions (e.g. page views).", "What action would we take if this number changed?"],
+      ["\"What's our north star metric?\"", "The one metric that best captures the value users get.", "Does every feature on the roadmap move it, or a guardrail metric?"],
+    ];
+    $("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(10);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Information Architecture · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* Touch-friendly: every tappable thing is at least 44px tall */
+    #app .btn, #app .chip, #app .tap { min-height: 44px; }
+
+    /* ---------- Explore: find it ---------- */
+    .task { text-align: center; margin-bottom: 20px; }
+    .task span { display: inline-block; font-size: 18px; font-weight: 800; background: var(--accent-soft); color: var(--accent); padding: 8px 18px; border-radius: 12px; }
+    .find { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 700px) { .find { grid-template-columns: 1fr; } }
+    .find-col h3 { margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .find-col h3 small { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .phone { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--bg); margin-top: 12px; position: relative; min-height: 360px; }
+    .ph-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); min-height: 56px; }
+    .ph-back { font: inherit; font-size: 22px; line-height: 1; width: 44px; height: 44px; border-radius: 10px; border: 0; background: transparent; color: var(--accent); cursor: pointer; }
+    .ph-back[disabled] { visibility: hidden; }
+    .ph-title { font-weight: 800; }
+    .ph-crumb { font-size: 12px; color: var(--muted); padding: 8px 14px 0; min-height: 26px; }
+    .ph-list { list-style: none; margin: 0; padding: 6px 8px 10px; }
+    .ph-item { width: 100%; text-align: left; font: inherit; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; margin: 2px 0; border: 0; border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; }
+    .ph-item:hover { background: var(--surface-2); }
+    .ph-item .chev { color: var(--muted); }
+    .ph-item.miss { animation: shake .3s; background: var(--bad-soft); }
+    @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .ph-done { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; background: color-mix(in srgb, var(--surface) 94%, transparent); animation: fade .3s; }
+    @keyframes fade { from { opacity: 0; } }
+    .ph-done .big { font-size: 40px; }
+    .ph-done .stat { font-size: 22px; font-weight: 800; margin: 6px 0; }
+    .ph-done .path { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .find-bar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .compare { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; text-align: center; }
+    .compare .card { padding: 14px; }
+    .compare .num { font-size: 26px; font-weight: 800; }
+    .compare .lbl { font-size: 13px; color: var(--muted); }
+    .why { margin-top: 16px; }
+
+    /* ---------- Learn: pillars ---------- */
+    .pillars { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 900px) { .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .pillar .ic { font-size: 30px; }
+    .pillar h3 { margin: 4px 0; }
+    .pillar p { margin: 0; color: var(--muted); font-size: 14px; }
+    .pillar .ex { margin-top: 10px; font-size: 13px; background: var(--surface-2); padding: 8px 10px; border-radius: 10px; }
+    .analogy { margin-top: 14px; text-align: center; font-weight: 700; }
+    .analogy span { background: var(--accent-soft); padding: 8px 14px; border-radius: 12px; display: inline-block; }
+
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .scheme { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .scheme { grid-template-columns: 1fr; } }
+    .mini { background: var(--surface-2); border-radius: 14px; padding: 12px; }
+    .mini .mh { font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin: 8px 4px 4px; }
+    .mini .mh:first-child { margin-top: 0; }
+    .mini .mi { background: var(--surface); border-radius: 8px; padding: 8px 10px; margin: 4px 0; font-size: 14px; }
+    .kind { display: inline-block; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+    .kind.exact { background: var(--good-soft); color: var(--good); }
+    .kind.ambig { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+    .scheme h4 { margin: 10px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+
+    /* Sitemap tree */
+    .sm-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .sm-wrap { grid-template-columns: 1fr; } }
+    .tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+    .tree ul { margin-left: 18px; border-left: 2px solid var(--line); padding-left: 10px; }
+    .tree .tap { font: inherit; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; background: transparent; color: var(--text); border-radius: 8px; padding: 0 8px; cursor: pointer; }
+    .tree .tap:hover { background: var(--surface-2); }
+    .tree .tw { width: 16px; color: var(--muted); }
+    .tree .lv { margin-left: auto; font-size: 11px; color: var(--muted); }
+    .tree .leaf { min-height: 36px; display: flex; align-items: center; padding: 0 8px 0 32px; color: var(--muted); font-size: 14px; }
+    .db { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .db .card { padding: 14px; }
+    .db h4 { margin: 0 0 8px; }
+    .lvls { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .lvls div { display: flex; gap: 3px; }
+    .lvls i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); opacity: .85; }
+    .db .stats { font-size: 13px; color: var(--muted); }
+    .db .stats b { color: var(--text); }
+    .myth { margin-top: 12px; }
+
+    /* Labels toggle */
+    .labels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+    @media (max-width: 700px) { .labels { grid-template-columns: 1fr; } }
+    .lnav { display: flex; flex-direction: column; gap: 6px; background: var(--surface-2); border-radius: 14px; padding: 12px; }
+    .lnav div { background: var(--surface); border-radius: 10px; padding: 10px 12px; font-weight: 600; display: flex; gap: 10px; transition: background .3s; }
+    .lnav div.flash { animation: flash .5s; }
+    @keyframes flash { from { background: var(--accent-soft); } }
+    .toggle { min-height: 44px; }
+
+    /* ---------- Navigation patterns ---------- */
+    .pat { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .pat { grid-template-columns: 1fr; } }
+    .mk { height: 220px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; position: relative; }
+    .mk.phonemk { width: 150px; margin: 0 auto; border-radius: 22px; }
+    .mk i { display: block; border-radius: 4px; background: var(--line); }
+    .mk .bar { display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .mk .logo { width: 26px; height: 14px; background: var(--accent); }
+    .mk .lnk { width: 34px; height: 8px; }
+    .mk .lnk.on, .mk .on { background: var(--accent); }
+    .mk .body { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .mk .ln { height: 8px; }
+    .mk .ln.s { width: 60%; }
+    .mk .blk { height: 50px; }
+    .mk .row { display: flex; flex: 1; min-height: 0; }
+    .mk .side { width: 34%; background: var(--surface); border-right: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .mk .side i { height: 8px; }
+    .mk .tabsmk { display: flex; gap: 14px; padding: 0 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .mk .tabsmk i { width: 40px; height: 8px; margin: 10px 0; }
+    .mk .tabsmk i.on { box-shadow: 0 10px 0 -7px var(--accent); }
+    .mk .bottom { display: flex; justify-content: space-around; padding: 10px 6px; background: var(--surface); border-top: 1px solid var(--line); }
+    .mk .bottom i { width: 16px; height: 16px; border-radius: 5px; }
+    .mk .burger { font-size: 16px; color: var(--muted); line-height: 1; }
+    .mk .drawer { position: absolute; top: 0; bottom: 0; left: 0; width: 68%; background: var(--surface); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: 6px 0 20px rgba(0,0,0,.2); }
+    .mk .drawer i { height: 8px; }
+    .mk .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.25); }
+    .mk .crumbs { display: flex; align-items: center; gap: 6px; padding: 10px 12px; font-size: 12px; color: var(--muted); }
+    .mk .crumbs b { color: var(--accent); }
+    .mk .mega { position: absolute; left: 10px; right: 10px; top: 40px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; box-shadow: var(--shadow); }
+    .mk .mega div { display: flex; flex-direction: column; gap: 6px; }
+    .mk .mega i { height: 7px; }
+    .mk .mega i.h { background: var(--accent); width: 70%; }
+    .pat h3 { margin: 0 0 6px; }
+    .pat h4 { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+    .pat h4.warn { color: var(--bad); }
+    .pat .eg { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+    /* ---------- User flows ---------- */
+    .legend-f { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; font-size: 13px; color: var(--muted); align-items: center; }
+    .legend-f .nd { padding: 4px 12px; font-size: 12px; }
+    .flow-bar { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; }
+    .counter { display: flex; gap: 10px; }
+    .counter div { background: var(--surface-2); border-radius: 12px; padding: 8px 14px; text-align: center; }
+    .counter b { display: block; font-size: 22px; }
+    .counter span { font-size: 12px; color: var(--muted); }
+    .flow { display: flex; flex-direction: column; }
+    .frow { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 0 12px; }
+    @media (max-width: 700px) { .frow { grid-template-columns: 1fr; } .frow .br { margin: 6px 0 4px 20px; } }
+    .frow.hidden { display: none; }
+    .mcol { display: flex; flex-direction: column; align-items: center; }
+    .down { color: var(--muted); font-size: 12px; height: 26px; display: flex; align-items: center; }
+    .nd { border: 2px solid var(--line); background: var(--surface); padding: 8px 14px; font-size: 14px; font-weight: 600; text-align: center; border-radius: 8px; }
+    .nd.oval { border-radius: 999px; border-color: var(--accent); background: var(--accent-soft); }
+    .nd.diamond { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-style: dashed; }
+    .nd.diamond::before { content: "◆ "; color: var(--warn); }
+    .nd.err { border-color: var(--bad); background: var(--bad-soft); }
+    .mcol .nd { width: 100%; }
+    .nd.ghost { border-style: dashed; background: transparent; color: var(--muted); font-weight: 600; }
+    .nd.ghost small { color: var(--bad); font-weight: 800; }
+    .br { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; align-self: start; animation: slidein .35s ease; }
+    @keyframes slidein { from { opacity: 0; transform: translateX(-8px); } }
+    .br .arr { font-size: 12px; font-weight: 700; color: var(--bad); white-space: nowrap; }
+    .br .arr.alt { color: var(--muted); }
+    .eng { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 700px) { .eng { grid-template-columns: 1fr; } }
+    .eng .card { padding: 14px; font-size: 14px; }
+    .eng b { display: block; font-size: 15px; margin-bottom: 4px; }
+
+    /* ---------- Try: card sort ---------- */
+    .tray { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 48px; margin-bottom: 16px; }
+    .chip { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); }
+    .chip:hover { border-color: var(--accent); }
+    .chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 900px) { .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .group { border: 2px dashed var(--line); border-radius: var(--radius); padding: 10px; min-height: 150px; cursor: pointer; transition: border-color .2s, background .2s; }
+    .group.ready { border-color: var(--accent); background: var(--accent-soft); }
+    .group input { width: 100%; font: inherit; font-weight: 800; border: 0; border-bottom: 1.5px solid var(--line); background: transparent; color: var(--text); padding: 6px 2px; margin-bottom: 8px; min-height: 40px; }
+    .group .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sort-bar { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+    .res { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 700px) { .res { grid-template-columns: 1fr; } }
+    .res h4 { margin: 0 0 10px; }
+    .agree { display: grid; grid-template-columns: minmax(0, 1fr) 90px 44px 20px; gap: 8px; align-items: center; font-size: 14px; margin: 6px 0; }
+    .agree .bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .agree .bar i { display: block; height: 100%; background: var(--good); }
+    .agree .bar i.low { background: var(--warn); }
+    .agree .pct { font-size: 12px; color: var(--muted); text-align: right; }
+    .res-sum { grid-column: 1 / -1; text-align: center; }
+
+    /* ---------- Try: tree test ---------- */
+    .tt { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .tt { grid-template-columns: 1fr; } }
+    .tt-task { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+    .tt-task small { display: block; font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .tt-crumb { font-size: 13px; color: var(--muted); margin-bottom: 8px; min-height: 20px; }
+    .tt-list { display: flex; flex-direction: column; gap: 6px; }
+    .tt-item { font: inherit; display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; text-align: left; }
+    .tt-item:hover { border-color: var(--accent); }
+    .tt-item.leaf .pick { font-size: 12px; font-weight: 700; color: var(--accent); }
+    .tt-score { list-style: none; margin: 0; padding: 0; }
+    .tt-score li { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+    .tt-score li:last-child { border-bottom: 0; }
+    .verdict { font-weight: 800; white-space: nowrap; }
+    .verdict.direct { color: var(--good); }
+    .verdict.indirect { color: var(--warn); }
+    .verdict.fail { color: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 03 Information Architecture</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 03 · Information Architecture</div>
+      <h1>If they can't find it,<br>it doesn't exist.</h1>
+      <p>How content is organized, labeled and connected so people can find their way.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Learn</a>
+        <a href="#nav">🧭 Navigation</a>
+        <a href="#flows">🔀 User Flows</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Same app. Same look. Different structure.</h2>
+      <p class="sub">Complete the task in both apps. Clicks are counted.</p>
+      <div class="task"><span>🎯 Task: change your password</span></div>
+
+      <div class="find">
+        <div class="card find-col" data-app="a">
+          <h3>📱 App A <small id="a-meta">0 taps</small></h3>
+          <div class="phone" id="a-phone"></div>
+          <div class="find-bar"><button class="btn" data-giveup="a">🏳️ Give up</button><button class="btn" data-restart="a">↺ Restart</button></div>
+        </div>
+        <div class="card find-col" data-app="b">
+          <h3>📱 App B <small id="b-meta">0 taps</small></h3>
+          <div class="phone" id="b-phone"></div>
+          <div class="find-bar"><button class="btn" data-giveup="b">🏳️ Give up</button><button class="btn" data-restart="b">↺ Restart</button></div>
+        </div>
+      </div>
+      <div id="find-result"></div>
+    </section>
+
+    <!-- ================= LEARN ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>IA in four words</h2>
+      <p class="sub">Information Architecture is the structure underneath every screen.</p>
+      <div class="pillars">
+        <div class="card pillar"><div class="ic">🗂️</div><h3>Organize</h3><p>Group content so it makes sense</p><div class="ex">Shoes under "Footwear", not "Misc"</div></div>
+        <div class="card pillar"><div class="ic">🏷️</div><h3>Label</h3><p>Name things in users' words</p><div class="ex">"Help", not "Knowledge Base"</div></div>
+        <div class="card pillar"><div class="ic">🧭</div><h3>Navigate</h3><p>Move around and know where you are</p><div class="ex">Menus, tabs, breadcrumbs</div></div>
+        <div class="card pillar"><div class="ic">🔍</div><h3>Search</h3><p>Find it when browsing fails</p><div class="ex">Search bar, filters, sorting</div></div>
+      </div>
+      <div class="analogy"><span>🧑‍💻 Engineer's analogy: IA is the <b>data model + routing</b> of the user's mental model.</span></div>
+
+      <h2 style="margin-top:44px">Organization schemes</h2>
+      <p class="sub">Five ways to group content. Tap each one.</p>
+      <div class="tabs" id="scheme-tabs"></div>
+      <div class="card scheme" id="scheme-body"></div>
+
+      <h2 style="margin-top:44px">Sitemaps: depth vs breadth</h2>
+      <p class="sub">A sitemap is the IA blueprint. Tap sections to expand.</p>
+      <div class="sm-wrap">
+        <div class="card"><ul class="tree" id="sitemap"></ul></div>
+        <div>
+          <div class="db">
+            <div class="card">
+              <h4>🪜 Deep & narrow</h4>
+              <div class="lvls"><div><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div></div>
+              <div class="stats"><b>3</b> options × <b>4</b> levels<br><b>4</b> taps to reach anything<br>More chances to take a wrong turn</div>
+            </div>
+            <div class="card">
+              <h4>🌳 Broad & shallow</h4>
+              <div class="lvls"><div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              <div class="stats"><b>9</b> options × <b>2</b> levels<br><b>2</b> taps to reach anything<br>More to scan per screen</div>
+            </div>
+          </div>
+          <div class="card myth">
+            <ul class="bullets">
+              <li>Both hold the <b>same 81 items</b>.</li>
+              <li>Research usually favors <b>broad and shallow</b>, if groups are clear.</li>
+              <li>The "3-click rule" is a <b>myth</b>. Users keep clicking if each step feels right (<b>information scent</b>).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:44px">Labels: whose language?</h2>
+      <p class="sub">Flip the switch to see the same menu in company vs user language.</p>
+      <div class="card labels">
+        <div>
+          <label class="toggle"><input type="checkbox" id="lbl-toggle"><span class="track"></span>🗣️ Speak the user's language</label>
+          <ul class="bullets" style="margin-top:14px">
+            <li>Internal team names leak into menus.</li>
+            <li>Org chart → navigation is <b>Conway's law</b> in action.</li>
+            <li>Find user words in interviews, support tickets and search logs.</li>
+          </ul>
+        </div>
+        <div class="lnav" id="lnav"></div>
+      </div>
+    </section>
+
+    <!-- ================= NAVIGATION ================= -->
+    <section class="section" id="nav">
+      <span class="step-label">🧭 Navigation</span>
+      <h2>Seven navigation patterns</h2>
+      <p class="sub">Know the name, when it fits and how it fails.</p>
+      <div class="tabs" id="pat-tabs"></div>
+      <div class="card pat" id="pat-body"></div>
+    </section>
+
+    <!-- ================= USER FLOWS ================= -->
+    <section class="section" id="flows">
+      <span class="step-label">🔀 User Flows</span>
+      <h2>Happy path vs real life</h2>
+      <p class="sub">A user flow maps every step and decision to finish one task. Turn on edge cases.</p>
+      <div class="legend-f">
+        <span class="nd oval">Start / End</span>
+        <span class="nd">Screen / Step</span>
+        <span class="nd diamond">Decision</span>
+        <span class="nd err">Error state</span>
+      </div>
+      <div class="card">
+        <div class="flow-bar">
+          <label class="toggle"><input type="checkbox" id="edge-toggle"><span class="track"></span>⚠️ Show edge cases</label>
+          <div class="counter">
+            <div><b id="c-states">0</b><span>states to build</span></div>
+            <div><b id="c-tests">0</b><span>paths to test</span></div>
+          </div>
+        </div>
+        <div class="flow" id="flow"></div>
+      </div>
+      <div class="eng">
+        <div class="card"><b>🧱 Every box</b>A screen, state or API response to build.</div>
+        <div class="card"><b>◆ Every diamond</b>A condition: an <code>if</code> in code and a test case in QA.</div>
+        <div class="card"><b>📏 Estimate from the flow</b>Designs showing only the happy path hide most of the work.</div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Card sort: how would you group these?</h2>
+      <p class="sub">Banking app features. Tap a card, then tap a group. Rename groups however you like.</p>
+      <div class="tray" id="cs-tray"></div>
+      <div class="groups" id="cs-groups"></div>
+      <div class="sort-bar">
+        <button class="btn primary" id="cs-compare">Compare with 20 participants</button>
+        <button class="btn" id="cs-reset">Reset</button>
+      </div>
+      <div id="cs-result"></div>
+
+      <h2 style="margin-top:48px">Tree test: can you find it?</h2>
+      <p class="sub">Text-only menu, no visuals. This tests the structure alone.</p>
+      <div class="tt">
+        <div class="card" id="tt-main"></div>
+        <div class="card">
+          <h4 style="margin:0 0 8px">📋 Results</h4>
+          <ul class="tt-score" id="tt-score"></ul>
+          <ul class="bullets" style="margin-top:12px;font-size:14px;color:var(--muted)">
+            <li><b style="color:var(--good)">Direct:</b> right answer, no backtracking</li>
+            <li><b style="color:var(--warn)">Indirect:</b> right answer after going back</li>
+            <li><b style="color:var(--bad)">Fail:</b> wrong place, so the label misled</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Tap a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Structure and labels decide findability, <b>not visuals</b>.</li>
+          <li>Use <b>users' words</b>; validate with a <b>card sort</b> (build) and a <b>tree test</b> (check).</li>
+          <li>Every branch in a user flow is <b>work to build and test</b>. Ask for the edge cases.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const list = a => `<ul class="bullets">${a.map(x => `<li>${x}</li>`).join("")}</ul>`;
+
+    /* ---------- Explore: find it ---------- */
+    const leaf = label => ({ label });
+    const APPS = {
+      a: { label: "Settings", children: [
+        { label: "General", children: [leaf("Display"), leaf("Sounds"), { label: "Preferences", children: [leaf("Regional"), leaf("Accessibility")] }] },
+        { label: "Advanced", children: [leaf("Developer options"), leaf("Sync engine"), { label: "Data management", children: [leaf("Export"), leaf("Cache")] }] },
+        { label: "Profile Mgmt", children: [leaf("Avatar"), leaf("Display name"), leaf("Linked identities")] },
+        { label: "System", children: [leaf("Updates"), { label: "IAM", children: [
+          { label: "Auth providers", children: [leaf("SSO"), { label: "Credential rotation", target: true }] }, leaf("Tokens")] }] },
+        { label: "Misc", children: [leaf("About"), leaf("Legal")] },
+      ] },
+      b: { label: "Settings", children: [
+        { label: "Account", children: [leaf("Profile"), leaf("Email"),
+          { label: "Password & security", children: [{ label: "Change password", target: true }, leaf("Two-step login"), leaf("Active sessions")] }, leaf("Delete account")] },
+        { label: "Notifications", children: [leaf("Push"), leaf("Email"), leaf("Quiet hours")] },
+        { label: "Privacy", children: [leaf("Who can see me"), leaf("Blocked users"), leaf("Download my data")] },
+        { label: "Display", children: [leaf("Theme"), leaf("Text size")] },
+        { label: "Help", children: [leaf("FAQ"), leaf("Contact us")] },
+      ] },
+    };
+    // Path to the target, used when giving up
+    function findPath(node, trail = []) {
+      if (node.target) return trail;
+      for (let i = 0; i < (node.children || []).length; i++) {
+        const r = findPath(node.children[i], [...trail, i]);
+        if (r) return r;
+      }
+      return null;
+    }
+    const st = {};
+    function resetApp(k) { st[k] = { path: [], taps: 0, start: null, done: false, gaveUp: false, secs: 0 }; renderApp(k); }
+    function nodeAt(k, path) { return path.reduce((n, i) => n.children[i], APPS[k]); }
+    function labelsAt(k, path) { const out = []; let n = APPS[k]; path.forEach(i => { n = n.children[i]; out.push(n.label); }); return out; }
+    function renderApp(k, missIdx) {
+      const s = st[k], node = nodeAt(k, s.path);
+      document.getElementById(k + "-meta").textContent = `${s.taps} taps`;
+      const crumbs = ["Settings", ...labelsAt(k, s.path)];
+      let html = `
+        <div class="ph-head"><button class="ph-back" data-back="${k}" ${s.path.length ? "" : "disabled"} aria-label="Back">‹</button>
+          <span class="ph-title">${node.label}</span></div>
+        <div class="ph-crumb">${s.path.length ? crumbs.join(" › ") : "Tap to explore"}</div>
+        <ul class="ph-list">${node.children.map((c, i) => `<li><button class="ph-item ${i === missIdx ? "miss" : ""}" data-go="${k}" data-i="${i}">
+          <span>${c.label}</span><span class="chev">${c.children ? "›" : ""}</span></button></li>`).join("")}</ul>`;
+      if (s.done) {
+        const full = labelsAt(k, findPath(APPS[k])).join(" › ");
+        html += `<div class="ph-done"><div>
+          <div class="big">${s.gaveUp ? "🏳️" : "✅"}</div>
+          <div class="stat">${s.gaveUp ? "Gave up" : `Found in ${s.taps} taps · ${s.secs}s`}</div>
+          <div class="path">It was in: ${full}</div></div></div>`;
+      }
+      document.getElementById(k + "-phone").innerHTML = html;
+      renderFindResult();
+    }
+    function tapApp(k, i) {
+      const s = st[k];
+      if (s.done) return;
+      if (s.start === null) s.start = Date.now();
+      s.taps++;
+      const child = nodeAt(k, s.path).children[i];
+      if (child.target) { s.done = true; s.secs = Math.max(1, Math.round((Date.now() - s.start) / 1000)); return renderApp(k); }
+      if (child.children) { s.path.push(i); return renderApp(k); }
+      renderApp(k, i); // dead end
+    }
+    function renderFindResult() {
+      const a = st.a, b = st.b, el = document.getElementById("find-result");
+      if (!a || !b || !a.done || !b.done) { el.innerHTML = ""; return; }
+      const v = s => s.gaveUp ? "🏳️" : s.taps;
+      el.innerHTML = `
+        <div class="compare">
+          <div class="card"><div class="num">${v(a)}</div><div class="lbl">App A taps</div></div>
+          <div class="card"><div class="num">${v(b)}</div><div class="lbl">App B taps</div></div>
+          <div class="card"><div class="num">0</div><div class="lbl">visual differences</div></div>
+        </div>
+        <div class="card why"><b>Why App A hurts:</b>${list([
+          "<b>Jargon labels</b>: 'IAM', 'Credential rotation' are engineer words",
+          "<b>Vague buckets</b>: 'General', 'Advanced', 'Misc' could hold anything",
+          "<b>Too deep</b>: the password was 4 levels down",
+          "<b>Split topics</b>: 'Profile Mgmt' and 'System › IAM' both feel like 'account'"])}</div>`;
+    }
+    document.getElementById("explore").addEventListener("click", e => {
+      const go = e.target.closest("[data-go]"), back = e.target.closest("[data-back]");
+      const give = e.target.closest("[data-giveup]"), rs = e.target.closest("[data-restart]");
+      if (go) tapApp(go.dataset.go, +go.dataset.i);
+      if (back) { const s = st[back.dataset.back]; if (!s.done) { s.taps++; s.path.pop(); renderApp(back.dataset.back); } }
+      if (give) { const s = st[give.dataset.giveup]; if (!s.done) { s.done = true; s.gaveUp = true; renderApp(give.dataset.giveup); } }
+      if (rs) resetApp(rs.dataset.restart);
+    });
+    resetApp("a"); resetApp("b");
+
+    /* ---------- Learn: organization schemes ---------- */
+    const SCHEMES = [
+      { tab: "🔤 Alphabetical", kind: "exact", mini: [["Contacts", ["Aisha", "Ben", "Carlos", "Dana"]]],
+        best: ["Lists people already know by name", "Contacts, glossaries, country pickers"], warn: ["Useless when users don't know the exact name"] },
+      { tab: "🕒 Chronological", kind: "exact", mini: [["Inbox", ["Today · 3 emails", "Yesterday · 8", "Last week · 21"]]],
+        best: ["Time matters most", "Inboxes, feeds, order history, changelogs"], warn: ["Hard to find an old item by topic"] },
+      { tab: "📚 Topic", kind: "ambig", mini: [["Store", ["Electronics", "Books", "Home & kitchen", "Toys"]]],
+        best: ["Browsing and discovery", "E-commerce, news, documentation"], warn: ["Items that fit two topics, so users guess"] },
+      { tab: "✅ Task", kind: "ambig", mini: [["Banking", ["Send money", "Pay a bill", "Deposit a check", "Freeze my card"]]],
+        best: ["Apps where people come to do something", "Banking, admin panels, government services"], warn: ["Missing tasks have no home"] },
+      { tab: "👥 Audience", kind: "ambig", mini: [["Company site", ["Personal", "Business", "Developers", "Investors"]]],
+        best: ["Very different user groups", "SaaS sites, universities, banks"], warn: ["Users who don't know which group they're in"] },
+    ];
+    let schemeI = 0;
+    function renderScheme() {
+      const s = SCHEMES[schemeI];
+      document.getElementById("scheme-tabs").innerHTML = SCHEMES.map((x, i) => `<button class="btn ${i === schemeI ? "active" : ""}" data-scheme="${i}">${x.tab}</button>`).join("");
+      document.getElementById("scheme-body").innerHTML = `
+        <div class="mini">${s.mini.map(([h, items]) => `<div class="mh">${h}</div>${items.map(x => `<div class="mi">${x}</div>`).join("")}`).join("")}</div>
+        <div>
+          <span class="kind ${s.kind}">${s.kind === "exact" ? "Exact scheme: one right answer" : "Ambiguous scheme: needs user research"}</span>
+          <h4>✅ Best for</h4>${list(s.best)}
+          <h4>⚠️ Watch out</h4>${list(s.warn)}
+        </div>`;
+    }
+    document.getElementById("scheme-tabs").onclick = e => { const b = e.target.closest("[data-scheme]"); if (b) { schemeI = +b.dataset.scheme; renderScheme(); } };
+    renderScheme();
+
+    /* ---------- Learn: sitemap ---------- */
+    const SITEMAP = { label: "🏠 Home", children: [
+      { label: "📁 Projects", children: [{ label: "Board" }, { label: "Timeline" }, { label: "Backlog" }] },
+      { label: "✅ My tasks", children: [{ label: "Assigned to me" }, { label: "Due this week" }] },
+      { label: "📊 Reports", children: [{ label: "Velocity" }, { label: "Burndown" }, { label: "Workload" }] },
+      { label: "👥 Team", children: [{ label: "Members" }, { label: "Roles & permissions" }] },
+      { label: "⚙️ Settings", children: [{ label: "Workspace" }, { label: "Billing" }, { label: "Integrations" }] },
+    ] };
+    const openSet = new Set(["0", "0.0", "0.2"]);
+    function treeHtml(n, id, depth) {
+      if (!n.children) return `<li class="leaf">${n.label}</li>`;
+      const open = openSet.has(id);
+      return `<li><button class="tap" data-tree="${id}" aria-expanded="${open}">
+          <span class="tw">${open ? "▾" : "▸"}</span><b>${n.label}</b><span class="lv">Level ${depth}</span></button>
+        ${open ? `<ul>${n.children.map((c, i) => treeHtml(c, id + "." + i, depth + 1)).join("")}</ul>` : ""}</li>`;
+    }
+    function renderTree() { document.getElementById("sitemap").innerHTML = treeHtml(SITEMAP, "0", 0); }
+    document.getElementById("sitemap").onclick = e => {
+      const b = e.target.closest("[data-tree]");
+      if (!b) return;
+      const id = b.dataset.tree;
+      openSet.has(id) ? openSet.delete(id) : openSet.add(id);
+      renderTree();
+    };
+    renderTree();
+
+    /* ---------- Learn: labels ---------- */
+    const LBL = [["📚", "Knowledge Base", "Help"], ["📦", "Fulfillment", "Orders"], ["🏷️", "SKU Catalog", "Products"],
+                 ["💳", "Entitlements", "Plans & billing"], ["🪪", "Identity", "Account"], ["📣", "Comms Prefs", "Notifications"]];
+    const lblT = document.getElementById("lbl-toggle");
+    function renderLabels(anim) {
+      document.getElementById("lnav").innerHTML = LBL.map(([ic, co, us]) =>
+        `<div class="${anim ? "flash" : ""}"><span>${ic}</span>${lblT.checked ? us : co}</div>`).join("");
+    }
+    lblT.onchange = () => renderLabels(true);
+    renderLabels();
+
+    /* ---------- Navigation patterns ---------- */
+    const ln = (n, s) => Array.from({ length: n }, (_, i) => `<i class="ln ${s && i % 2 ? "s" : ""}"></i>`).join("");
+    const PATTERNS = [
+      { tab: "Top nav", mock: `<div class="mk"><div class="bar"><i class="logo"></i><i class="lnk on"></i><i class="lnk"></i><i class="lnk"></i><i class="lnk"></i></div><div class="body"><i class="blk"></i>${ln(3, 1)}</div></div>`,
+        use: ["3 to 7 top-level sections", "Desktop websites, marketing sites"], fail: ["Doesn't scale past ~7 items", "Must collapse on mobile"], eg: "Apple.com, most company sites" },
+      { tab: "Sidebar", mock: `<div class="mk"><div class="row"><div class="side"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><div class="body">${ln(5, 1)}</div></div></div>`,
+        use: ["Many sections, used daily", "Web apps and dashboards"], fail: ["Takes horizontal space", "Needs a collapsed state on small screens"], eg: "Gmail, Jira, Slack" },
+      { tab: "Tabs", mock: `<div class="mk"><div class="bar"><i class="logo"></i></div><div class="tabsmk"><i class="on"></i><i></i><i></i></div><div class="body">${ln(4, 1)}</div></div>`,
+        use: ["Switching between peer views of the same thing", "Profile: Posts / Media / Likes"], fail: ["Not for sequential steps (use a stepper)", "Too many tabs overflow"], eg: "Settings pages, GitHub repo tabs" },
+      { tab: "Bottom tab bar", mock: `<div class="mk phonemk"><div class="body">${ln(5, 1)}</div><div class="bottom"><i class="on"></i><i></i><i></i><i></i></div></div>`,
+        use: ["Mobile apps", "3 to 5 top destinations, always visible"], fail: ["Max 5 items", "For destinations, not actions"], eg: "Instagram, Spotify, banking apps" },
+      { tab: "Hamburger", mock: `<div class="mk phonemk"><div class="bar"><span class="burger">☰</span></div><div class="body">${ln(4, 1)}</div><div class="scrim"></div><div class="drawer"><i class="on"></i><i></i><i></i><i></i><i></i></div></div>`,
+        use: ["Secondary items on small screens"], fail: ["Hidden nav gets used less: out of sight, out of mind", "Don't hide your main destinations here"], eg: "Mobile websites" },
+      { tab: "Breadcrumbs", mock: `<div class="mk"><div class="bar"><i class="logo"></i><i class="lnk"></i><i class="lnk"></i></div><div class="crumbs">Home › Shoes › <b>Running</b></div><div class="body">${ln(4, 1)}</div></div>`,
+        use: ["Deep hierarchies", "Show 'you are here' and one-tap jump up"], fail: ["A helper, never the main nav", "Pointless on flat sites"], eg: "Amazon, docs sites" },
+      { tab: "Mega menu", mock: `<div class="mk"><div class="bar"><i class="logo"></i><i class="lnk on"></i><i class="lnk"></i><i class="lnk"></i></div><div class="body">${ln(4, 1)}</div><div class="mega">${Array.from({ length: 4 }, () => `<div><i class="h"></i><i></i><i></i><i></i></div>`).join("")}</div></div>`,
+        use: ["Huge sites with many categories", "Shows the whole structure at once"], fail: ["Can overwhelm", "Hover-only menus break on touch: open on tap"], eg: "IKEA, large retailers" },
+    ];
+    let patI = 0;
+    function renderPat() {
+      const p = PATTERNS[patI];
+      document.getElementById("pat-tabs").innerHTML = PATTERNS.map((x, i) => `<button class="btn ${i === patI ? "active" : ""}" data-pat="${i}">${x.tab}</button>`).join("");
+      document.getElementById("pat-body").innerHTML = `
+        <div>${p.mock}</div>
+        <div><h3>${p.tab}</h3>
+          <h4>✅ Use when</h4>${list(p.use)}
+          <h4 class="warn">⚠️ Pitfalls</h4>${list(p.fail)}
+          <div class="eg">Seen in: ${p.eg}</div></div>`;
+    }
+    document.getElementById("pat-tabs").onclick = e => { const b = e.target.closest("[data-pat]"); if (b) { patI = +b.dataset.pat; renderPat(); } };
+    renderPat();
+
+    /* ---------- User flows ---------- */
+    // Each row: a main-path node, optional edge-case branch to the right
+    const FLOW = [
+      { main: ["oval", "Start: open app"] },
+      { main: ["", "Login screen"], arr: "or →", alt: true, branch: [["", "Tap 'Forgot password'"], ["", "Reset email sent"], ["oval", "Back to login"]] },
+      { main: ["", "Enter email + password"], arr: "offline →", branch: [["err", "'No connection' + Retry"]] },
+      { main: ["diamond", "Credentials valid?"], arr: "No →", branch: [["err", "'Wrong email or password'"], ["diamond", "5th failed try?"], ["err", "Lock account 15 min"]] },
+      { main: ["diamond", "Email verified?"], edgeOnly: true, arr: "No →", branch: [["err", "'Verify your email' + Resend"]] },
+      { main: ["", "Dashboard"] },
+      { main: ["oval", "End: signed in"] },
+    ];
+    const edgeT = document.getElementById("edge-toggle");
+    function renderFlow() {
+      const edges = edgeT.checked;
+      const rows = FLOW.filter(r => edges || !r.edgeOnly);
+      document.getElementById("flow").innerHTML = rows.map((r, idx) => `
+        <div class="frow">
+          <div class="mcol"><div class="nd ${r.main[0]}">${r.main[1]}</div>
+            ${idx < rows.length - 1 ? `<div class="down">${r.main[0] === "diamond" ? "Yes ↓" : "↓"}</div>` : ""}</div>
+          ${edges && r.branch ? `<div class="br"><span class="arr ${r.alt ? "alt" : ""}">${r.arr}</span>${r.branch.map((b, j) =>
+            `<span class="nd ${b[0]}">${b[1]}</span>${j < r.branch.length - 1 ? `<span class="arr alt">→</span>` : ""}`).join("")}</div>`
+            : r.branch ? `<div class="br"><span class="arr alt">→</span><span class="nd ghost">What if…? <small>(${r.branch.length})</small></span></div>` : "<div></div>"}
+        </div>`).join("");
+      const states = rows.reduce((n, r) => n + 1 + (edges && r.branch ? r.branch.length : 0), 0);
+      const paths = 1 + (edges ? rows.filter(r => r.branch).length + 1 : 0); // +1: the lockout sub-branch
+      document.getElementById("c-states").textContent = states;
+      document.getElementById("c-tests").textContent = paths;
+    }
+    edgeT.onchange = renderFlow;
+    renderFlow();
+
+    /* ---------- Try: card sort ---------- */
+    const CARDS = ["Transfer money", "Pay bills", "Scheduled payments", "Freeze card", "Change PIN", "Card limits",
+                   "Statements", "Tax documents", "Savings goals", "Spending insights"];
+    // What 20 (fictional) participants did: majority group + agreement %
+    const CONSENSUS = [
+      { name: "💸 Move money", cards: [[0, 90], [1, 85], [2, 70]] },
+      { name: "💳 Cards", cards: [[3, 95], [4, 80], [5, 60]] },
+      { name: "📄 Documents", cards: [[6, 75], [7, 85]] },
+      { name: "🎯 Plan & save", cards: [[8, 80], [9, 50]] },
+    ];
+    const groupOf = {}; CONSENSUS.forEach((g, gi) => g.cards.forEach(([c]) => groupOf[c] = gi));
+    let csPlaced, csSel, csNames = ["Group 1", "Group 2", "Group 3", "Group 4"], csOrder;
+    function csReset() {
+      csPlaced = CARDS.map(() => null); csSel = null;
+      csOrder = CARDS.map((_, i) => i).sort(() => Math.random() - .5);
+      document.getElementById("cs-result").innerHTML = "";
+      renderCs();
+    }
+    const csChip = i => `<button class="chip ${csSel === i ? "sel" : ""}" data-card="${i}">${CARDS[i]}</button>`;
+    function renderCs() {
+      const left = csOrder.filter(i => csPlaced[i] === null);
+      document.getElementById("cs-tray").innerHTML = left.length ? left.map(csChip).join("") : `<span style="color:var(--muted);align-self:center">All sorted. Compare below ↓</span>`;
+      document.getElementById("cs-groups").innerHTML = csNames.map((n, g) => `
+        <div class="group ${csSel !== null ? "ready" : ""}" data-group="${g}">
+          <input value="${n}" data-name="${g}" aria-label="Group name">
+          <div class="chips">${csOrder.filter(i => csPlaced[i] === g).map(csChip).join("")}</div>
+        </div>`).join("");
+    }
+    const tryEl = document.getElementById("try");
+    tryEl.addEventListener("click", e => {
+      if (e.target.matches("input")) return;
+      const card = e.target.closest("[data-card]"), grp = e.target.closest("[data-group]");
+      if (card) {
+        const i = +card.dataset.card;
+        if (csPlaced[i] !== null && csSel === null) csPlaced[i] = null; // tap a placed card to return it
+        else csSel = csSel === i ? null : i;
+        renderCs();
+      } else if (grp && csSel !== null) {
+        csPlaced[csSel] = +grp.dataset.group; csSel = null; renderCs();
+      }
+    });
+    tryEl.addEventListener("input", e => { if (e.target.dataset.name) csNames[+e.target.dataset.name] = e.target.value; });
+    // A card "matches" when you grouped it with most of its majority-group mates
+    function csMatches(i) {
+      const mates = CONSENSUS[groupOf[i]].cards.map(([c]) => c).filter(c => c !== i);
+      if (csPlaced[i] === null) return false;
+      return mates.filter(m => csPlaced[m] === csPlaced[i]).length >= Math.ceil(mates.length / 2);
+    }
+    document.getElementById("cs-compare").onclick = () => {
+      const placedN = csPlaced.filter(x => x !== null).length;
+      const matched = CARDS.filter((_, i) => csMatches(i)).length;
+      document.getElementById("cs-result").innerHTML = `<div class="res">
+        ${CONSENSUS.map(g => `<div class="card"><h4>${g.name}</h4>${g.cards.map(([c, p]) => `
+          <div class="agree"><span>${CARDS[c]}</span><span class="bar"><i class="${p < 65 ? "low" : ""}" style="width:${p}%"></i></span>
+          <span class="pct">${p}%</span><span>${csMatches(c) ? "✅" : "➖"}</span></div>`).join("")}</div>`).join("")}
+        <div class="card res-sum">
+          <b>You agreed with the majority on ${matched} / ${CARDS.length} cards</b>${placedN < CARDS.length ? ` · ${CARDS.length - placedN} not sorted yet` : ""}
+          ${list(["<b>High agreement</b> (green): safe to group that way", "<b>Low agreement</b> (amber, e.g. 'Spending insights' 50%): users are split, so cross-link it or test the label", "Real studies: 15–20+ participants, tools like Optimal Workshop or Maze"])}
+        </div></div>`;
+    };
+    document.getElementById("cs-reset").onclick = csReset;
+    csReset();
+
+    /* ---------- Try: tree test ---------- */
+    const L = label => ({ label });
+    const TT_TREE = { label: "Home", children: [
+      { label: "Shop", children: [L("Men"), L("Women"), L("Kids"), { label: "Shoes", children: [L("Running"), L("Casual"), L("Size guide")] }, L("Sale")] },
+      { label: "Account", children: [L("Profile"), L("Addresses"), L("Payment methods"), L("Order history")] },
+      { label: "Help", children: [{ label: "Orders & returns", children: [L("Track an order"), L("Start a return"), L("Return policy")] }, L("Shipping"), L("Size guides"), L("Contact us")] },
+      { label: "About", children: [L("Our story"), L("Careers"), L("Stores")] },
+    ] };
+    const TASKS = [
+      { q: "You bought shoes that don't fit. Send them back.", ok: ["Help/Orders & returns/Start a return", "Account/Order history"] },
+      { q: "Find out which shoe size to order.", ok: ["Shop/Shoes/Size guide", "Help/Size guides"] },
+      { q: "You moved house. Update where orders get delivered.", ok: ["Account/Addresses"] },
+    ];
+    let tt;
+    function ttReset() { tt = { task: 0, path: [], back: false, results: [] }; renderTT(); }
+    const ttNode = path => path.reduce((n, i) => n.children[i], TT_TREE);
+    const ttLabels = path => { const o = []; let n = TT_TREE; path.forEach(i => { n = n.children[i]; o.push(n.label); }); return o; };
+    function renderTT() {
+      const main = document.getElementById("tt-main");
+      if (tt.task >= TASKS.length) {
+        const direct = tt.results.filter(r => r === "direct").length;
+        main.innerHTML = `<div class="tt-task"><small>Done</small>${direct} / ${TASKS.length} found directly</div>
+          ${list(["Real tree tests: 50+ participants per task", "Look at <b>where people went first</b>. That shows what the labels promise", "Two right answers (e.g. size guide in Shop and Help) are fine if both are findable"])}
+          <button class="btn primary" data-tt="restart" style="margin-top:12px">↺ Try again</button>`;
+      } else {
+        const node = ttNode(tt.path);
+        main.innerHTML = `
+          <div class="tt-task"><small>Task ${tt.task + 1} of ${TASKS.length}</small>${TASKS[tt.task].q}</div>
+          <div class="tt-crumb">${["Home", ...ttLabels(tt.path)].join(" › ")}</div>
+          <div class="tt-list">
+            ${tt.path.length ? `<button class="tt-item" data-tt="back"><span>‹ Back</span></button>` : ""}
+            ${node.children.map((c, i) => `<button class="tt-item ${c.children ? "" : "leaf"}" data-tt="go" data-i="${i}">
+              <span>${c.label}</span><span class="${c.children ? "" : "pick"}">${c.children ? "›" : "I'd look here"}</span></button>`).join("")}
+          </div>`;
+      }
+      const V = { direct: "✅ Direct", indirect: "🔁 Indirect", fail: "❌ Fail" };
+      document.getElementById("tt-score").innerHTML = TASKS.map((t, i) => `<li><span>Task ${i + 1}</span>
+        <span class="verdict ${tt.results[i] || ""}">${tt.results[i] ? V[tt.results[i]] : i === tt.task ? "⏳ In progress" : "—"}</span></li>`).join("");
+    }
+    document.getElementById("tt-main").addEventListener("click", e => {
+      const b = e.target.closest("[data-tt]");
+      if (!b) return;
+      const act = b.dataset.tt;
+      if (act === "restart") return ttReset();
+      if (act === "back") { tt.path.pop(); tt.back = true; return renderTT(); }
+      const i = +b.dataset.i, child = ttNode(tt.path).children[i];
+      if (child.children) { tt.path.push(i); return renderTT(); }
+      const answer = [...ttLabels(tt.path), child.label].join("/");
+      const ok = TASKS[tt.task].ok.includes(answer);
+      tt.results.push(ok ? (tt.back ? "indirect" : "direct") : "fail");
+      tt.task++; tt.path = []; tt.back = false;
+      renderTT();
+    });
+    ttReset();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"Let's run a card sort.\"", "Users group content themselves, revealing their mental model.", "Open or closed sort? How many participants, and when do we get results?"],
+      ["\"The IA is too deep.\"", "Important things are buried several levels down.", "Which tasks suffer most? Can we flatten without overloading screens?"],
+      ["\"Users don't speak our language.\"", "Labels use internal or technical words.", "Where will the new labels come from: interviews, search logs, support tickets?"],
+      ["\"We need a tree test.\"", "Test if people find things in the structure, without visuals.", "Which top tasks are we testing, and what success rate is 'good enough'?"],
+      ["\"That's a navigation problem, not a search problem.\"", "Adding search won't fix a confusing structure.", "What's the evidence? Do search logs show people searching for things already in the menu?"],
+      ["\"Let's map the user flow.\"", "Draw every step, decision and error path for one task.", "Will it include edge cases? I'll use it for estimates and test cases."],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(3);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

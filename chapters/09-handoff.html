@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Design → Dev Handoff · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Shared bits ---------- */
+    .seg { display: inline-flex; gap: 6px; flex-wrap: wrap; background: var(--surface-2); padding: 4px; border-radius: 14px; }
+    .seg button { font: inherit; font-weight: 700; font-size: 14px; min-height: 44px; padding: 8px 16px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+    .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .center { display: flex; justify-content: center; margin-bottom: 18px; }
+    .pill-btn { font: inherit; font-size: 14px; font-weight: 600; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; transition: border-color .2s, background .2s; }
+    .pill-btn:hover { border-color: var(--accent); }
+    .pill-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .stage { background: var(--surface-2); border-radius: var(--radius); padding: 24px 16px; }
+    .k { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+    code, .code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+    .code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; background: var(--surface-2); border-radius: 12px; padding: 12px 14px; margin: 0; }
+
+    /* ---------- Explore: design vs shipped ---------- */
+    .cmp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 700px) { .cmp { grid-template-columns: 1fr; } }
+    .cmp-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .cmp-lbl { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .swipe { position: relative; width: 300px; max-width: 100%; margin: 0 auto; }
+    .swipe .mock.design { position: absolute; top: 0; left: 0; }
+    .swipe-range { width: 300px; max-width: 100%; display: block; margin: 16px auto 0; accent-color: var(--accent); height: 44px; }
+    .swipe-lbls { display: flex; justify-content: space-between; width: 300px; max-width: 100%; margin: 0 auto; font-size: 12px; font-weight: 700; color: var(--muted); }
+
+    /* Mock card. Fixed colors on purpose: it's a "design canvas". */
+    .mock { width: 300px; max-width: 100%; background: #fff; color: #1d1d1f; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.18); font-family: system-ui, sans-serif; }
+    .mock .img { height: 120px; display: grid; place-items: center; font-size: 52px; background: linear-gradient(135deg, #ffd8a8, #ffb4a2); }
+    .mock .body { padding: 20px; }
+    .mock .name { font-size: 18px; font-weight: 700; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mock .meta { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: #555; margin-bottom: 16px; }
+    .mock .price { font-weight: 700; color: #1d1d1f; }
+    .mock .buy { display: block; width: 100%; padding: 12px; border: 0; border-radius: 10px; background: #5b4bdb; color: #fff; font: inherit; font-weight: 700; font-size: 15px; }
+    /* What actually shipped */
+    .mock.build .img { background: #e8e8e8; font-size: 15px; color: #999; }
+    .mock.build .body { padding: 12px; }
+    .mock.build .name { font-weight: 400; white-space: normal; overflow: visible; }
+    .mock.build .meta { display: block; }
+    .mock.build .meta .price { display: block; margin-top: 2px; }
+    .mock.build .buy { background: #4338ca; }
+    .mock.hl, .mock [data-d].hl { outline: 3px solid #ff6b6b; }
+    .mock.hl { outline-offset: 3px; }
+    .mock [data-d].hl { outline-offset: -3px; border-radius: 6px; }
+
+    .issues { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+    @media (max-width: 700px) { .issues { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .issue { font: inherit; text-align: left; cursor: pointer; min-height: 52px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); display: flex; gap: 10px; align-items: center; transition: border-color .2s; }
+    .issue .n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; background: var(--surface-2); }
+    .issue.seen .n { background: var(--good-soft); color: var(--good); }
+    .issue.on { border-color: var(--bad); }
+    .issue.on .n { background: var(--bad); color: #fff; }
+    .issue b { font-size: 14px; }
+    .issue-panel { margin-top: 16px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 760px) { .issue-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .issue-panel > div { background: var(--surface-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+    .issue-panel .fix { background: var(--good-soft); }
+    .issue-panel .cause { background: var(--bad-soft); }
+    .found { text-align: center; margin-top: 14px; font-weight: 700; color: var(--muted); }
+
+    /* ---------- Learn: handoff package ---------- */
+    .pkg { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+    .pkg-item { font: inherit; text-align: left; cursor: pointer; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text); min-height: 64px; transition: border-color .2s, background .2s; }
+    .pkg-item:hover { border-color: var(--accent); }
+    .pkg-item .top { display: flex; gap: 10px; align-items: center; font-weight: 800; }
+    .pkg-item .ic { font-size: 22px; }
+    .pkg-item .why { display: none; margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .pkg-item .why b { color: var(--bad); }
+    .pkg-item.open { border-color: var(--accent); background: var(--accent-soft); }
+    .pkg-item.open .why { display: block; color: var(--text); }
+
+    /* ---------- Learn: inspect mode ---------- */
+    .inspect { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .inspect { grid-template-columns: 1fr; } }
+    .insp-stage { background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / 20px 20px; border-radius: var(--radius); padding: 28px 16px; display: grid; place-items: center; }
+    .sum { width: 280px; max-width: 100%; background: #fff; color: #1d1d1f; border-radius: 16px; padding: 24px; font-family: system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.15); cursor: pointer; }
+    .sum [data-s], .sum[data-s] { position: relative; }
+    .sum h4 { margin: 0 0 16px; font-size: 20px; font-weight: 700; }
+    .sum .row { display: flex; justify-content: space-between; font-size: 15px; color: #555; padding: 4px 0; }
+    .sum hr { border: 0; border-top: 1px solid #e5e5ea; margin: 12px 0; }
+    .sum .total { display: flex; justify-content: space-between; font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+    .sum .cta { display: block; width: 100%; height: 48px; border: 0; border-radius: 12px; background: #5b4bdb; color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .sum .note { font-size: 12px; color: #6b6b70; text-align: center; margin-top: 10px; }
+    .insp-on { outline: 2px solid #ff3bd4 !important; outline-offset: 2px; }
+    .insp-on::after { content: attr(data-size); position: absolute; top: -26px; left: 50%; transform: translateX(-50%); background: #ff3bd4; color: #fff; font: 700 11px/1 system-ui; padding: 4px 6px; border-radius: 4px; white-space: nowrap; z-index: 2; }
+    .insp-panel h3 { margin: 0 0 4px; }
+    .props { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; margin: 12px 0 14px; }
+    .props dt { color: var(--muted); }
+    .props dd { margin: 0; font-weight: 600; }
+    .tok { display: inline-flex; align-items: center; gap: 6px; }
+    .sw { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--line); display: inline-block; }
+
+    /* ---------- Learn 2: responsive ---------- */
+    .rf-wrap { display: flex; justify-content: center; }
+    .rf { border: 3px solid var(--line); border-radius: 18px; background: var(--surface); overflow: hidden; transition: width .4s ease; display: grid; grid-template-rows: auto 1fr auto; height: 280px; max-width: 100%; }
+    .rf.mobile { width: 230px; }
+    .rf.tablet { width: 470px; }
+    .rf.desktop { width: 760px; }
+    .rf .bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; }
+    .rf .bar .links { margin-left: auto; display: flex; gap: 10px; color: var(--muted); }
+    .rf .bar .burger { margin-left: auto; font-size: 16px; display: none; }
+    .rf .main { display: flex; min-height: 0; }
+    .rf .side { width: 130px; border-right: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .rf .side i { height: 10px; border-radius: 4px; background: var(--surface-2); }
+    .rf .grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; align-content: start; overflow: hidden; }
+    .rf .tile { height: 70px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 22px; }
+    .rf .tabs { display: none; justify-content: space-around; padding: 8px; border-top: 1px solid var(--line); font-size: 16px; }
+    .rf.tablet .side { width: 44px; }
+    .rf.tablet .grid { grid-template-columns: repeat(2, 1fr); }
+    .rf.mobile .side, .rf.mobile .bar .links { display: none; }
+    .rf.mobile .bar .burger { display: block; }
+    .rf.mobile .grid { grid-template-columns: 1fr; }
+    .rf.mobile .tabs { display: flex; }
+    .bp-notes { margin-top: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 700px) { .bp-notes { grid-template-columns: 1fr; } }
+    .bp-notes > div { background: var(--surface-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+
+    .sizing { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .sizing { grid-template-columns: 1fr; } }
+    .sz-box { border: 2px dashed var(--accent); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 10px; transition: width .15s; }
+    .sz-row { display: flex; align-items: center; gap: 10px; }
+    .sz-row .lbl { flex: none; width: 52px; font-size: 12px; font-weight: 800; color: var(--muted); }
+    .sz-el { height: 40px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; padding: 0 14px; white-space: nowrap; overflow: hidden; }
+    .sz-fixed { width: 160px; flex: none; }
+    .sz-fill { flex: 1; min-width: 0; }
+    .sz-hug { width: fit-content; }
+    .sz-range { width: 100%; accent-color: var(--accent); height: 44px; }
+    .sz-map { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; font-size: 14px; align-items: center; }
+    .sz-map b { color: var(--accent); }
+
+    .stress { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .stress { grid-template-columns: 1fr; } }
+    .stress-stage { background: var(--surface-2); border-radius: var(--radius); padding: 24px 12px; display: grid; place-items: center; min-height: 340px; overflow: hidden; }
+    .sc { width: 240px; background: #fff; color: #1d1d1f; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.15); font-family: system-ui, sans-serif; }
+    .sc .img { height: 100px; border-radius: 14px 14px 0 0; display: grid; place-items: center; font-size: 44px; background: linear-gradient(135deg, #ffd8a8, #ffb4a2); }
+    .sc .img.broken { background: #fff; font-size: 12px; color: #999; justify-items: start; align-items: start; padding: 6px; border-bottom: 1px solid #eee; }
+    .sc .bd { padding: 14px; }
+    .sc .nm { font-weight: 700; font-size: 16px; white-space: nowrap; }
+    .sc .sub { font-size: 13px; color: #666; margin: 2px 0 12px; white-space: nowrap; }
+    .sc .ft { display: flex; align-items: center; gap: 8px; }
+    .sc .pr { width: 64px; flex: none; font-weight: 700; white-space: nowrap; }
+    .sc .bt { width: 110px; flex: none; height: 36px; border: 0; border-radius: 8px; background: #5b4bdb; color: #fff; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; margin-left: auto; }
+    /* Defensive build */
+    .sc.safe .nm, .sc.safe .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sc.safe .ft { flex-wrap: wrap; }
+    .sc.safe .pr { width: auto; }
+    .sc.safe .bt { width: auto; min-width: 110px; height: auto; min-height: 36px; padding: 8px 12px; white-space: normal; }
+    #safe-mode { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    #safe-mode button { padding: 8px 10px; font-size: 13px; }
+    .breaks { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+    .breaks div { padding: 8px 12px; border-radius: 10px; background: var(--bad-soft); }
+    .breaks div.ok { background: var(--good-soft); }
+
+    /* ---------- Learn 3: process ---------- */
+    .flow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 760px) { .flow { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .fstep { font: inherit; cursor: pointer; padding: 12px 6px; border-radius: 14px; border: 2px solid transparent; background: var(--surface-2); color: var(--text); text-align: center; min-height: 84px; transition: border-color .2s; }
+    .fstep .e { font-size: 24px; display: block; }
+    .fstep .t { font-size: 12px; font-weight: 800; }
+    .fstep.on { border-color: var(--accent); background: var(--accent-soft); }
+    .flow-panel { margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 700px) { .flow-panel { grid-template-columns: 1fr; } }
+    .flow-panel > div { background: var(--surface-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+    .flow-panel .tpm { background: var(--accent-soft); }
+    .dor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 640px) { .dor { grid-template-columns: 1fr; } }
+    .dor h3 { margin: 0 0 4px; }
+    .dor .when { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .ac { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+    @media (max-width: 700px) { .ac { grid-template-columns: 1fr; } }
+    .ac .vague { background: var(--bad-soft); border-radius: var(--radius); padding: 18px; }
+    .ac .good { background: var(--good-soft); border-radius: var(--radius); padding: 18px; }
+    .gwt { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 15px; }
+    .gwt b { color: var(--good); }
+
+    /* ---------- Try: ticket review ---------- */
+    .ticket-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .ticket-wrap { grid-template-columns: 1fr; } }
+    .ticket .tk-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .ticket .tk-id { font-size: 12px; font-weight: 800; color: var(--muted); }
+    .ticket .tk-type { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: var(--good-soft); color: var(--good); }
+    .ticket h3 { margin: 0 0 12px; }
+    .ticket .att { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+    .ticket .att div { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
+    .ticket .att .ic { flex: none; }
+    .checks { display: flex; flex-direction: column; gap: 8px; }
+    .chk { font: inherit; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; }
+    .chk .box { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: grid; place-items: center; font-size: 13px; color: #fff; }
+    .chk.on .box { background: var(--bad); border-color: var(--bad); }
+    .chk.right { border-color: var(--good); background: var(--good-soft); }
+    .chk.wrong { border-color: var(--bad); background: var(--bad-soft); }
+    .chk .why { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+    .try-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .try-msg { font-weight: 700; }
+
+    .acq { max-width: 680px; margin: 0 auto; }
+    .acq .scn { font-size: 18px; font-weight: 700; text-align: center; margin: 8px 0 16px; }
+    .acq .opts { display: flex; flex-direction: column; gap: 10px; }
+    .acq .opt { font: inherit; font-size: 15px; text-align: left; cursor: pointer; min-height: 48px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); }
+    .acq .opt:hover { border-color: var(--accent); }
+    .acq .opt.right { border-color: var(--good); background: var(--good-soft); }
+    .acq .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+    .acq .fb:empty { display: none; }
+    .acq .fb { margin-top: 12px; font-weight: 600; text-align: center; }
+    .acq .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 09 Design → Dev Handoff</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 09 · Design → Dev Handoff</div>
+      <h1>From Figma<br>to production.</h1>
+      <p>Where designs get lost in translation, and how you stop it.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#package">📦 Package</a>
+        <a href="#responsive">📱 Responsive</a>
+        <a href="#process">🔁 Process</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Design vs what shipped</h2>
+      <p class="sub">Same card. Spot the 6 differences, then tap each one to see why it happened.</p>
+
+      <div class="center"><div class="seg" id="cmp-mode">
+        <button class="on" data-mode="side">Side by side</button>
+        <button data-mode="swipe">Swipe compare</button>
+      </div></div>
+
+      <div class="stage" id="cmp-stage"></div>
+
+      <div class="issues" id="issues"></div>
+      <div class="issue-panel" id="issue-panel"></div>
+      <div class="found" id="found"></div>
+    </section>
+
+    <!-- ================= PACKAGE ================= -->
+    <section class="section" id="package">
+      <span class="step-label">💡 Learn</span>
+      <h2>What a complete handoff contains</h2>
+      <p class="sub">Tap each item to see what breaks without it.</p>
+      <div class="pkg" id="pkg"></div>
+
+      <h2 style="margin-top:44px">Inspect mode, like Figma Dev Mode</h2>
+      <p class="sub">Tap any part of the card. Get the spec and the CSS.</p>
+      <div class="inspect">
+        <div class="insp-stage">
+          <div class="sum" data-s="card">
+            <h4 data-s="title">Order summary</h4>
+            <div class="row" data-s="row"><span>Margherita × 2</span><span>€18.00</span></div>
+            <div class="row"><span>Delivery</span><span>€2.50</span></div>
+            <hr>
+            <div class="total" data-s="total"><span>Total</span><span>€20.50</span></div>
+            <button class="cta" data-s="cta">Place order</button>
+            <div class="note" data-s="note">You won't be charged yet</div>
+          </div>
+        </div>
+        <div class="card insp-panel" id="insp-panel"></div>
+      </div>
+    </section>
+
+    <!-- ================= RESPONSIVE ================= -->
+    <section class="section" id="responsive">
+      <span class="step-label">💡 Learn</span>
+      <h2>One design, three screens</h2>
+      <p class="sub">A desktop mockup alone is half a spec. Switch breakpoints.</p>
+
+      <div class="center"><div class="seg" id="bp">
+        <button data-bp="mobile">📱 Mobile · 375</button>
+        <button data-bp="tablet">📲 Tablet · 768</button>
+        <button class="on" data-bp="desktop">🖥️ Desktop · 1280</button>
+      </div></div>
+      <div class="rf-wrap">
+        <div class="rf desktop" id="rf">
+          <div class="bar"><span>🍕 FoodApp</span><span class="links"><span>Menu</span><span>Orders</span><span>Account</span></span><span class="burger">☰</span></div>
+          <div class="main">
+            <div class="side"><i></i><i></i><i></i><i></i></div>
+            <div class="grid"><div class="tile">🍕</div><div class="tile">🍔</div><div class="tile">🥗</div><div class="tile">🍜</div><div class="tile">🌮</div><div class="tile">🍣</div></div>
+          </div>
+          <div class="tabs"><span>🏠</span><span>🔍</span><span>🧾</span><span>👤</span></div>
+        </div>
+      </div>
+      <div class="bp-notes" id="bp-notes"></div>
+
+      <h2 style="margin-top:44px">Fixed, Fill, Hug</h2>
+      <p class="sub">How an element reacts when its container changes. Drag the slider.</p>
+      <div class="sizing">
+        <div class="card">
+          <div class="sz-box" id="sz-box" style="width:100%">
+            <div class="sz-row"><span class="lbl">FIXED</span><div class="sz-el sz-fixed">Checkout</div></div>
+            <div class="sz-row"><span class="lbl">FILL</span><div class="sz-el sz-fill">Checkout</div></div>
+            <div class="sz-row"><span class="lbl">HUG</span><div class="sz-el sz-hug">Checkout</div></div>
+          </div>
+          <input type="range" class="sz-range" id="sz-range" min="55" max="100" value="100" aria-label="Container width">
+        </div>
+        <div class="card">
+          <p class="k">Figma → CSS</p>
+          <div class="sz-map">
+            <b>Fixed</b><code>width: 160px;</code>
+            <b>Fill</b><code>flex: 1;</code>
+            <b>Hug</b><code>width: fit-content;</code>
+          </div>
+          <ul class="bullets" style="margin-top:14px">
+            <li>Ask which one, for every key element</li>
+            <li>Fixed widths are where layouts break</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 style="margin-top:44px">Content stress test</h2>
+      <p class="sub">Designs use perfect content. Real data doesn't. Turn on the chaos.</p>
+      <div class="stress">
+        <div class="stress-stage">
+          <div class="sc" id="sc">
+            <div class="img">🍔</div>
+            <div class="bd">
+              <div class="nm">Classic Burger</div>
+              <div class="sub">Free delivery over €15</div>
+              <div class="ft"><span class="pr">€9.50</span><button class="bt">Add to cart</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <p class="k">Real-world content</p>
+          <div class="pill-row" id="stress-toggles" style="justify-content:flex-start"></div>
+          <p class="k" style="margin-top:18px">Build quality</p>
+          <div class="seg" id="safe-mode">
+            <button class="on" data-safe="0">😬 From the mockup</button>
+            <button data-safe="1">🛡️ Defensively</button>
+          </div>
+          <div class="breaks" id="breaks"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PROCESS ================= -->
+    <section class="section" id="process">
+      <span class="step-label">💡 Learn</span>
+      <h2>Handoff is a process, not a moment</h2>
+      <p class="sub">Throwing a Figma link over the wall is how bugs are born. Tap each step.</p>
+      <div class="flow" id="flow"></div>
+      <div class="flow-panel" id="flow-panel"></div>
+
+      <h2 style="margin-top:44px">Definition of Ready vs Done</h2>
+      <p class="sub">Two gates every design ticket should pass.</p>
+      <div class="dor">
+        <div class="card">
+          <h3>🚦 Definition of Ready</h3>
+          <div class="when">Before a developer picks it up</div>
+          <ul class="bullets">
+            <li>All states and breakpoints designed</li>
+            <li>Final copy, no lorem ipsum</li>
+            <li>Uses existing components, or new ones flagged</li>
+            <li>Edge cases and errors covered</li>
+            <li>Testable acceptance criteria</li>
+            <li>Engineering has reviewed feasibility</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>✅ Definition of Done</h3>
+          <div class="when">Before it ships</div>
+          <ul class="bullets">
+            <li>Design QA passed (designer signed off)</li>
+            <li>Tested on target devices and breakpoints</li>
+            <li>Accessibility checked: keyboard, contrast, labels</li>
+            <li>Analytics events firing</li>
+            <li>Acceptance criteria met</li>
+            <li>Design file updated to match what shipped</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 style="margin-top:44px">Turn a design into acceptance criteria</h2>
+      <p class="sub">Given / When / Then makes "like the design" testable.</p>
+      <div class="ac">
+        <div class="vague">
+          <p class="k" style="color:var(--bad)">❌ Vague</p>
+          <ul class="bullets">
+            <li>"Coupon field works like the design"</li>
+            <li>"Show an error if the code is wrong"</li>
+          </ul>
+        </div>
+        <div class="good">
+          <p class="k" style="color:var(--good)">✅ Testable</p>
+          <div class="gwt">
+            <b>Given</b><span>a cart over €15</span>
+            <b>When</b><span>I apply an expired code</span>
+            <b>Then</b><span>I see "This code expired on 12 Oct" under the field, and the total doesn't change</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Is this ticket ready for dev?</h2>
+      <p class="sub">Read the ticket. Tick everything that is missing or not good enough.</p>
+      <div class="ticket-wrap">
+        <div class="card ticket">
+          <div class="tk-head"><span class="tk-type">STORY</span><span class="tk-id">FOOD-142</span></div>
+          <h3>Saved addresses screen</h3>
+          <div class="att">
+            <div><span class="ic">🖼️</span><span>Figma: <b>1 desktop frame</b>, showing 3 saved addresses</span></div>
+            <div><span class="ic">🧩</span><span>Uses <b>Card</b>, <b>Button</b> and <b>Input</b> from the design system</span></div>
+            <div><span class="ic">🎨</span><span>Colors and spacing use <b>tokens</b></span></div>
+            <div><span class="ic">✍️</span><span>Copy: "Lorem ipsum dolor sit amet…"</span></div>
+            <div><span class="ic">🗂️</span><span>Icons exported as SVG</span></div>
+            <div><span class="ic">✅</span><span>Acceptance criteria: "Works like the design"</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="checks" id="checks"></div>
+          <div class="try-bar">
+            <button class="btn primary" id="tk-check">Check review</button>
+            <button class="btn" id="tk-reset">Reset</button>
+            <span class="try-msg" id="tk-msg"></span>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:48px">Pick the testable criterion</h2>
+      <p class="sub">Which one could QA actually pass or fail?</p>
+      <div class="card acq" id="acq"></div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the team says…</h2>
+      <p class="sub">Tap a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Most design bugs are <b>missing specs</b>, not careless developers.</li>
+          <li>A handoff needs <b>all states, breakpoints and edge cases</b>, not one pretty frame.</li>
+          <li>Handoff is ongoing: <b>involve devs early, run design QA before shipping</b>.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const $ = (id) => document.getElementById(id);
+    const list = (a) => `<ul class="bullets">${a.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+
+    /* ---------- Explore: design vs shipped ---------- */
+    const ISSUES = [
+      { d: "pad", name: "Spacing", design: "24px card padding", built: "12px padding",
+        cause: "No spacing spec. The developer eyeballed it.", fix: "Spacing tokens (space-6) visible in Dev Mode." },
+      { d: "name", name: "Font weight", design: "Title bold (700)", built: "Regular (400)",
+        cause: "The text style wasn't linked to a token.", fix: "Named text styles, e.g. heading-sm." },
+      { d: "buy", name: "Color", design: "Brand purple #5B4BDB", built: "Similar hex #4338CA",
+        cause: "Hex picked from a screenshot instead of a token.", fix: "Use color tokens, never raw hex." },
+      { d: "name2", name: "Truncation", design: "Long name: 1 line + …", built: "Wraps to 3 lines",
+        cause: "No long-text edge case in the design.", fix: "Design and spec the overflow behavior." },
+      { d: "img", name: "Missing state", design: "Food photo with fallback", built: "Grey 'image failed' box",
+        cause: "The image error state was never designed.", fix: "Hand off all states: loading, empty, error." },
+      { d: "meta", name: "Alignment", design: "Rating left, price right", built: "Stacked, left-aligned",
+        cause: "Layout intent unclear, no auto layout.", fix: "Auto layout = flexbox spec. Read it in Dev Mode." },
+    ];
+    const LONG = "The Really Long Name Burger &amp; Grill Co.";
+    const mockHtml = (kind) => `
+      <div class="mock ${kind}" data-d="pad">
+        <div class="img" data-d="img">${kind === "build" ? "⚠ image failed" : "🍔"}</div>
+        <div class="body">
+          <p class="name" data-d="name"><span data-d="name2">${LONG}</span></p>
+          <div class="meta" data-d="meta"><span>⭐ 4.8 · 25 min</span><span class="price">€9.50</span></div>
+          <button class="buy" data-d="buy" tabindex="-1">Add to cart</button>
+        </div>
+      </div>`;
+    let cmpMode = "side", activeIssue = null;
+    const seen = new Set();
+    function renderCmp() {
+      $("cmp-stage").innerHTML = cmpMode === "side"
+        ? `<div class="cmp">
+            <div class="cmp-col"><span class="cmp-lbl">🎨 Design (Figma)</span>${mockHtml("design")}</div>
+            <div class="cmp-col"><span class="cmp-lbl">💻 Shipped (production)</span>${mockHtml("build")}</div>
+          </div>`
+        // The (taller) build stays in flow; the design sits on top and is clipped from the right
+        : `<div class="swipe" id="swipe">${mockHtml("build")}${mockHtml("design")}</div>
+          <input type="range" class="swipe-range" id="swipe-range" min="0" max="100" value="50" aria-label="Swipe between design and build">
+          <div class="swipe-lbls"><span>◀ Design</span><span>Shipped ▶</span></div>`;
+      if (cmpMode === "swipe") {
+        const r = $("swipe-range");
+        const apply = () => { document.querySelector("#swipe .mock.design").style.clipPath = `inset(0 ${100 - r.value}% 0 0)`; };
+        r.oninput = apply; apply();
+      }
+      highlight();
+    }
+    function highlight() {
+      document.querySelectorAll("#cmp-stage [data-d], #cmp-stage .mock").forEach((el) =>
+        el.classList.toggle("hl", activeIssue !== null && el.dataset.d === ISSUES[activeIssue].d));
+    }
+    function renderIssues() {
+      $("issues").innerHTML = ISSUES.map((x, i) => `
+        <button class="issue ${seen.has(i) ? "seen" : ""} ${activeIssue === i ? "on" : ""}" data-i="${i}">
+          <span class="n">${seen.has(i) ? "✓" : i + 1}</span><b>${x.name}</b></button>`).join("");
+      const x = ISSUES[activeIssue];
+      $("issue-panel").innerHTML = x ? `
+        <div><p class="k">🎨 Design said</p>${x.design}</div>
+        <div><p class="k">💻 Shipped</p>${x.built}</div>
+        <div class="cause"><p class="k" style="color:var(--bad)">🔎 Root cause</p>${x.cause}</div>
+        <div class="fix"><p class="k" style="color:var(--good)">🛡️ Prevent it</p>${x.fix}</div>` : "";
+      $("found").textContent = seen.size === ISSUES.length
+        ? "🏆 All 6 found. Notice: none of them was the developer's 'fault'."
+        : `${seen.size} / ${ISSUES.length} explored · tap a difference above`;
+    }
+    $("cmp-mode").onclick = (e) => {
+      const b = e.target.closest("[data-mode]"); if (!b) return;
+      cmpMode = b.dataset.mode;
+      [...$("cmp-mode").children].forEach((x) => x.classList.toggle("on", x === b));
+      renderCmp();
+    };
+    $("issues").onclick = (e) => {
+      const b = e.target.closest("[data-i]"); if (!b) return;
+      const i = +b.dataset.i;
+      activeIssue = activeIssue === i ? null : i;
+      seen.add(i);
+      renderIssues(); highlight();
+    };
+    renderCmp(); renderIssues();
+
+    /* ---------- Learn: handoff package ---------- */
+    const PKG = [
+      ["🖼️", "Final frames", "Devs build from an outdated version."],
+      ["🔄", "All states", "Loading, empty and error get invented in code."],
+      ["📱", "Breakpoints", "Mobile layout is guessed from desktop."],
+      ["✨", "Interactions & motion", "Hover, focus, transitions get skipped or improvised."],
+      ["🧩", "Components & tokens", "Near-duplicate components and hardcoded hex values."],
+      ["✍️", "Final copy", "Lorem ipsum ships, or text breaks the layout later."],
+      ["🗂️", "Exported assets", "Blurry PNGs and wrong icon sizes."],
+      ["♿", "Accessibility notes", "No focus order, missing labels, failed audits."],
+      ["🧪", "Edge cases", "Long names, 0 items, 10,000 items, slow network."],
+      ["🌍", "Localization", "German text is ~30% longer and breaks buttons."],
+      ["📊", "Analytics events", "Feature ships, but nobody can measure it."],
+      ["✅", "Acceptance criteria", "'Done' is a matter of opinion. QA can't test it."],
+    ];
+    $("pkg").innerHTML = PKG.map(([ic, n, w]) => `
+      <button class="pkg-item"><span class="top"><span class="ic">${ic}</span>${n}</span>
+        <span class="why"><b>Without it:</b> ${w}</span></button>`).join("");
+    $("pkg").onclick = (e) => { const b = e.target.closest(".pkg-item"); if (b) b.classList.toggle("open"); };
+
+    /* ---------- Learn: inspect mode ---------- */
+    const SPECS = {
+      card: { name: "Card / Summary", size: "280 × auto", props: [["Width", "280px (fixed)"], ["Padding", "24px · space-6"], ["Radius", "16px · radius-lg"], ["Fill", ["#FFFFFF", "surface"]]],
+        css: ".summary {\n  width: 280px;\n  padding: var(--space-6);\n  border-radius: var(--radius-lg);\n  background: var(--surface);\n}" },
+      title: { name: "Text / Heading-sm", size: "232 × 24", props: [["Font", "System · 20 / 24 · Bold"], ["Color", ["#1D1D1F", "text-primary"]], ["Margin bottom", "16px · space-4"]],
+        css: ".summary__title {\n  font: var(--heading-sm);\n  color: var(--text-primary);\n  margin-bottom: var(--space-4);\n}" },
+      row: { name: "Row / Line item", size: "232 × 30", props: [["Layout", "Auto layout · horizontal"], ["Distribution", "Space between"], ["Padding", "4px 0 · space-1"], ["Font", "System · 15 · Regular"]],
+        css: ".line-item {\n  display: flex;\n  justify-content: space-between;\n  padding: var(--space-1) 0;\n  font: var(--body-md);\n}" },
+      total: { name: "Row / Total", size: "232 × 22", props: [["Layout", "Auto layout · horizontal"], ["Font", "System · 17 · Bold"], ["Margin bottom", "16px · space-4"]],
+        css: ".summary__total {\n  display: flex;\n  justify-content: space-between;\n  font: var(--body-lg-bold);\n  margin-bottom: var(--space-4);\n}" },
+      cta: { name: "Button / Primary / Large", size: "232 × 48", props: [["Height", "48px"], ["Width", "Fill container"], ["Radius", "12px · radius-md"], ["Fill", ["#5B4BDB", "brand-primary"]], ["States", "default · hover · pressed · disabled · loading"]],
+        css: "<Button variant=\"primary\" size=\"lg\" fullWidth>\n  Place order\n</Button>" },
+      note: { name: "Text / Caption", size: "232 × 16", props: [["Font", "System · 12 · Regular"], ["Color", ["#6B6B70", "text-secondary"]], ["Align", "Center"]],
+        css: ".summary__note {\n  font: var(--caption);\n  color: var(--text-secondary);\n  text-align: center;\n}" },
+    };
+    let inspected = "cta";
+    function renderInspect() {
+      document.querySelectorAll(".sum [data-s], .sum[data-s]").forEach((el) => {
+        const on = el.dataset.s === inspected;
+        el.classList.toggle("insp-on", on);
+        if (on) el.dataset.size = SPECS[inspected].size; else delete el.dataset.size;
+      });
+      const s = SPECS[inspected];
+      const val = (v) => Array.isArray(v) ? `<span class="tok"><span class="sw" style="background:${v[0]}"></span>${v[1]} <span style="color:var(--muted)">${v[0]}</span></span>` : v;
+      $("insp-panel").innerHTML = `
+        <p class="k">🔍 Inspecting</p>
+        <h3>${s.name}</h3>
+        <dl class="props">${s.props.map(([k, v]) => `<dt>${k}</dt><dd>${val(v)}</dd>`).join("")}</dl>
+        <p class="k">Code</p>
+        <pre class="code">${s.css.replace(/</g, "&lt;")}</pre>`;
+    }
+    document.querySelector(".sum").onclick = (e) => {
+      const el = e.target.closest("[data-s]"); if (!el) return;
+      inspected = el.dataset.s; renderInspect();
+    };
+    renderInspect();
+
+    /* ---------- Responsive: breakpoints ---------- */
+    const BP = {
+      mobile: [["Navigation", "Hamburger + bottom tab bar"], ["Grid", "1 column, full width"], ["Ask", "What moves, what hides, what stacks?"]],
+      tablet: [["Navigation", "Collapsed icon sidebar"], ["Grid", "2 columns"], ["Ask", "Portrait and landscape both?"]],
+      desktop: [["Navigation", "Top links + full sidebar"], ["Grid", "3 columns"], ["Ask", "Max width on huge screens?"]],
+    };
+    function renderBp(bp) {
+      $("rf").className = `rf ${bp}`;
+      [...$("bp").children].forEach((b) => b.classList.toggle("on", b.dataset.bp === bp));
+      $("bp-notes").innerHTML = BP[bp].map(([k, v]) => `<div><p class="k">${k}</p>${v}</div>`).join("");
+    }
+    $("bp").onclick = (e) => { const b = e.target.closest("[data-bp]"); if (b) renderBp(b.dataset.bp); };
+    renderBp("desktop");
+
+    /* ---------- Responsive: fixed / fill / hug ---------- */
+    $("sz-range").oninput = (e) => { $("sz-box").style.width = e.target.value + "%"; };
+
+    /* ---------- Responsive: stress test ---------- */
+    const STRESS = [
+      { k: "long", label: "📏 Long name", br: "Long name overflows the card", ok: "Long name truncates with …" },
+      { k: "de", label: "🇩🇪 German", br: "German button text overflows", ok: "Button grows to fit German text" },
+      { k: "noimg", label: "🖼️ No image", br: "Broken image shows to users", ok: "Fallback illustration appears" },
+      { k: "price", label: "💶 Big price", br: "Price collides with the button", ok: "Price and button wrap cleanly" },
+    ];
+    const stressOn = new Set();
+    let safe = false;
+    function renderStress() {
+      const sc = $("sc");
+      sc.className = `sc ${safe ? "safe" : ""}`;
+      sc.querySelector(".nm").textContent = stressOn.has("long") ? "The Original Smoky Double Cheeseburger Deluxe" : "Classic Burger";
+      sc.querySelector(".sub").textContent = stressOn.has("de") ? "Kostenlose Lieferung ab 15 €" : "Free delivery over €15";
+      sc.querySelector(".bt").textContent = stressOn.has("de") ? "In den Warenkorb legen" : "Add to cart";
+      sc.querySelector(".pr").textContent = stressOn.has("price") ? "€1.249,90" : "€9.50";
+      const img = sc.querySelector(".img");
+      const noImg = stressOn.has("noimg");
+      img.className = `img ${noImg && !safe ? "broken" : ""}`;
+      img.textContent = noImg ? (safe ? "🍽️" : "⚠ burger_final_v3.jpg") : "🍔";
+      if (noImg && safe) img.style.background = "linear-gradient(135deg, #e3e0ff, #cfe9ff)"; else img.style.background = "";
+      $("stress-toggles").innerHTML = STRESS.map((s) => `<button class="pill-btn ${stressOn.has(s.k) ? "on" : ""}" data-k="${s.k}">${s.label}</button>`).join("");
+      const active = STRESS.filter((s) => stressOn.has(s.k));
+      $("breaks").innerHTML = active.length
+        ? active.map((s) => `<div class="${safe ? "ok" : ""}">${safe ? "✓ " + s.ok : "✗ " + s.br}</div>`).join("")
+        : `<div class="ok">Perfect content: everything looks fine. That's the trap.</div>`;
+    }
+    $("stress-toggles").onclick = (e) => {
+      const b = e.target.closest("[data-k]"); if (!b) return;
+      stressOn.has(b.dataset.k) ? stressOn.delete(b.dataset.k) : stressOn.add(b.dataset.k);
+      renderStress();
+    };
+    $("safe-mode").onclick = (e) => {
+      const b = e.target.closest("[data-safe]"); if (!b) return;
+      safe = b.dataset.safe === "1";
+      [...$("safe-mode").children].forEach((x) => x.classList.toggle("on", x === b));
+      renderStress();
+    };
+    renderStress();
+
+    /* ---------- Process ---------- */
+    const FLOW = [
+      { e: "🚀", t: "Kickoff", who: "PM, designer, tech lead", what: ["Share the problem and constraints", "Flag technical limits early"], tpm: "Invite engineering on day one, not at handoff." },
+      { e: "🔍", t: "Feasibility", who: "Designer + developers", what: ["Review early wireframes", "Spot expensive or risky ideas"], tpm: "Trade-offs are cheapest here. Get estimates on options." },
+      { e: "🎤", t: "Walkthrough", who: "Designer presents to devs", what: ["Walk through flows and states", "Answer questions live"], tpm: "Make it a meeting, not a link in Slack." },
+      { e: "💻", t: "Build", who: "Developers, designer on call", what: ["Pair on tricky parts", "Quick questions answered same day"], tpm: "Set up a channel. Unblock fast." },
+      { e: "🧐", t: "Design QA", who: "Designer reviews the build", what: ["Check against specs on real devices", "Log visual bugs with screenshots"], tpm: "Put design QA in the plan and the estimate." },
+      { e: "🚢", t: "Ship", who: "Whole team", what: ["Release behind a flag if risky", "Confirm analytics fire"], tpm: "Check the Definition of Done." },
+      { e: "📊", t: "Learn", who: "PM, designer, data", what: ["Measure against the goal", "Feed results into next iteration"], tpm: "Close the loop. Share results with the team." },
+    ];
+    let flowActive = 2;
+    function renderFlow() {
+      $("flow").innerHTML = FLOW.map((f, i) => `<button class="fstep ${i === flowActive ? "on" : ""}" data-f="${i}"><span class="e">${f.e}</span><span class="t">${f.t}</span></button>`).join("");
+      const f = FLOW[flowActive];
+      $("flow-panel").innerHTML = `
+        <div><p class="k">👥 Who</p>${f.who}</div>
+        <div><p class="k">📋 What happens</p>${list(f.what)}</div>
+        <div class="tpm"><p class="k">🧑‍💼 Your role</p>${f.tpm}</div>`;
+    }
+    $("flow").onclick = (e) => { const b = e.target.closest("[data-f]"); if (b) { flowActive = +b.dataset.f; renderFlow(); } };
+    renderFlow();
+
+    /* ---------- Try: ticket review ---------- */
+    const CHECKS = [
+      ["Mobile and tablet layouts", true, "Only 1 desktop frame. Breakpoints are missing."],
+      ["Empty state (no addresses yet)", true, "Every new user sees this first."],
+      ["Error state (save fails)", true, "Not designed, so it'll be improvised."],
+      ["Final copy", true, "Lorem ipsum is placeholder, not copy."],
+      ["Uses design system components", false, "Card, Button, Input are listed. Good."],
+      ["Color and spacing tokens", false, "Tokens are used. Good."],
+      ["Accessibility notes", true, "No focus order or labels specified."],
+      ["Analytics events", true, "Nothing to measure success with."],
+      ["Exported icons", false, "SVGs are attached. Good."],
+      ["Testable acceptance criteria", true, "'Works like the design' can't pass or fail."],
+    ];
+    const ticked = new Set();
+    let tkChecked = false;
+    function renderChecks() {
+      $("checks").innerHTML = CHECKS.map(([label, missing, why], i) => {
+        const on = ticked.has(i);
+        const cls = tkChecked ? (on === missing ? "right" : "wrong") : "";
+        return `<button class="chk ${on ? "on" : ""} ${cls}" data-c="${i}">
+          <span class="box">${on ? "✗" : ""}</span>
+          <span>${label}${tkChecked ? `<span class="why">${missing ? "🚩 Missing: " : "✓ "}${why}</span>` : ""}</span></button>`;
+      }).join("");
+    }
+    $("checks").onclick = (e) => {
+      const b = e.target.closest("[data-c]"); if (!b) return;
+      const i = +b.dataset.c;
+      ticked.has(i) ? ticked.delete(i) : ticked.add(i);
+      tkChecked = false; $("tk-msg").textContent = "";
+      renderChecks();
+    };
+    $("tk-check").onclick = () => {
+      tkChecked = true; renderChecks();
+      const right = CHECKS.filter(([, m], i) => ticked.has(i) === m).length;
+      $("tk-msg").textContent = `${right === CHECKS.length ? "🏆" : "👀"} ${right} / ${CHECKS.length} right · ${right >= 8 ? "Not ready. Send it back." : "Look again: what would a developer have to guess?"}`;
+    };
+    $("tk-reset").onclick = () => { ticked.clear(); tkChecked = false; $("tk-msg").textContent = ""; renderChecks(); };
+    renderChecks();
+
+    /* ---------- Try: acceptance criteria picker ---------- */
+    const ACQ = [
+      { s: "🔐 Login button", o: ["The button should look nice and modern", "Given empty fields, when I tap Log in, then the button stays disabled", "Login should be fast and easy"], a: 1,
+        why: "It names a state, an action and an observable result." },
+      { s: "🔎 Search results", o: ["Results load quickly", "Search works for all users", "Given no matches, when I search 'xyz', then I see 'No results for xyz' and a 'Clear search' button"], a: 2,
+        why: "It covers the empty state with exact copy and a next step." },
+      { s: "📱 Product grid", o: ["Given a 375px screen, when the page loads, then products show in 1 column", "The grid should be responsive", "It should match the Figma file"], a: 0,
+        why: "A specific breakpoint and a measurable layout." },
+    ];
+    let aq = 0, aqRes = [], aqPicked = null;
+    function renderAcq() {
+      const dots = ACQ.map((_, i) => `<i class="${aqRes[i] === true ? "good" : aqRes[i] === false ? "bad" : ""}"></i>`).join("");
+      if (aq >= ACQ.length) {
+        const score = aqRes.filter(Boolean).length;
+        $("acq").innerHTML = `<div class="dots" style="justify-content:center">${dots}</div>
+          <div class="scn">${score === ACQ.length ? "🏆" : "👍"} ${score} / ${ACQ.length}</div>
+          <p style="text-align:center;color:var(--muted)">Rule of thumb: if QA can't fail it, it isn't a criterion.</p>
+          <div style="text-align:center"><button class="btn primary" data-retry>Try again</button></div>`;
+        return;
+      }
+      const q = ACQ[aq];
+      $("acq").innerHTML = `<div class="dots" style="justify-content:center">${dots}</div>
+        <div class="scn">${q.s}</div>
+        <div class="opts">${q.o.map((o, i) => {
+          const cls = aqPicked === null ? "" : i === q.a ? "right" : i === aqPicked ? "wrong" : "";
+          return `<button class="opt ${cls}" data-o="${i}">${o}</button>`;
+        }).join("")}</div>
+        <div class="fb">${aqPicked === null ? "" : (aqPicked === q.a ? "✓ Testable. " : "✗ Not testable. ") + q.why}</div>
+        ${aqPicked === null ? "" : `<div class="nav"><span></span><button class="btn primary" data-next>Next →</button></div>`}`;
+    }
+    $("acq").onclick = (e) => {
+      const o = e.target.closest("[data-o]");
+      if (o && aqPicked === null) { aqPicked = +o.dataset.o; aqRes[aq] = aqPicked === ACQ[aq].a; renderAcq(); return; }
+      if (e.target.closest("[data-next]")) { aq++; aqPicked = null; renderAcq(); return; }
+      if (e.target.closest("[data-retry]")) { aq = 0; aqRes = []; aqPicked = null; renderAcq(); }
+    };
+    renderAcq();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"Check Dev Mode.\"", "Figma's inspect view: sizes, spacing, tokens and code snippets.", "Are the tokens and components named there the same as in our codebase?"],
+      ["\"It's not pixel-perfect.\"", "The build differs visually from the design.", "Which differences matter to users? Let's log them in design QA, ranked."],
+      ["\"What's the breakpoint behavior?\"", "How the layout changes across screen sizes.", "Do we have mobile and tablet frames, or are devs guessing?"],
+      ["\"We need design QA.\"", "The designer reviews the real build before release.", "Is it in the sprint plan and the estimate? Who signs off?"],
+      ["\"That's an edge case.\"", "A rare but real situation: long text, no data, errors.", "How often does it happen, and what does the user see today?"],
+      ["\"The specs are in Figma.\"", "Measurements live in the design file, not a document.", "Which page and frame is final? Is it versioned or marked 'Ready for dev'?"],
+    ];
+    $("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(9);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

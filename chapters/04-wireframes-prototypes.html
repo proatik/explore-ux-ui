@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Wireframes & Prototypes · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Explore: fidelity slider ---------- */
+    .fid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: stretch; }
+    .stage-info, .st-info { display: flex; flex-direction: column; }
+    @media (max-width: 700px) { .fid { grid-template-columns: 1fr; justify-items: center; } }
+    .fid-controls { margin-bottom: 24px; }
+    .fid-controls input[type=range] { width: 100%; accent-color: var(--accent); }
+    .fid-ticks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+    .fid-ticks button { font: inherit; font-size: 13px; font-weight: 700; padding: 8px 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+    .fid-ticks button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .stage-info h3 { margin: 0 0 10px; font-size: 24px; }
+    .chips-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chips-row span { font-size: 13px; background: var(--surface-2); padding: 4px 12px; border-radius: 999px; }
+    .chips-row b { color: var(--accent); }
+    .fb-box { border-radius: 12px; padding: 12px 14px; margin-top: 10px; font-size: 14px; }
+    .fb-box.good { background: var(--good-soft); }
+    .fb-box.bad { background: var(--bad-soft); }
+    .fb-box h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .fb-box.good h4 { color: var(--good); }
+    .fb-box.bad h4 { color: var(--bad); }
+    .cost { margin-top: auto; padding-top: 16px; }
+    .cost .meter-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .cost .meter { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
+    .cost .meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), var(--warn), var(--bad)); background-size: 360px 100%; transition: width .5s; }
+
+    /* Phone mock. Deliberately ignores theme tokens: it is a "screen" being designed. */
+    .phone { width: 280px; height: 540px; border-radius: 30px; border: 6px solid #2a2a2e; overflow: hidden; background: #fff; color: #222; display: flex; flex-direction: column; font-family: system-ui, sans-serif; animation: morph .35s ease; flex: none; }
+    @keyframes morph { from { opacity: .3; transform: scale(.98); } }
+    .m-hero { height: 120px; flex: none; display: grid; place-items: center; font-size: 56px; }
+    .m-body { padding: 14px; flex: 1; overflow: hidden; }
+    .m-title { font-weight: 800; font-size: 20px; }
+    .m-meta { font-size: 12px; color: #666; margin: 4px 0 12px; }
+    .m-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+    .m-tabs span { padding: 4px 10px; border-radius: 999px; font-size: 12px; border: 1px solid #ccc; min-width: 40px; text-align: center; }
+    .m-item { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid #eee; }
+    .m-thumb { width: 52px; height: 52px; border-radius: 10px; flex: none; display: grid; place-items: center; font-size: 26px; }
+    .m-info { flex: 1; min-width: 0; }
+    .m-name { font-weight: 700; font-size: 14px; }
+    .m-desc { font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .m-price { font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .m-add { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 18px; line-height: 1; flex: none; color: inherit; }
+    .m-cart { margin: 0 12px 12px; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 14px; }
+    .bar { display: block; height: 9px; background: #dcdcdc; border-radius: 3px; margin: 3px 0; }
+    .xbox { background-color: #e8e8e8;
+      background-image: linear-gradient(to top right, transparent calc(50% - 1px), #bdbdbd, transparent calc(50% + 1px)),
+                        linear-gradient(to bottom right, transparent calc(50% - 1px), #bdbdbd, transparent calc(50% + 1px)); }
+    /* 0 · sketch */
+    .phone.s0 { background: #fdfbf3; border: 3px solid #444; border-radius: 34px 24px 38px 22px / 24px 38px 22px 34px; color: #3a3a3a; font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive; }
+    .s0 .m-hero { border-bottom: 2px dashed #666; background-color: transparent; }
+    .s0 .xbox { background-color: transparent;
+      background-image: linear-gradient(to top right, transparent calc(50% - 1.5px), #777, transparent calc(50% + 1.5px)),
+                        linear-gradient(to bottom right, transparent calc(50% - 1.5px), #777, transparent calc(50% + 1.5px)); }
+    .s0 .m-thumb { border: 2px solid #555; border-radius: 12px 6px 14px 5px; }
+    .s0 .m-tabs span { border: 1.5px solid #555; border-radius: 12px 7px 14px 6px; }
+    .s0 .m-item { border-bottom: 1.5px dashed #aaa; }
+    .s0 .m-item:nth-child(odd) { transform: rotate(-.7deg); }
+    .s0 .m-item:nth-child(even) { transform: rotate(.5deg); }
+    .s0 .m-desc, .s0 .m-meta { color: #888; }
+    .s0 .m-add { border: 2px solid #555; background: transparent; font-family: inherit; }
+    .s0 .m-cart { border: 2px solid #444; border-radius: 18px 10px 20px 8px; transform: rotate(-.6deg); }
+    /* 1 · lo-fi */
+    .phone.s1 { border-color: #c4c4c4; color: #999; }
+    .s1 .m-tabs span { border-color: #d4d4d4; }
+    .s1 .m-item { border-color: #f0f0f0; }
+    .s1 .m-add { border-color: #c4c4c4; color: #bbb; }
+    .s1 .m-cart { background: #d6d6d6; color: #8a8a8a; }
+    /* 2 · mid-fi */
+    .s2 .m-hero, .s2 .m-thumb { background: #d6d6d6; }
+    .s2 .m-tabs span:first-child { background: #333; color: #fff; border-color: #333; }
+    .s2 .m-cart { background: #3a3a3a; color: #fff; }
+    /* 3 · hi-fi */
+    .s3 .m-hero { background: linear-gradient(135deg, #ffb347, #ff5e62); }
+    .s3 .m-title { color: #1d1d1f; }
+    .s3 .m-meta b { color: #1f9d63; }
+    .s3 .m-tabs span { border-color: #eee; background: #f5f5f7; }
+    .s3 .m-tabs span:first-child { background: #ff5e62; color: #fff; border-color: #ff5e62; }
+    .s3 .m-thumb { background: linear-gradient(135deg, #fff1e6, #ffe0d6); }
+    .s3 .m-price { color: #ff5e62; }
+    .s3 .m-add { background: #ff5e62; color: #fff; border: 0; box-shadow: 0 4px 10px rgba(255, 94, 98, .4); }
+    .s3 .m-cart { background: #1d1d1f; color: #fff; box-shadow: 0 8px 20px rgba(0, 0, 0, .25); }
+
+    /* ---------- Learn: ladder ---------- */
+    .ladder-wrap { overflow-x: auto; }
+    .ladder { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
+    .ladder th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 10px 10px; }
+    .ladder td { padding: 12px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+    .ladder td:first-child { font-weight: 800; white-space: nowrap; }
+    .ladder .costbar { height: 8px; border-radius: 999px; background: var(--surface-2); width: 110px; overflow: hidden; }
+    .ladder .costbar i { display: block; height: 100%; border-radius: 999px; }
+
+    .proto-cards .card h3 { margin: 4px 0 8px; }
+    .proto-cards .big { font-size: 34px; }
+    .rate { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin: 4px 0; }
+    .dots5 { letter-spacing: 2px; color: var(--accent); }
+    .dots5 .off { color: var(--line); }
+
+    .hv { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: center; margin-top: 16px; }
+    @media (max-width: 700px) { .hv { grid-template-columns: 1fr; } }
+    .hv-grid { display: grid; grid-template-columns: 56px repeat(5, minmax(0, 1fr)); gap: 6px; font-size: 12px; }
+    .hv-grid .h { font-weight: 700; color: var(--muted); text-align: center; align-self: end; padding-bottom: 2px; }
+    .hv-grid .r { font-weight: 700; color: var(--muted); display: flex; align-items: center; }
+    .hv-grid .cell { height: 40px; border-radius: 8px; background: var(--surface-2); transition: background .3s, transform .3s; }
+    .hv-grid .cell.on { background: var(--accent); }
+    .seg { display: inline-flex; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: 12px; margin-bottom: 14px; }
+    .seg button { font: inherit; font-weight: 700; font-size: 14px; border: 0; padding: 8px 14px; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; }
+    .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+    /* ---------- Learn: Figma ↔ code ---------- */
+    .al { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 900px) { .al { grid-template-columns: 1fr; } }
+    .al-controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-bottom: 18px; }
+    .al-controls label { font-size: 13px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .al-controls input[type=range] { accent-color: var(--accent); width: 110px; }
+    .al-canvas { background: var(--surface-2); border-radius: var(--radius); padding: 28px 16px; display: grid; place-items: center; min-height: 240px; position: relative; }
+    .al-canvas .tag-fig { position: absolute; top: 10px; left: 12px; font-size: 11px; font-weight: 700; color: #0d99ff; }
+    .al-frame { display: flex; outline: 1.5px solid #0d99ff; background: #fff; border-radius: 12px; transition: all .25s; width: 100%; max-width: 380px;
+      /* Figma shows padding in pink */
+      box-shadow: inset 0 0 0 var(--pad, 16px) rgba(255, 105, 180, .14); }
+    .al-frame.col { width: auto; }
+    .al-child { background: #fff3ec; border: 1px solid #ffd2bf; color: #333; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .code { background: #16161c; color: #e6e6f0; border-radius: var(--radius); padding: 18px; font: 14px/1.7 ui-monospace, Consolas, monospace; margin: 0; overflow-x: auto; position: relative; }
+    .code .k { color: #8fd3ff; } .code .v { color: #ffb86b; } .code .c { color: #6f6f80; }
+    .code .tag-code { position: absolute; top: 10px; right: 12px; font: 700 11px var(--font); color: #6f6f80; }
+
+    .vocab { display: flex; flex-direction: column; gap: 8px; }
+    .vrow { display: grid; grid-template-columns: 170px 24px 210px minmax(0, 1fr); gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+    .vrow .fig { font-weight: 800; }
+    .vrow .fig::before { content: "◆ "; color: #a259ff; }
+    .vrow .eq { color: var(--muted); text-align: center; }
+    .vrow .dev { font: 600 13px ui-monospace, Consolas, monospace; color: var(--accent); }
+    .vrow .tip { font-size: 13px; color: var(--muted); }
+    @media (max-width: 700px) { .vrow { grid-template-columns: 1fr; gap: 2px; } .vrow .eq { display: none; } }
+
+    /* ---------- Learn 2: five states ---------- */
+    .states { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: stretch; }
+    @media (max-width: 700px) { .states { grid-template-columns: 1fr; justify-items: center; } }
+    .st-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+    .st-tabs .btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .mini { width: 280px; height: 400px; border-radius: 26px; border: 6px solid #2a2a2e; background: #fff; color: #222; overflow: hidden; display: flex; flex-direction: column; font-family: system-ui, sans-serif; flex: none; }
+    .mini-top { padding: 16px 16px 10px; font-weight: 800; font-size: 18px; border-bottom: 1px solid #eee; }
+    .mini-body { flex: 1; padding: 6px 16px; display: flex; flex-direction: column; animation: morph .3s ease; }
+    .o-row { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .o-ic { width: 40px; height: 40px; border-radius: 10px; background: #fff1e6; display: grid; place-items: center; font-size: 20px; flex: none; }
+    .o-txt { flex: 1; min-width: 0; font-size: 13px; }
+    .o-txt b { display: block; font-size: 14px; }
+    .o-txt span { color: #888; }
+    .o-st { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #dcf5e8; color: #1f9d63; }
+    .center-msg { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 0 10px; }
+    .center-msg .ill { font-size: 54px; }
+    .center-msg b { font-size: 16px; }
+    .center-msg span { font-size: 13px; color: #777; }
+    .center-msg .cta { margin-top: 6px; background: #ff5e62; color: #fff; border: 0; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; }
+    .center-msg.err .cta { background: #222; }
+    .sk { background: linear-gradient(90deg, #eee 25%, #f7f7f7 50%, #eee 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite linear; border-radius: 6px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .hint { margin-top: auto; margin-bottom: 12px; padding: 12px; border-radius: 12px; background: #f5f5f7; font-size: 12px; color: #555; text-align: center; }
+    .st-info h3 { margin: 0 0 4px; font-size: 24px; }
+    .st-info .what { color: var(--muted); margin-bottom: 14px; }
+    .st-info .credit { font-size: 12px; color: var(--muted); margin-top: auto; padding-top: 14px; }
+
+    /* ---------- Try 1: right feedback ---------- */
+    .rf { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; }
+    @media (max-width: 700px) { .rf { grid-template-columns: 1fr; justify-items: center; } }
+    .rf-thumb { width: 196px; height: 378px; overflow: hidden; flex: none; }
+    .rf-thumb .phone { transform: scale(.7); transform-origin: top left; animation: none; }
+    .rf-stage { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+    .rf h3 { margin: 4px 0 14px; font-size: 20px; }
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt { font: inherit; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; font-size: 15px; transition: border-color .2s; }
+    .opt:hover:not(:disabled) { border-color: var(--accent); }
+    .opt.ok { border-color: var(--good); background: var(--good-soft); }
+    .opt.no { border-color: var(--bad); background: var(--bad-soft); }
+    .opt:disabled { cursor: default; }
+    .rf-why { margin-top: 12px; font-weight: 600; min-height: 48px; }
+    .rf-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 12px; flex-wrap: wrap; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- Try 2: missing states ---------- */
+    .ms { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: start; }
+    @media (max-width: 700px) { .ms { grid-template-columns: 1fr; justify-items: center; } }
+    .handoff { position: relative; }
+    .handoff .stamp { position: absolute; top: -10px; right: -10px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; transform: rotate(6deg); }
+    .checks { display: flex; flex-direction: column; gap: 8px; }
+    .ck { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); cursor: pointer; font-size: 15px; }
+    .ck input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+    .ck small { display: block; color: var(--muted); font-size: 12px; }
+    .ck.ok { border-color: var(--good); background: var(--good-soft); }
+    .ck.no { border-color: var(--bad); background: var(--bad-soft); }
+    .ms-bar { display: flex; gap: 12px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .ms-msg { font-weight: 700; }
+
+    /* Touch: every tappable control is at least 44px tall */
+    .fid-ticks button, .seg button, .st-tabs .btn, .opt, .ck { min-height: 44px; }
+    .fid-controls input[type=range], .al-controls input[type=range] { height: 32px; }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 04 Wireframes & Prototypes</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 04 · Wireframes & Prototypes</div>
+      <h1>Cheap to change.<br>Then real.</h1>
+      <p>How a screen grows from napkin to pixel, and what to say at each step.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Learn</a>
+        <a href="#figma">🧩 Figma ↔ Code</a>
+        <a href="#states">🚦 States</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>One screen, four fidelities</h2>
+      <p class="sub">Drag the slider. Same restaurant page, from napkin to final design.</p>
+
+      <div class="fid-controls">
+        <input type="range" id="fid-range" min="0" max="3" step="1" value="0" aria-label="Fidelity">
+        <div class="fid-ticks" id="fid-ticks"></div>
+      </div>
+
+      <div class="fid">
+        <div id="fid-phone"></div>
+        <div class="card stage-info" id="fid-info"></div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>The fidelity ladder</h2>
+      <p class="sub">Each step up costs more time, and makes change more expensive.</p>
+      <div class="card ladder-wrap">
+        <table class="ladder" id="ladder"></table>
+      </div>
+
+      <h2 style="margin-top:40px">Three kinds of prototype</h2>
+      <p class="sub">A prototype is anything people can interact with to test an idea.</p>
+      <div class="grid grid-3 proto-cards" id="proto-cards"></div>
+
+      <h2 style="margin-top:40px">Horizontal vs vertical</h2>
+      <p class="sub">Two ways to slice a prototype. Toggle to compare.</p>
+      <div class="card">
+        <div class="seg" id="hv-seg">
+          <button class="on" data-hv="h">↔ Horizontal</button>
+          <button data-hv="v">↕ Vertical</button>
+        </div>
+        <div class="hv">
+          <div class="hv-grid" id="hv-grid"></div>
+          <div id="hv-text"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FIGMA ↔ CODE ================= -->
+    <section class="section" id="figma">
+      <span class="step-label">🧩 Figma ↔ Code</span>
+      <h2>Auto Layout is Flexbox</h2>
+      <p class="sub">Change the Figma settings and watch the CSS update.</p>
+
+      <div class="card">
+        <div class="al-controls">
+          <div class="seg" id="al-dir" style="margin:0">
+            <button class="on" data-dir="row">→ Horizontal</button>
+            <button data-dir="column">↓ Vertical</button>
+          </div>
+          <label>Gap <input type="range" id="al-gap" min="0" max="32" step="4" value="12"> <span id="al-gap-v">12</span></label>
+          <label>Padding <input type="range" id="al-pad" min="0" max="32" step="4" value="16"> <span id="al-pad-v">16</span></label>
+          <div class="seg" id="al-just" style="margin:0">
+            <button class="on" data-j="flex-start">Packed</button>
+            <button data-j="center">Center</button>
+            <button data-j="space-between">Space between</button>
+          </div>
+        </div>
+        <div class="al">
+          <div class="al-canvas">
+            <span class="tag-fig">◆ Frame · Auto layout</span>
+            <div class="al-frame" id="al-frame">
+              <div class="al-child">🍛 Biryani</div>
+              <div class="al-child">🥘 Curry</div>
+              <div class="al-child">🥗 Salad</div>
+            </div>
+          </div>
+          <pre class="code" id="al-code"></pre>
+        </div>
+      </div>
+
+      <h2 style="margin-top:40px">Figma words, dev meanings</h2>
+      <p class="sub">The translation table you'll use in every design review.</p>
+      <div class="vocab" id="vocab"></div>
+    </section>
+
+    <!-- ================= STATES ================= -->
+    <section class="section" id="states">
+      <span class="step-label">🚦 States</span>
+      <h2>Every screen has five states</h2>
+      <p class="sub">Designs usually show only the happy one. Click through all five.</p>
+      <div class="st-tabs" id="st-tabs"></div>
+      <div class="states">
+        <div class="mini">
+          <div class="mini-top">My orders</div>
+          <div class="mini-body" id="st-body"></div>
+        </div>
+        <div class="card st-info" id="st-info"></div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Right feedback, right stage</h2>
+      <p class="sub">Pick the most useful comment for each fidelity.</p>
+      <div class="card" id="rf"></div>
+
+      <h2 style="margin-top:48px">Spot the missing states</h2>
+      <p class="sub">This design was just marked "Ready for dev". Tick every state the designer still needs to provide.</p>
+      <div class="ms">
+        <div class="handoff">
+          <span class="stamp">READY FOR DEV</span>
+          <div class="mini">
+            <div class="mini-top">Saved addresses</div>
+            <div class="mini-body">
+              <div class="o-row"><div class="o-ic">🏠</div><div class="o-txt"><b>Home</b><span>12 Lake Road, Dhaka</span></div></div>
+              <div class="o-row"><div class="o-ic">🏢</div><div class="o-txt"><b>Office</b><span>45 Gulshan Ave, Floor 7</span></div></div>
+              <div class="o-row"><div class="o-ic">❤️</div><div class="o-txt"><b>Mum's place</b><span>8 Green Street</span></div></div>
+              <div class="hint" style="background:#ff5e62;color:#fff;font-weight:700;font-size:14px">+ Add new address</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="checks" id="checks"></div>
+          <div class="ms-bar">
+            <button class="btn primary" id="ms-check">Check</button>
+            <button class="btn" id="ms-reset">Reset</button>
+            <span class="ms-msg" id="ms-msg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Match feedback to fidelity: <b>structure</b> on lo-fi, <b>polish</b> on hi-fi.</li>
+          <li>Figma speaks CSS: <b>frames, auto layout, components, variables</b>.</li>
+          <li>No handoff without all <b>five states</b>: ideal, empty, loading, error, partial.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    /* ---------- Shared: the restaurant phone mock at any fidelity ---------- */
+    const DISHES = [
+      ["🍛", "Chicken Biryani", "Fragrant rice, slow-cooked chicken", "$12.50"],
+      ["🥘", "Beef Curry", "Rich and mild, served with naan", "$13.90"],
+      ["🥗", "Garden Salad", "Seasonal greens, lemon dressing", "$7.20"],
+    ];
+    function phone(s) {
+      // t(real, sketch, barWidth): pick the right text for the fidelity
+      const t = (real, sketch, w) => s === 0 ? sketch : s === 1 ? `<i class="bar" style="width:${w}"></i>` : real;
+      const img = (emoji) => s === 3 ? emoji : s < 2 ? "" : "";
+      return `<div class="phone s${s}">
+        <div class="m-hero ${s < 2 ? "xbox" : ""}">${img("🍛")}</div>
+        <div class="m-body">
+          <div class="m-title">${t("Mama's Kitchen", "Restaurant name", "70%")}</div>
+          <div class="m-meta">${t(s === 3 ? "⭐ 4.7 · 25–35 min · <b>Free delivery</b>" : "★ 4.7 · 25–35 min · Free delivery", "★★★★ · time · fee", "85%")}</div>
+          <div class="m-tabs">${["Popular", "Mains", "Drinks"].map((x) => `<span>${t(x, "tab", "30px")}</span>`).join("")}</div>
+          ${DISHES.map(([e, n, d, p]) => `
+            <div class="m-item">
+              <div class="m-thumb ${s < 2 ? "xbox" : ""}">${s === 3 ? e : ""}</div>
+              <div class="m-info">
+                <div class="m-name">${t(n, "dish name", "60%")}</div>
+                <div class="m-desc">${t(d, "~~~ ~~~~ ~~", "90%")}</div>
+                <div class="m-price">${t(p, "$$", "30%")}</div>
+              </div>
+              <button class="m-add" tabindex="-1">+</button>
+            </div>`).join("")}
+        </div>
+        <div class="m-cart">${s === 1 ? "&nbsp;" : t("View cart · 2 items · $26.40", "[ view cart ]", "0")}</div>
+      </div>`;
+    }
+
+    /* ---------- Explore: fidelity slider ---------- */
+    const STAGES = [
+      { name: "✏️ Sketch", time: "5–15 min", tools: "Paper, whiteboard", show: "Your own team", cost: 8,
+        purpose: "Explore many ideas fast. Throw most away.",
+        good: "Is this the right idea? What's missing?",
+        bad: "Alignment, colors, exact wording" },
+      { name: "⬜ Lo-fi wireframe", time: "1–2 hours", tools: "Figma, Balsamiq, Whimsical", show: "Team, PM, TPM", cost: 25,
+        purpose: "Agree on structure and what matters most on the screen.",
+        good: "Is the hierarchy right? Is the order of content right?",
+        bad: "Fonts, colors, imagery" },
+      { name: "◻️ Mid-fi", time: "½–1 day", tools: "Figma", show: "Users, stakeholders", cost: 55,
+        purpose: "Real copy and flow. Ready for usability testing.",
+        good: "Does the copy make sense? Can users finish the task?",
+        bad: "Brand colors, photo choices" },
+      { name: "🎨 Hi-fi", time: "1–3 days per flow", tools: "Figma + design system", show: "Clients, developers", cost: 90,
+        purpose: "Final look. Sign-off and developer handoff.",
+        good: "Contrast, consistency, every state covered?",
+        bad: "\"What if we rethink the whole concept?\"" },
+    ];
+    const range = document.getElementById("fid-range");
+    const ticks = document.getElementById("fid-ticks");
+    function renderFid() {
+      const s = +range.value, st = STAGES[s];
+      ticks.innerHTML = STAGES.map((x, i) => `<button class="${i === s ? "on" : ""}" data-s="${i}">${x.name}</button>`).join("");
+      document.getElementById("fid-phone").innerHTML = phone(s);
+      document.getElementById("fid-info").innerHTML = `
+        <h3>${st.name}</h3>
+        <div class="chips-row"><span><b>Time:</b> ${st.time}</span><span><b>Tools:</b> ${st.tools}</span><span><b>Show to:</b> ${st.show}</span></div>
+        <ul class="bullets"><li><b>Purpose:</b> ${st.purpose}</li></ul>
+        <div class="fb-box good"><h4>✓ Useful feedback now</h4>${st.good}</div>
+        <div class="fb-box bad"><h4>✗ Wrong time for</h4>${st.bad}</div>
+        <div class="cost"><div class="meter-lbl"><span>Cost of changing direction</span><b>${["Tiny", "Low", "Medium", "High"][s]}</b></div>
+          <div class="meter"><i style="width:${st.cost}%"></i></div></div>`;
+    }
+    range.oninput = renderFid;
+    ticks.onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) { range.value = b.dataset.s; renderFid(); } };
+    renderFid();
+
+    /* ---------- Learn: ladder ---------- */
+    const LADDER = [
+      ["✏️ Sketch", "Minutes", "The idea itself", "Your own team", 8, "var(--good)"],
+      ["⬜ Lo-fi", "Hours", "Structure, content priority", "Team, PM, TPM", 25, "var(--good)"],
+      ["◻️ Mid-fi", "Days", "Flow, copy, usability", "Users, stakeholders", 55, "var(--warn)"],
+      ["🎨 Hi-fi", "Days–weeks", "Visual polish, brand, accessibility", "Clients, developers", 90, "var(--bad)"],
+    ];
+    document.getElementById("ladder").innerHTML = `
+      <tr><th>Fidelity</th><th>Time</th><th>What it tests</th><th>Show it to</th><th>Cost to change</th></tr>
+      ${LADDER.map(([f, t, w, a, c, col]) => `<tr><td>${f}</td><td>${t}</td><td>${w}</td><td>${a}</td>
+        <td><div class="costbar"><i style="width:${c}%;background:${col}"></i></div></td></tr>`).join("")}`;
+
+    /* ---------- Learn: prototype types ---------- */
+    const dots = (n) => `<span class="dots5">${"●".repeat(n)}<span class="off">${"●".repeat(3 - n)}</span></span>`;
+    const PROTOS = [
+      ["📝", "Paper", 3, 1, ["Workshops, early concept tests", "Users happily criticize paper"], "Can't test real interaction"],
+      ["🖱️", "Clickable (Figma)", 2, 2, ["Usability tests, stakeholder demos", "Looks real in a browser or phone"], "No real data, logic or validation"],
+      ["💻", "Coded", 1, 3, ["Real data, complex interactions, performance", "Proves technical feasibility"], "Slow. Teams get attached to the code"],
+    ];
+    document.getElementById("proto-cards").innerHTML = PROTOS.map(([e, n, speed, real, good, limit]) => `
+      <div class="card">
+        <div class="big">${e}</div>
+        <h3>${n}</h3>
+        <div class="rate"><span>Speed</span>${dots(speed)}</div>
+        <div class="rate"><span>Realism</span>${dots(real)}</div>
+        <ul class="bullets" style="margin-top:10px">${good.map((g) => `<li>${g}</li>`).join("")}<li style="color:var(--bad)">${limit}</li></ul>
+      </div>`).join("");
+
+    /* ---------- Learn: horizontal vs vertical ---------- */
+    const FEATS = ["Search", "Menu", "Cart", "Checkout", "Tracking"];
+    const LAYERS = ["UI", "Logic", "Data"];
+    const HV = {
+      h: ["Every feature, <b>surface only</b>", ["Clickable screens across the whole app", "Tests navigation and overall concept", "Typical Figma prototype"]],
+      v: ["One feature, <b>all the way down</b>", ["Checkout works end to end, with real payment API", "Tests technical risk and feasibility", "Also called a spike or proof of concept"]],
+    };
+    let hv = "h";
+    function renderHv() {
+      document.querySelectorAll("#hv-seg button").forEach((b) => b.classList.toggle("on", b.dataset.hv === hv));
+      document.getElementById("hv-grid").innerHTML = `<span></span>${FEATS.map((f) => `<span class="h">${f}</span>`).join("")}` +
+        LAYERS.map((l, li) => `<span class="r">${l}</span>` + FEATS.map((f, fi) =>
+          `<span class="cell ${(hv === "h" ? li === 0 : fi === 3) ? "on" : ""}"></span>`).join("")).join("");
+      const [title, pts] = HV[hv];
+      document.getElementById("hv-text").innerHTML = `<h3 style="margin:0 0 8px">${title}</h3><ul class="bullets">${pts.map((p) => `<li>${p}</li>`).join("")}</ul>`;
+    }
+    document.getElementById("hv-seg").onclick = (e) => { const b = e.target.closest("[data-hv]"); if (b) { hv = b.dataset.hv; renderHv(); } };
+    renderHv();
+
+    /* ---------- Figma ↔ code: auto layout playground ---------- */
+    const al = { dir: "row", gap: 12, pad: 16, just: "flex-start" };
+    function renderAl() {
+      const f = document.getElementById("al-frame");
+      f.style.flexDirection = al.dir;
+      f.style.gap = al.gap + "px";
+      f.style.padding = al.pad + "px";
+      f.style.setProperty("--pad", al.pad + "px");
+      f.style.justifyContent = al.just;
+      f.classList.toggle("col", al.dir === "column");
+      document.getElementById("al-gap-v").textContent = al.gap;
+      document.getElementById("al-pad-v").textContent = al.pad;
+      const line = (k, v) => `  <span class="k">${k}</span>: <span class="v">${v}</span>;`;
+      document.getElementById("al-code").innerHTML = `<span class="tag-code">CSS</span><span class="c">/* What Dev Mode hands to developers */</span>
+.menu-row {
+${line("display", "flex")}
+${line("flex-direction", al.dir)}       <span class="c">/* ${al.dir === "row" ? "→ Horizontal" : "↓ Vertical"} */</span>
+${line("gap", al.gap + "px")}             <span class="c">/* Spacing between */</span>
+${line("padding", al.pad + "px")}         <span class="c">/* Padding */</span>
+${line("justify-content", al.just)}
+}`;
+    }
+    const segPick = (id, key, attr) => {
+      const el = document.getElementById(id);
+      el.onclick = (e) => {
+        const b = e.target.closest(`[${attr}]`);
+        if (!b) return;
+        al[key] = b.getAttribute(attr);
+        el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+        renderAl();
+      };
+    };
+    segPick("al-dir", "dir", "data-dir");
+    segPick("al-just", "just", "data-j");
+    document.getElementById("al-gap").oninput = (e) => { al.gap = +e.target.value; renderAl(); };
+    document.getElementById("al-pad").oninput = (e) => { al.pad = +e.target.value; renderAl(); };
+    renderAl();
+
+    /* ---------- Figma ↔ code: vocabulary ---------- */
+    const VOCAB = [
+      ["Frame", "<div> container", "Frames nest inside frames, like divs."],
+      ["Auto Layout", "display: flex", "No auto layout = developers guess the spacing."],
+      ["Component", "React / Vue component", "Main component = source of truth. Instances = usages."],
+      ["Variant", "props: size, state", "Every variant in Figma should exist in code too."],
+      ["Constraints", "responsive positioning", "Ask: how does it stretch on tablet and desktop?"],
+      ["Variables / Styles", "CSS variables, tokens", "Hard-coded colors today = inconsistency tomorrow."],
+      ["Prototype links", "routes / navigation", "Fake flow: no real data, errors or validation."],
+      ["Dev Mode", "DevTools inspect", "Specs, CSS, assets, and \"Ready for dev\" status."],
+    ];
+    document.getElementById("vocab").innerHTML = VOCAB.map(([f, d, tip]) => `
+      <div class="vrow"><span class="fig">${f}</span><span class="eq">≈</span>
+        <span class="dev">${d.replace(/</g, "&lt;")}</span><span class="tip">💬 ${tip}</span></div>`).join("");
+
+    /* ---------- States ---------- */
+    const ORDERS = [["🍛", "Mama's Kitchen", "Biryani × 2 · $26.40"], ["🍕", "Slice Bros", "Pepperoni · $14.00"], ["🍣", "Sushi Go", "Combo B · $21.50"], ["🥗", "Green Bowl", "Garden Salad · $7.20"]];
+    const row = ([e, n, d]) => `<div class="o-row"><div class="o-ic">${e}</div><div class="o-txt"><b>${n}</b><span>${d}</span></div><span class="o-st">Delivered</span></div>`;
+    const skel = `<div class="o-row"><div class="o-ic sk"></div><div class="o-txt"><div class="sk" style="height:12px;width:70%"></div><div class="sk" style="height:10px;width:45%;margin-top:6px"></div></div></div>`;
+    const STATES = [
+      { tab: "✅ Ideal", html: ORDERS.map(row).join(""),
+        what: "The happy path, with realistic data.", define: ["Real-looking content, not lorem ipsum", "Typical number of items"],
+        missing: "Usually the only state that gets designed!" },
+      { tab: "📭 Empty", html: `<div class="center-msg"><div class="ill">🛵</div><b>No orders yet</b><span>Your first meal is a few taps away.</span><button class="cta" tabindex="-1">Browse restaurants</button></div>`,
+        what: "Nothing to show yet: new user, cleared data, no results.", define: ["A friendly message", "A clear next action"],
+        missing: "Developers ship a blank list. Users think it's broken." },
+      { tab: "⏳ Loading", html: skel.repeat(4),
+        what: "Data is on its way.", define: ["Skeleton or spinner", "What appears first"],
+        missing: "Layout jumps around. Users tap twice." },
+      { tab: "⚠️ Error", html: `<div class="center-msg err"><div class="ill">📡</div><b>Couldn't load your orders</b><span>Check your connection and try again.</span><button class="cta" tabindex="-1">Try again</button></div>`,
+        what: "Something went wrong: network, server, permissions.", define: ["A human message, no codes", "A way to recover"],
+        missing: "Users see \"Error 500\", or nothing at all." },
+      { tab: "🧩 Partial", html: row(ORDERS[0]) + `<div class="hint">🎁 Order 2 more times to unlock free delivery</div>`,
+        what: "Only a little data. The screen should still look intentional.", define: ["How 1 item looks", "What fills the space"],
+        missing: "Big awkward gaps. Looks unfinished." },
+    ];
+    let stI = 0;
+    function renderStates() {
+      document.getElementById("st-tabs").innerHTML = STATES.map((s, i) => `<button class="btn ${i === stI ? "on" : ""}" data-st="${i}">${s.tab}</button>`).join("");
+      const s = STATES[stI];
+      document.getElementById("st-body").innerHTML = s.html;
+      document.getElementById("st-info").innerHTML = `
+        <h3>${s.tab}</h3><div class="what">${s.what}</div>
+        <div class="fb-box good"><h4>Design must define</h4><ul class="bullets">${s.define.map((d) => `<li>${d}</li>`).join("")}</ul></div>
+        <div class="fb-box bad"><h4>If it's missing</h4>${s.missing}</div>
+        <div class="credit">Model: Scott Hurff's "UI Stack".</div>`;
+    }
+    document.getElementById("st-tabs").onclick = (e) => { const b = e.target.closest("[data-st]"); if (b) { stI = +b.dataset.st; renderStates(); } };
+    renderStates();
+
+    /* ---------- Try 1: right feedback, right stage ---------- */
+    const ROUNDS = [
+      { s: 0, opts: [
+        ["Should search come before the menu?", true, "Yes. Big structural questions are exactly what sketches are for."],
+        ["Can the button be blue?", false, "Way too early. Colors don't exist yet."],
+        ["The handwriting looks messy.", false, "It's supposed to. Sketches are disposable."],
+        ["Prices should be right-aligned.", false, "Alignment comes much later."] ] },
+      { s: 1, opts: [
+        ["Use our brand orange.", false, "Lo-fi is deliberately grey. Brand comes in hi-fi."],
+        ["Delivery time should be visible before scrolling.", true, "Yes. Content priority is what lo-fi tests."],
+        ["The placeholder images look boring.", false, "They're placeholders on purpose."],
+        ["Round the corners more.", false, "Visual detail. Too early."] ] },
+      { s: 2, opts: [
+        ["Make the shadows softer.", false, "Polish. Save it for hi-fi."],
+        ["The food photos need to look tastier.", false, "There are no photos yet. Mid-fi is greyscale."],
+        ["Does '+' add to cart or to favorites?", true, "Yes. Mid-fi has real copy, so test clarity and flow."],
+        ["Let's scrap the menu idea entirely.", false, "Possible, but costly now. That belonged in sketch or lo-fi."] ] },
+      { s: 3, opts: [
+        ["What if it's a chatbot instead?", false, "Rethinking the concept at hi-fi wastes days of work."],
+        ["I just don't like the layout.", false, "Vague, and late. Point to a specific problem."],
+        ["Grey description text may fail contrast.", true, "Yes. Accessibility and polish are hi-fi feedback."],
+        ["Can we add three more features?", false, "That's scope creep, not design feedback."] ] },
+    ];
+    let rI = 0, rRes = [], answered = false;
+    const rf = document.getElementById("rf");
+    function renderRf(pick) {
+      const d = ROUNDS.map((_, i) => `<i class="${rRes[i] === true ? "good" : rRes[i] === false ? "bad" : ""}"></i>`).join("");
+      if (rI >= ROUNDS.length) {
+        const sc = rRes.filter(Boolean).length;
+        rf.innerHTML = `<div style="text-align:center;padding:20px 0">
+          <div class="dots" style="justify-content:center">${d}</div>
+          <h3 style="font-size:28px;margin:14px 0 6px">${sc === 4 ? "🏆" : sc >= 2 ? "👍" : "🌱"} ${sc} / ${ROUNDS.length}</h3>
+          <p style="color:var(--muted);margin:0 0 16px">Rule of thumb: the rougher it looks, the bigger your questions should be.</p>
+          <button class="btn primary" data-rf="restart">Play again</button></div>`;
+        return;
+      }
+      const r = ROUNDS[rI];
+      rf.innerHTML = `<div class="rf">
+        <div class="rf-thumb">${phone(r.s)}</div>
+        <div>
+          <div class="rf-stage">Round ${rI + 1} · ${STAGES[r.s].name}</div>
+          <h3>Which comment helps most right now?</h3>
+          <div class="opts">${r.opts.map(([txt, ok], i) => {
+            const cls = pick === undefined ? "" : ok ? "ok" : i === pick ? "no" : "";
+            return `<button class="opt ${cls}" data-opt="${i}" ${pick !== undefined ? "disabled" : ""}>${txt}</button>`;
+          }).join("")}</div>
+          <div class="rf-why">${pick !== undefined ? (r.opts[pick][1] ? "✓ " : "✗ ") + r.opts[pick][2] : ""}</div>
+          <div class="rf-foot"><div class="dots">${d}</div>
+            ${pick !== undefined ? `<button class="btn primary" data-rf="next">${rI === ROUNDS.length - 1 ? "See score" : "Next round →"}</button>` : ""}</div>
+        </div></div>`;
+    }
+    rf.onclick = (e) => {
+      const o = e.target.closest("[data-opt]"), b = e.target.closest("[data-rf]");
+      if (o && !o.disabled) { const i = +o.dataset.opt; rRes[rI] = ROUNDS[rI].opts[i][1]; renderRf(i); }
+      if (b && b.dataset.rf === "next") { rI++; renderRf(); }
+      if (b && b.dataset.rf === "restart") { rI = 0; rRes = []; renderRf(); }
+    };
+    renderRf();
+
+    /* ---------- Try 2: spot the missing states ---------- */
+    const CHECKS = [
+      ["Ideal", "3 saved addresses", false],
+      ["Empty", "A new user with no addresses", true],
+      ["Loading", "While addresses are fetched", true],
+      ["Error", "Saving an address fails", true],
+      ["Partial", "Only 1 address saved", true],
+      ["Long content", "A 3-line street address", true],
+    ];
+    const checksEl = document.getElementById("checks");
+    function renderChecks(result) {
+      checksEl.innerHTML = CHECKS.map(([n, d, missing], i) => {
+        const box = checksEl.querySelector(`[data-ck="${i}"]`);
+        const on = box ? box.checked : false;
+        const cls = result ? (on === missing ? "ok" : "no") : "";
+        return `<label class="ck ${cls}"><input type="checkbox" data-ck="${i}" ${on ? "checked" : ""}>
+          <span><b>${n}</b><small>${d}${result ? (missing ? " · missing ✗" : " · already designed ✓") : ""}</small></span></label>`;
+      }).join("");
+    }
+    document.getElementById("ms-check").onclick = () => {
+      renderChecks(true);
+      const right = CHECKS.filter(([, , m], i) => checksEl.querySelector(`[data-ck="${i}"]`).checked === m).length;
+      document.getElementById("ms-msg").textContent = right === CHECKS.length
+        ? "🏆 Spot on. 5 of 6 states were missing."
+        : `${right} / ${CHECKS.length} right. Only the ideal state was designed.`;
+    };
+    document.getElementById("ms-reset").onclick = () => {
+      checksEl.querySelectorAll("input").forEach((x) => (x.checked = false));
+      renderChecks(false);
+      document.getElementById("ms-msg").textContent = "";
+    };
+    checksEl.onchange = () => { renderChecks(false); document.getElementById("ms-msg").textContent = ""; };
+    renderChecks(false);
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"It's just a wireframe.\"", "Structure and content only. Visuals are not decided.", "What do you need me to decide on layout and content?"],
+      ["\"Here's a clickable prototype.\"", "Linked screens that feel real, with no real data or logic.", "Which paths are clickable, and what is NOT covered?"],
+      ["\"I used auto layout.\"", "Figma's flexbox. The design resizes like real CSS.", "Will developers see the same gaps and padding in Dev Mode?"],
+      ["\"That's a new component variant.\"", "Same component, different props: size, state, style.", "Does our coded component support it, or is this new dev work?"],
+      ["\"Check Dev Mode for specs.\"", "Figma's inspect view: spacing, CSS, tokens, assets.", "Which frames are marked \"Ready for dev\"? Which version is final?"],
+      ["\"It's pixel-perfect.\"", "Final hi-fi visuals at exact sizes.", "At which breakpoints? Are all five states designed?"],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(4);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

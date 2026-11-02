@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Design Thinking · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Explore: two teams race ---------- */
+    .brief { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .brief span { display: inline-block; background: var(--bad-soft); color: var(--bad); padding: 8px 16px; border-radius: 12px; }
+    .race { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 680px) { .race { grid-template-columns: 1fr; } }
+    .team-col h3 { margin: 0 0 4px; }
+    .team-col .motto { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+    .meter { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 6px 0 14px; }
+    .meter i { display: block; height: 100%; background: var(--bad); transition: width .6s, background .6s; }
+    .meter-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .meter-lbl b { color: var(--text); }
+    .weeks { display: flex; flex-direction: column; gap: 8px; min-height: 230px; }
+    .wk { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; animation: pop .35s ease; }
+    .wk .n { flex: none; font-size: 11px; font-weight: 800; color: var(--accent); width: 34px; padding-top: 2px; }
+    .wk.ghost { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); animation: none; }
+    .wk.result { background: var(--bad-soft); }
+    .wk.result.win { background: var(--good-soft); }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+    .race-controls { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+    .wk-dots { display: flex; gap: 6px; }
+    .wk-dots i { width: 28px; height: 6px; border-radius: 999px; background: var(--line); }
+    .wk-dots i.on { background: var(--accent); }
+    .moral { text-align: center; font-size: 20px; font-weight: 800; margin-top: 20px; min-height: 30px; }
+
+    /* ---------- Learn: double diamond ---------- */
+    .dd svg { width: 100%; height: auto; display: block; }
+    .dd .phase { cursor: pointer; fill: var(--surface-2); stroke: var(--line); stroke-width: 2; transition: fill .25s; }
+    .dd .phase:hover { fill: var(--accent-soft); }
+    .dd .phase.active { fill: var(--accent); stroke: var(--accent); }
+    .dd text { fill: var(--text); font-family: var(--font); pointer-events: none; }
+    .dd .ph-name { font-size: 17px; font-weight: 800; }
+    .dd .ph-mode { font-size: 12px; fill: var(--muted); }
+    .dd .active-txt { fill: #fff; }
+    .dd .axis { font-size: 13px; font-weight: 700; fill: var(--muted); letter-spacing: .08em; }
+    .phase-panel { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 16px; align-items: start; }
+    @media (max-width: 760px) { .phase-panel { grid-template-columns: 1fr; } }
+    .phase-panel h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+    .phase-panel .goal { font-size: 20px; font-weight: 800; grid-column: 1 / -1; }
+    .phase-panel .tpm { background: var(--accent-soft); border-radius: 12px; padding: 12px; }
+
+    /* ---------- Learn: framework tabs ---------- */
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .fw-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .fw-meta span { font-size: 13px; background: var(--surface-2); padding: 4px 12px; border-radius: 999px; }
+    .fw-meta b { color: var(--accent); }
+    .stages { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .stage { text-align: center; padding: 14px 12px; border-radius: 14px; background: var(--surface-2); min-width: 104px; cursor: pointer; border: 2px solid transparent; transition: border-color .2s; }
+    .stage:hover, .stage.active { border-color: var(--accent); }
+    .stage .e { font-size: 26px; }
+    .stage .t { font-weight: 800; font-size: 14px; }
+    .stage .s { font-size: 12px; color: var(--muted); }
+    .arrow { color: var(--muted); font-size: 20px; }
+    .stage-detail { margin-top: 14px; min-height: 60px; text-align: center; }
+    .loop-note { text-align: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
+    .lean-loop { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+    .lean-loop .ring { position: absolute; inset: 30px; border: 3px dashed var(--accent); border-radius: 50%; animation: spin 20s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .lean-loop .stage { position: absolute; transform: translate(-50%, -50%); }
+
+    /* ---------- Try: sort into the diamond ---------- */
+    .tray { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 44px; margin-bottom: 16px; }
+    .chip { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); transition: border-color .2s, background .2s; }
+    .chip:hover { border-color: var(--accent); }
+    .chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .chip.ok { border-color: var(--good); background: var(--good-soft); }
+    .chip.no { border-color: var(--bad); background: var(--bad-soft); }
+    .buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .bucket { border: 2px dashed var(--line); border-radius: var(--radius); padding: 12px; min-height: 140px; cursor: pointer; transition: border-color .2s, background .2s; }
+    .bucket.ready { border-color: var(--accent); background: var(--accent-soft); }
+    .bucket h4 { margin: 0 0 8px; font-size: 15px; }
+    .bucket h4 small { color: var(--muted); font-weight: 600; }
+    .bucket .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sort-bar { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+    .sort-msg { font-weight: 700; }
+
+    /* ---------- Try: hypothesis builder ---------- */
+    .hypo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .hypo { grid-template-columns: 1fr; } }
+    .hypo label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin: 12px 0 6px; }
+    .hypo label:first-child { margin-top: 0; }
+    .hypo select { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); }
+    .hypo-card { background: linear-gradient(135deg, var(--accent-soft), var(--surface)); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; font-size: 19px; line-height: 1.9; }
+    .hypo-card mark { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone; hyphens: none; }
+    .hypo-card .vs { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
+    .hypo-card .vs s { color: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 01 Design Thinking</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 01 · Design Thinking</div>
+      <h1>Problem first.<br>Solution second.</h1>
+      <p>How design teams decide what to build before building it.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Learn</a>
+        <a href="#frameworks">🧰 Frameworks</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Two teams, same brief</h2>
+      <p class="sub">Play it out week by week and watch the metric.</p>
+
+      <div class="brief"><span>📉 40% of users abandon checkout in our food delivery app. Fix it.</span></div>
+
+      <div class="race">
+        <div class="card team-col">
+          <h3>🏃 Team Rush</h3>
+          <div class="motto">"We know what's wrong. Let's build."</div>
+          <div class="meter-lbl"><span>Checkout abandonment</span><b id="a-val">40%</b></div>
+          <div class="meter"><i id="a-bar" style="width:40%"></i></div>
+          <div class="weeks" id="a-weeks"></div>
+        </div>
+        <div class="card team-col">
+          <h3>🧭 Team Think</h3>
+          <div class="motto">"Let's understand why first."</div>
+          <div class="meter-lbl"><span>Checkout abandonment</span><b id="b-val">40%</b></div>
+          <div class="meter"><i id="b-bar" style="width:40%"></i></div>
+          <div class="weeks" id="b-weeks"></div>
+        </div>
+      </div>
+
+      <div class="race-controls">
+        <div class="wk-dots" id="wk-dots"></div>
+        <button class="btn primary" id="next-week">▶ Week 1</button>
+      </div>
+      <div class="moral" id="moral"></div>
+    </section>
+
+    <!-- ================= LEARN ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>The Double Diamond</h2>
+      <p class="sub">Open up, then narrow down. Do it twice: once for the problem, once for the solution. Click each phase.</p>
+
+      <div class="card dd">
+        <svg viewBox="0 0 800 290" role="img" aria-label="Double Diamond diagram">
+          <text class="axis" x="205" y="20" text-anchor="middle">THE RIGHT PROBLEM</text>
+          <text class="axis" x="595" y="20" text-anchor="middle">THE RIGHT SOLUTION</text>
+          <polygon class="phase" data-p="0" points="20,150 205,40 205,260"/>
+          <polygon class="phase" data-p="1" points="205,40 390,150 205,260"/>
+          <polygon class="phase" data-p="2" points="410,150 595,40 595,260"/>
+          <polygon class="phase" data-p="3" points="595,40 780,150 595,260"/>
+          <g id="dd-labels"></g>
+          <text class="axis" x="20" y="285">PROBLEM</text>
+          <text class="axis" x="400" y="285" text-anchor="middle">PROBLEM STATEMENT</text>
+          <text class="axis" x="780" y="285" text-anchor="end">SOLUTION</text>
+        </svg>
+        <div class="phase-panel" id="phase-panel"></div>
+      </div>
+    </section>
+
+    <!-- ================= FRAMEWORKS ================= -->
+    <section class="section" id="frameworks">
+      <span class="step-label">🧰 Frameworks</span>
+      <h2>Three ways teams run it</h2>
+      <p class="sub">Same mindset, different rhythm. You'll hear all three.</p>
+      <div class="tabs" id="fw-tabs"></div>
+      <div class="card" id="fw-body"></div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Sort the activities</h2>
+      <p class="sub">Tap an activity, then tap the phase where it belongs.</p>
+      <div class="tray" id="tray"></div>
+      <div class="buckets" id="buckets"></div>
+      <div class="sort-bar">
+        <button class="btn primary" id="sort-check">Check answers</button>
+        <button class="btn" id="sort-reset">Reset</button>
+        <span class="sort-msg" id="sort-msg"></span>
+      </div>
+
+      <h2 style="margin-top:48px">Write a Lean UX hypothesis</h2>
+      <p class="sub">Swap requirements for testable bets. Pick the pieces.</p>
+      <div class="hypo">
+        <div class="card" id="hypo-form"></div>
+        <div class="hypo-card" id="hypo-out"></div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Fall in love with the <b>problem</b>, not the solution.</li>
+          <li><b>Diverge → converge</b>, twice: first the problem, then the solution.</li>
+          <li>Match the framework to the risk: <b>Sprint</b> for one big bet, <b>Lean UX</b> for continuous delivery.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    /* ---------- Explore: two teams race ---------- */
+    const WEEKS = [
+      { a: ["🎨", "Jumps into a fresh checkout UI. New colors, new layout."],
+        b: ["🔍", "Interviews 6 users and digs into analytics."] },
+      { a: ["💻", "Developers start building the redesign."],
+        b: ["💡", "Insight: the delivery fee only appears at the last step. Users feel tricked."] },
+      { a: ["🚀", "Ships a shiny new checkout."],
+        b: ["🧪", "Prototypes 'fees shown upfront' and tests it with 5 users."] },
+      { a: ["📉", "Result: 40% → 38%. Prettier, but the real problem remains."], av: 38,
+        b: ["📈", "Result: 40% → 24%. A small change to the right problem."], bv: 24 },
+    ];
+    let wk = 0;
+    const nextBtn = document.getElementById("next-week");
+    const dotsEl = document.getElementById("wk-dots");
+    function setMeter(side, v) {
+      document.getElementById(side + "-val").textContent = v + "%";
+      const bar = document.getElementById(side + "-bar");
+      bar.style.width = v + "%";
+      bar.style.background = v < 30 ? "var(--good)" : "var(--bad)";
+    }
+    function renderRace() {
+      dotsEl.innerHTML = WEEKS.map((_, i) => `<i class="${i < wk ? "on" : ""}"></i>`).join("");
+      ["a", "b"].forEach(side => {
+        // Unplayed weeks show as dashed placeholders so the cards keep their shape
+        document.getElementById(side + "-weeks").innerHTML = WEEKS.map((w, i) => {
+          if (i >= wk) return `<div class="wk ghost"><span class="n">WK ${i + 1}</span><span>${i === WEEKS.length - 1 ? "🏁 Result" : "…"}</span></div>`;
+          const last = i === WEEKS.length - 1;
+          return `<div class="wk ${last ? "result" : ""} ${last && side === "b" ? "win" : ""}">
+            <span class="n">WK ${i + 1}</span><span>${w[side][0]} ${w[side][1]}</span></div>`;
+        }).join("");
+      });
+      const done = wk === WEEKS.length;
+      setMeter("a", done ? WEEKS[3].av : 40);
+      setMeter("b", done ? WEEKS[3].bv : 40);
+      nextBtn.textContent = done ? "↺ Replay" : `▶ Week ${wk + 1}`;
+      document.getElementById("moral").textContent = done ? "💬 Same effort. Different starting point." : "";
+    }
+    nextBtn.onclick = () => { wk = wk === WEEKS.length ? 0 : wk + 1; renderRace(); };
+    renderRace();
+
+    /* ---------- Learn: double diamond ---------- */
+    const PHASES = [
+      { name: "Discover", mode: "↔ diverge", x: 130, goal: "Understand the problem space",
+        acts: ["User interviews", "Analytics review", "Competitor analysis", "Stakeholder interviews"],
+        out: ["Research insights", "Raw observations"],
+        tpm: "Protect time for research. Unblock access to data and users." },
+      { name: "Define", mode: "→← converge", x: 280, goal: "Agree on the right problem",
+        acts: ["Affinity mapping", "Personas", "Problem statement", "How Might We questions"],
+        out: ["One clear problem statement", "Success criteria"],
+        tpm: "Get stakeholders to sign off on the problem before anyone pitches solutions." },
+      { name: "Develop", mode: "↔ diverge", x: 520, goal: "Explore many possible solutions",
+        acts: ["Brainstorming", "Sketching", "Prototypes", "Technical spikes"],
+        out: ["Tested concepts", "A chosen direction"],
+        tpm: "Bring engineers in early. Feasibility checks are cheap here, expensive later." },
+      { name: "Deliver", mode: "→← converge", x: 670, goal: "Build, ship, and learn",
+        acts: ["Hi-fi design", "Dev handoff", "Build and QA", "Launch and measure"],
+        out: ["Live product", "Metrics to learn from"],
+        tpm: "Own the success metrics and plan the next iteration." },
+    ];
+    let activePhase = 0;
+    const ddLabels = document.getElementById("dd-labels");
+    function renderPhase() {
+      document.querySelectorAll(".dd .phase").forEach(p => p.classList.toggle("active", +p.dataset.p === activePhase));
+      ddLabels.innerHTML = PHASES.map((p, i) => `
+        <text class="ph-name ${i === activePhase ? "active-txt" : ""}" x="${p.x}" y="148" text-anchor="middle">${p.name}</text>
+        <text class="ph-mode ${i === activePhase ? "active-txt" : ""}" x="${p.x}" y="170" text-anchor="middle">${p.mode}</text>`).join("");
+      const p = PHASES[activePhase];
+      const list = a => `<ul class="bullets">${a.map(x => `<li>${x}</li>`).join("")}</ul>`;
+      document.getElementById("phase-panel").innerHTML = `
+        <div class="goal">${["🔍", "🎯", "💡", "🚀"][activePhase]} ${p.goal}</div>
+        <div><h4>Activities</h4>${list(p.acts)}</div>
+        <div><h4>Outputs</h4>${list(p.out)}</div>
+        <div class="tpm"><h4>🧑‍💼 Your role as TPM</h4>${p.tpm}</div>`;
+    }
+    document.querySelectorAll(".dd .phase").forEach(p => p.onclick = () => { activePhase = +p.dataset.p; renderPhase(); });
+    renderPhase();
+
+    /* ---------- Frameworks ---------- */
+    const FW = [
+      { tab: "🔄 Design Thinking", meta: [["Origin", "IDEO / Stanford d.school"], ["Length", "Weeks to months"], ["Best for", "New, fuzzy problems"]],
+        type: "stages",
+        stages: [["❤️", "Empathize", "Understand users"], ["🎯", "Define", "Frame the problem"], ["💡", "Ideate", "Generate ideas"], ["🧱", "Prototype", "Make it real"], ["🧪", "Test", "Learn from users"]],
+        detail: ["Watch and listen to real users. Feel their pain.", "Turn observations into one sharp problem statement.", "Quantity over quality. Wild ideas welcome.", "Cheap and fast: paper, Figma, cardboard.", "Put it in front of users. Expect to loop back."],
+        note: "↺ Not a straight line. Testing often sends you back to Define or Ideate." },
+      { tab: "⚡ Design Sprint", meta: [["Origin", "Google Ventures"], ["Length", "5 days"], ["Best for", "One big, risky decision"]],
+        type: "stages",
+        stages: [["🗺️", "Mon", "Map"], ["✏️", "Tue", "Sketch"], ["🗳️", "Wed", "Decide"], ["🧱", "Thu", "Prototype"], ["🧪", "Fri", "Test"]],
+        detail: ["Map the problem and pick one target to focus on.", "Everyone sketches solutions alone. No group brainstorm.", "Vote. The Decider makes the final call.", "Build a realistic-looking facade in one day.", "Test with 5 real users. Learn what works."],
+        note: "⚠️ Not the same as a Scrum sprint. Needs the whole team and a Decider for 5 days." },
+      { tab: "🔁 Lean UX", meta: [["Origin", "Jeff Gothelf & Josh Seiden"], ["Length", "Continuous"], ["Best for", "Agile teams shipping often"]],
+        type: "loop",
+        stages: [["🤔", "Think", "Hypothesis"], ["🛠️", "Make", "Smallest test"], ["📊", "Check", "Measure"]],
+        detail: ["Write a testable hypothesis, not a requirement.", "Build the smallest thing that can prove or disprove it.", "Look at real data. Keep, change, or kill the idea."],
+        note: "↺ Runs inside your sprints. Outcomes over outputs." },
+    ];
+    let fwActive = 0, stActive = 0;
+    function renderFw() {
+      const f = FW[fwActive];
+      document.getElementById("fw-tabs").innerHTML = FW.map((x, i) =>
+        `<button class="btn ${i === fwActive ? "active" : ""}" data-fw="${i}">${x.tab}</button>`).join("");
+      const stageHtml = (s, i, style = "") => `<div class="stage ${i === stActive ? "active" : ""}" data-st="${i}" style="${style}">
+        <div class="e">${s[0]}</div><div class="t">${s[1]}</div><div class="s">${s[2]}</div></div>`;
+      const body = f.type === "loop"
+        ? `<div class="lean-loop"><div class="ring"></div>${f.stages.map((s, i) => {
+            const ang = -90 + i * 120, r = 100;
+            return stageHtml(s, i, `left:${130 + r * Math.cos(ang * Math.PI / 180)}px;top:${130 + r * Math.sin(ang * Math.PI / 180)}px`);
+          }).join("")}</div>`
+        : `<div class="stages">${f.stages.map((s, i) => stageHtml(s, i) + (i < f.stages.length - 1 ? `<span class="arrow">→</span>` : "")).join("")}</div>`;
+      document.getElementById("fw-body").innerHTML = `
+        <div class="fw-meta">${f.meta.map(([k, v]) => `<span><b>${k}:</b> ${v}</span>`).join("")}</div>
+        ${body}
+        <div class="stage-detail"><b>${f.stages[stActive][1]}:</b> ${f.detail[stActive]}</div>
+        <div class="loop-note">${f.note}</div>`;
+    }
+    document.getElementById("frameworks").onclick = e => {
+      const t = e.target.closest("[data-fw]"), s = e.target.closest("[data-st]");
+      if (t) { fwActive = +t.dataset.fw; stActive = 0; renderFw(); }
+      if (s) { stActive = +s.dataset.st; renderFw(); }
+    };
+    renderFw();
+
+    /* ---------- Try: sort into the diamond ---------- */
+    const ACTS = [
+      ["User interviews", 0], ["Analytics review", 0], ["Competitor analysis", 0],
+      ["Problem statement", 1], ["Affinity mapping", 1], ["How Might We questions", 1],
+      ["Brainstorming", 2], ["Sketching ideas", 2], ["Prototype testing", 2],
+      ["Dev handoff", 3], ["Launch and measure", 3], ["Hi-fi UI polish", 3],
+    ];
+    let placed, selected, checked;
+    function resetSort() {
+      placed = ACTS.map(() => null);
+      selected = null; checked = false;
+      order = ACTS.map((_, i) => i).sort(() => Math.random() - 0.5);
+      renderSort();
+    }
+    let order = [];
+    function chipHtml(i) {
+      const st = checked ? (placed[i] === ACTS[i][1] ? "ok" : "no") : selected === i ? "sel" : "";
+      return `<button class="chip ${st}" data-chip="${i}">${ACTS[i][0]}</button>`;
+    }
+    function renderSort() {
+      const left = order.filter(i => placed[i] === null);
+      document.getElementById("tray").innerHTML = left.length ? left.map(chipHtml).join("") : `<span style="color:var(--muted)">All placed. Check your answers ↓</span>`;
+      document.getElementById("buckets").innerHTML = PHASES.map((p, b) => `
+        <div class="bucket ${selected !== null ? "ready" : ""}" data-bucket="${b}">
+          <h4>${["🔍", "🎯", "💡", "🚀"][b]} ${p.name} <small>${p.mode}</small></h4>
+          <div class="chips">${order.filter(i => placed[i] === b).map(chipHtml).join("")}</div>
+        </div>`).join("");
+      if (!checked) document.getElementById("sort-msg").textContent = "";
+    }
+    document.getElementById("try").addEventListener("click", e => {
+      const chip = e.target.closest("[data-chip]"), bucket = e.target.closest("[data-bucket]");
+      if (chip) {
+        const i = +chip.dataset.chip;
+        checked = false;
+        // Tapping a placed chip sends it back to the tray
+        if (placed[i] !== null && selected === null) placed[i] = null;
+        else selected = selected === i ? null : i;
+        renderSort();
+      } else if (bucket && selected !== null) {
+        placed[selected] = +bucket.dataset.bucket;
+        selected = null; checked = false;
+        renderSort();
+      }
+    });
+    document.getElementById("sort-check").onclick = () => {
+      checked = true; selected = null; renderSort();
+      const right = placed.filter((b, i) => b === ACTS[i][1]).length;
+      const unplaced = placed.filter(b => b === null).length;
+      document.getElementById("sort-msg").textContent =
+        `${right === ACTS.length ? "🏆" : "👀"} ${right} / ${ACTS.length} correct${unplaced ? ` · ${unplaced} not placed yet` : ""}`;
+    };
+    document.getElementById("sort-reset").onclick = resetSort;
+    resetSort();
+
+    /* ---------- Try: hypothesis builder ---------- */
+    const HYPO = {
+      outcome: ["checkout completion rises 15%", "support tickets drop 20%", "weekly orders grow 10%"],
+      user: ["first&#8209;time customers", "busy parents", "returning users"],
+      benefit: ["see the full price upfront", "reorder a past meal in one tap", "track their delivery live"],
+      feature: ["a price summary on the menu", "a 'Reorder' button", "a live delivery map"],
+    };
+    const LABELS = { outcome: "🎯 Business outcome", user: "👤 User", benefit: "✨ User benefit", feature: "🧩 Feature" };
+    const pick = { outcome: 0, user: 0, benefit: 0, feature: 0 };
+    document.getElementById("hypo-form").innerHTML = Object.keys(HYPO).map(k => `
+      <label>${LABELS[k]}</label>
+      <select data-h="${k}">${HYPO[k].map((v, i) => `<option value="${i}">${v}</option>`).join("")}</select>`).join("");
+    function renderHypo() {
+      const v = k => `<mark>${HYPO[k][pick[k]]}</mark>`;
+      document.getElementById("hypo-out").innerHTML = `
+        We believe ${v("outcome")} if ${v("user")} can ${v("benefit")} with ${v("feature")}.
+        <div class="vs">❌ <s>"Requirement: build ${HYPO.feature[pick.feature]}."</s><br>
+        ✅ A hypothesis has a <b>measurable outcome</b>, so the team knows if it worked.</div>`;
+    }
+    document.getElementById("hypo-form").onchange = e => { pick[e.target.dataset.h] = +e.target.value; renderHypo(); };
+    renderHypo();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"We're still in discovery.\"", "Exploring the problem. No solution yet.", "When does discovery end, and what decision comes after it?"],
+      ["\"Let's diverge before we converge.\"", "Generate many options before picking one.", "When and how will we choose? Who decides?"],
+      ["\"What's our HMW?\"", "A 'How Might We…' question turns a problem into an open challenge.", "Does this HMW match the problem stakeholders agreed on?"],
+      ["\"Let's run a sprint.\"", "Often a 5-day Design Sprint, not a Scrum sprint.", "Which kind? Who must attend all 5 days? Is the Decider available?"],
+      ["\"That's an assumption, not an insight.\"", "A belief with no evidence behind it yet.", "What's the cheapest way to test it?"],
+      ["\"Let's ship an MVP.\"", "The smallest thing that lets us learn from real users.", "What exactly will we learn, and what's the success metric?"],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(1);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

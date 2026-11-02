@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Design Systems · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Shared bits ---------- */
+    .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+    .seg .btn { min-height: 44px; padding: 8px 14px; font-size: 14px; }
+    .seg .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .code {
+      margin: 0; padding: 14px 16px; border-radius: 12px; background: #15151b; color: #e6e4f0;
+      font: 13px/1.6 ui-monospace, "Cascadia Code", Consolas, monospace;
+      white-space: pre-wrap; word-break: break-word; max-height: 360px; overflow: auto;
+    }
+    .code .k { color: #a99bff; } .code .s { color: #7fd6a4; } .code .c { color: #7c7c8a; }
+    h4.mini-h { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+
+    /* ---------- Explore: drift vs system ---------- */
+    .worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 700px) { .worlds { grid-template-columns: 1fr; } }
+    .world h3 { margin: 0 0 4px; }
+    .world .motto { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+    /* The two mini product screens are always "light" like a real app screenshot */
+    .screen { background: #f4f4f7; border-radius: 14px; overflow: hidden; color: #222; font-family: system-ui, sans-serif; border: 1px solid var(--line); }
+    .screen .bar { color: #fff; padding: 12px 14px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; transition: background .4s; }
+    .screen .bar small { font-weight: 600; opacity: .85; }
+    .screen .body { padding: 12px; display: grid; gap: 10px; }
+    .screen .card { box-shadow: none; padding: 12px; }
+    .screen .card h5 { margin: 0 0 4px; }
+    .screen .card p { margin: 0 0 10px; font-size: 13px; }
+    .screen button { border: 0; color: #fff; font-weight: 700; cursor: pointer; transition: background .4s; min-height: 40px; }
+    .screen .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    /* drift world: every value hardcoded and slightly different */
+    .drift .card.c1 { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; }
+    .drift .card.c2 { background: #fff; border: 1px solid #d9d9e3; border-radius: 6px; }
+    .drift .c1 h5 { font-size: 17px; } .drift .c2 h5 { font-size: 15px; font-weight: 600; }
+    .drift .c1 p { color: #666; } .drift .c2 p { color: #5f6368; }
+    .drift .b1 { background: #5a4ad9; border-radius: 6px; padding: 8px 14px; font-size: 14px; }
+    .drift .b2 { background: #6650e0; border-radius: 999px; padding: 10px 20px; font-size: 15px; }
+    .drift .b3 { background: #4f46e5; border-radius: 3px; padding: 8px 12px; font-size: 13px; }
+    .drift .b4 { background: transparent; color: #707070; border: 1px solid #c9c9d6; border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+    .drift.flag .dv { outline: 2px dashed #d64545; outline-offset: 2px; }
+    /* system world: everything reads from a handful of tokens */
+    .sys { --ds-primary: #5b4bdb; --ds-radius: 10px; --ds-text-muted: #5f5f6a; --ds-border: #e1e1ea; }
+    .sys .bar { background: var(--ds-primary); }
+    .sys .card { background: #fff; border: 1px solid var(--ds-border); border-radius: var(--ds-radius); }
+    .sys .card h5 { font-size: 16px; }
+    .sys .card p { color: var(--ds-text-muted); }
+    .sys button { background: var(--ds-primary); border-radius: var(--ds-radius); padding: 9px 16px; font-size: 14px; }
+    .sys button.ghost { background: transparent; color: var(--ds-primary); border: 1px solid var(--ds-border); }
+    .rebrand { display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+    .swatch-btn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 2px var(--line); cursor: pointer; }
+    .swatch-btn.active { box-shadow: 0 0 0 3px var(--accent); }
+    .scoreboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    @media (max-width: 700px) { .scoreboard { grid-template-columns: 1fr; } }
+    .scoreboard div { text-align: center; padding: 12px; border-radius: 12px; font-weight: 700; }
+    .scoreboard .bad { background: var(--bad-soft); color: var(--bad); }
+    .scoreboard .good { background: var(--good-soft); color: var(--good); }
+
+    /* ---------- Learn: building blocks ---------- */
+    .block { cursor: pointer; transition: border-color .2s; }
+    .block .icon { font-size: 30px; }
+    .block h3 { margin: 6px 0 2px; font-size: 18px; }
+    .block .q { color: var(--muted); font-size: 14px; margin: 0; }
+    .block .more { display: none; margin-top: 10px; }
+    .block.open .more { display: block; }
+    .block.open { border-color: var(--accent); }
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; justify-content: center; }
+    .examples span { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+    .examples small { color: var(--muted); font-weight: 500; }
+
+    /* ---------- Learn: token tiers ---------- */
+    .tiers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) auto minmax(0, 1fr); gap: 10px; align-items: start; }
+    .tiers .arrow { align-self: center; color: var(--muted); font-size: 22px; }
+    @media (max-width: 700px) { .tiers { grid-template-columns: 1fr; } .tiers .arrow { transform: rotate(90deg); justify-self: center; } }
+    .tier h4 { margin: 0 0 4px; font-size: 15px; }
+    .tier .hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .prims { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; }
+    .prim { aspect-ratio: 1; min-height: 44px; border-radius: 10px; border: 2px solid var(--line); cursor: pointer; position: relative; }
+    .prim.brand.active { border-color: var(--text); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .prim.used::after { content: "●"; position: absolute; right: 3px; top: -1px; font-size: 10px; color: var(--accent); }
+    .prim:not(.brand) { cursor: default; }
+    .trow { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; font: 12px/1.3 ui-monospace, Consolas, monospace; background: var(--surface-2); margin-bottom: 6px; }
+    .trow i { flex: none; width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--line); }
+    .trow b { font-weight: 700; word-break: break-word; }
+    .trow span { color: var(--muted); margin-left: auto; text-align: right; word-break: break-word; }
+    .tok-out { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 16px; margin-top: 20px; align-items: stretch; }
+    @media (max-width: 700px) { .tok-out { grid-template-columns: 1fr; } }
+    .tok-preview { border-radius: 14px; padding: 20px; border: 1px solid var(--line); transition: background .3s; display: grid; align-content: center; }
+    .tok-card { padding: 16px; border-radius: 12px; border: 1px solid; transition: all .3s; }
+    .tok-card h5 { margin: 0 0 4px; font-size: 17px; }
+    .tok-card p { margin: 0 0 12px; font-size: 13px; }
+    .tok-card button { border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; min-height: 44px; transition: background .3s; }
+    .bar-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+
+    /* ---------- Learn: atomic design ---------- */
+    .levels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+    @media (max-width: 700px) { .levels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .level { text-align: center; padding: 10px 6px; border-radius: 12px; background: var(--surface-2); border: 2px solid transparent; cursor: pointer; min-height: 64px; font: inherit; color: var(--text); }
+    .level .e { font-size: 22px; display: block; }
+    .level b { font-size: 13px; }
+    .level.active { border-color: var(--accent); background: var(--accent-soft); }
+    .atomic-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .atomic-body { grid-template-columns: 1fr; } }
+    .stage { background: #f4f4f7; color: #222; border-radius: 14px; padding: 16px; min-height: 250px; display: grid; place-items: center; font-family: system-ui, sans-serif; }
+    .stage .a-btn { background: #5b4bdb; color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font-weight: 700; }
+    .stage .a-in { border: 1.5px solid #c9c9d6; border-radius: 8px; padding: 8px 10px; background: #fff; color: #888; min-width: 0; }
+    .stage .a-lbl { font-size: 12px; font-weight: 700; color: #444; }
+    .stage .a-av { width: 32px; height: 32px; border-radius: 50%; background: #ffb86b; display: grid; place-items: center; }
+    .stage .row { display: flex; gap: 8px; align-items: center; }
+    .stage .tagged { position: relative; padding: 6px; border-radius: 10px; }
+    .stage .tagged::before { content: attr(data-tag); position: absolute; top: -9px; left: 8px; font-size: 10px; font-weight: 800; background: #5b4bdb; color: #fff; padding: 0 6px; border-radius: 6px; }
+    .stage .hdr { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 10px; padding: 8px 10px; width: 100%; flex-wrap: wrap; }
+    .stage .logo { font-weight: 900; color: #5b4bdb; }
+    .stage .nav { display: flex; gap: 10px; font-size: 13px; color: #555; }
+    .stage .grow { flex: 1; }
+    .stage .tpl { width: 100%; display: grid; gap: 8px; }
+    .stage .ph { background: repeating-linear-gradient(45deg, #e4e4ec 0 8px, #ececf2 8px 16px); border-radius: 8px; }
+    .stage .cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stage .food { background: #fff; border-radius: 8px; padding: 8px; font-size: 12px; }
+    .stage .food .em { font-size: 26px; }
+    .stage .hero { background: linear-gradient(135deg, #5b4bdb, #8f6bff); color: #fff; border-radius: 8px; padding: 14px; font-weight: 800; }
+    .stage .hero small { display: block; font-weight: 500; opacity: .9; }
+
+    /* ---------- Learn: props playground ---------- */
+    .props { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .props { grid-template-columns: 1fr; } }
+    .figma-panel { background: #2c2c2c; color: #eee; border-radius: 12px; padding: 14px; font-size: 13px; }
+    .figma-panel .ttl { font-weight: 700; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+    .figma-panel .ttl i { color: #a99bff; font-style: normal; }
+    .fp-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 8px; }
+    .fp-row label { color: #b0b0b0; font-size: 12px; }
+    .fp-row .seg .btn { background: #3a3a3a; border-color: #4a4a4a; color: #eee; padding: 6px 10px; font-size: 13px; }
+    .fp-row .seg .btn.active { background: #5b4bdb; border-color: #5b4bdb; }
+    .fp-row input[type=text] { width: 100%; font: inherit; padding: 10px; min-height: 44px; border-radius: 8px; border: 1px solid #4a4a4a; background: #3a3a3a; color: #eee; }
+    .props-stage { display: grid; place-items: center; min-height: 120px; background: var(--surface-2); border-radius: 12px; margin-bottom: 12px; }
+    .pbtn { font: inherit; font-weight: 700; border-radius: 10px; border: 1.5px solid transparent; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+    .pbtn.sm { padding: 6px 12px; font-size: 13px; } .pbtn.md { padding: 10px 18px; font-size: 15px; } .pbtn.lg { padding: 14px 24px; font-size: 17px; }
+    .pbtn.primary { background: var(--accent); color: #fff; }
+    .pbtn.secondary { background: var(--accent-soft); color: var(--accent); }
+    .pbtn.ghost { background: transparent; color: var(--accent); border-color: var(--line); }
+    .pbtn.danger { background: var(--bad); color: #fff; }
+    .pbtn[disabled] { opacity: .4; cursor: not-allowed; }
+    .map-rows { display: grid; gap: 6px; margin-top: 14px; }
+    .map-rows div { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+    .map-rows div span:nth-child(2) { color: var(--muted); }
+
+    /* ---------- Learn: governance ---------- */
+    .pipe { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; position: relative; }
+    @media (max-width: 700px) { .pipe { grid-template-columns: 1fr 1fr; } }
+    .pnode { font: inherit; color: var(--text); text-align: center; padding: 14px 8px; border-radius: 14px; background: var(--surface); border: 2px solid var(--line); cursor: pointer; position: relative; min-height: 96px; }
+    .pnode .e { font-size: 26px; display: block; }
+    .pnode b { font-size: 14px; display: block; }
+    .pnode small { color: var(--muted); font-size: 12px; }
+    .pnode.active { border-color: var(--accent); background: var(--accent-soft); }
+    @media (min-width: 701px) { .pnode:not(:last-child)::after { content: "→"; position: absolute; right: -11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 800; z-index: 1; } }
+    .pipe-detail { margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 700px) { .pipe-detail { grid-template-columns: 1fr; } }
+    .pipe-detail > div { background: var(--surface-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+    .semver { display: flex; justify-content: center; align-items: flex-end; gap: 4px; font: 800 44px/1 ui-monospace, Consolas, monospace; margin: 8px 0 14px; }
+    .semver span { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .semver small { font: 700 11px var(--font); letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; }
+    .semver .ma { color: var(--bad); } .semver .ma small { background: var(--bad-soft); }
+    .semver .mi { color: var(--accent); } .semver .mi small { background: var(--accent-soft); }
+    .semver .pa { color: var(--good); } .semver .pa small { background: var(--good-soft); }
+    .semver .dot { color: var(--muted); padding-bottom: 26px; }
+    .models { margin-top: 20px; }
+    .models h3 { margin: 0 0 6px; font-size: 17px; }
+
+    /* ---------- Try ---------- */
+    .tok-try { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .tok-try { grid-template-columns: 1fr; } }
+    .hc-list, .tok-list { display: grid; gap: 8px; }
+    .hc { font: 14px ui-monospace, Consolas, monospace; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; text-align: left; }
+    .hc .prop { color: var(--muted); min-width: 92px; }
+    .hc .val { font-weight: 700; }
+    .hc .sw { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
+    .hc .to { margin-left: auto; color: var(--accent); font-weight: 700; font-size: 13px; text-align: right; }
+    .hc.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .hc.ok { border-color: var(--good); background: var(--good-soft); }
+    .hc.no { border-color: var(--bad); background: var(--bad-soft); }
+    .tchip { font: 600 13px ui-monospace, Consolas, monospace; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1.5px dashed var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; text-align: left; }
+    .tok-list.ready .tchip { border-color: var(--accent); border-style: solid; }
+    .tok-list .tchip.taken { opacity: .45; }
+    .try-bar { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .try-msg { font-weight: 700; }
+    .sv-card { max-width: 640px; margin: 0 auto; text-align: center; }
+    .sv-q { font-size: 20px; font-weight: 700; min-height: 64px; display: grid; place-items: center; margin: 8px 0 16px; }
+    .sv-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .sv-btns .btn { min-width: 120px; min-height: 48px; }
+    .sv-fb { min-height: 48px; margin-top: 14px; font-weight: 600; }
+    .sv-fb.good { color: var(--good); } .sv-fb.bad { color: var(--bad); }
+    .dots { display: flex; gap: 6px; justify-content: center; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); } .dots i.bad { background: var(--bad); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 08 Design Systems</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 08 · Design Systems</div>
+      <h1>Design once.<br>Use everywhere.</h1>
+      <p>The shared language between Figma and your codebase.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#inside">💡 Learn</a>
+        <a href="#tokens">🎟️ Tokens</a>
+        <a href="#atomic">⚛️ Components</a>
+        <a href="#governance">🏛️ Governance</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Marketing wants a rebrand</h2>
+      <p class="sub">Same screen, built two ways. Pick a new brand color and watch.</p>
+
+      <div class="worlds">
+        <div class="card world">
+          <h3>🧩 Without a system</h3>
+          <div class="motto">Every value hardcoded, copy-pasted, slightly off.</div>
+          <div class="screen drift" id="drift">
+            <div class="bar dv" id="drift-bar" style="background:#5b4bdb">FoodHub <small>Orders</small></div>
+            <div class="body">
+              <div class="card c1 dv"><h5 class="dv">Pizza Palace</h5><p class="dv">Delivery in 25 min</p><div class="actions"><button class="b1 dv">Order</button></div></div>
+              <div class="card c2 dv"><h5 class="dv">Noodle Bar</h5><p class="dv">Delivery in 30 min</p><div class="actions"><button class="b2 dv">Order now</button></div></div>
+              <div class="actions"><button class="b4 dv">Cancel</button><button class="b3 dv">Save</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card world">
+          <h3>🧱 With a design system</h3>
+          <div class="motto">Every value comes from a shared token.</div>
+          <div class="screen sys" id="sys">
+            <div class="bar">FoodHub <small>Orders</small></div>
+            <div class="body">
+              <div class="card"><h5>Pizza Palace</h5><p>Delivery in 25 min</p><div class="actions"><button>Order</button></div></div>
+              <div class="card"><h5>Noodle Bar</h5><p>Delivery in 30 min</p><div class="actions"><button>Order now</button></div></div>
+              <div class="actions"><button class="ghost">Cancel</button><button>Save</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rebrand">
+        <b>🎨 New brand color:</b>
+        <div class="seg" id="brand-swatches"></div>
+        <label class="toggle"><input type="checkbox" id="flag-drift"><span class="track"></span>Show inconsistencies</label>
+      </div>
+      <div class="scoreboard">
+        <div class="bad" id="drift-score">Without: 1 of 4 purples found by search-and-replace</div>
+        <div class="good" id="sys-score">With: 1 token changed → whole screen updated</div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: WHAT'S INSIDE ================= -->
+    <section class="section" id="inside">
+      <span class="step-label">💡 Learn</span>
+      <h2>What's inside a design system</h2>
+      <p class="sub">Not just a Figma file. A product, used by other products. Tap a block.</p>
+      <div class="grid grid-3" id="blocks"></div>
+      <div class="examples">
+        <span>Material <small>· Google</small></span>
+        <span>Human Interface Guidelines <small>· Apple</small></span>
+        <span>Carbon <small>· IBM</small></span>
+        <span>Polaris <small>· Shopify</small></span>
+        <span>Fluent <small>· Microsoft</small></span>
+        <span>Atlassian Design System</span>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: TOKENS ================= -->
+    <section class="section" id="tokens">
+      <span class="step-label">🎟️ Tokens</span>
+      <h2>Three tiers of tokens</h2>
+      <p class="sub">Raw values → meaning → component. Tap a brand color, flip the theme.</p>
+
+      <div class="card">
+        <div class="bar-row">
+          <b>Theme</b>
+          <div class="seg" id="theme-seg"></div>
+        </div>
+        <div class="tiers">
+          <div class="tier">
+            <h4>1 · Primitive</h4>
+            <div class="hint">Raw palette. "What it is."</div>
+            <div class="prims" id="prims"></div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="tier">
+            <h4>2 · Semantic</h4>
+            <div class="hint">Intent. "What it's for." Themes swap here.</div>
+            <div id="semantic"></div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="tier">
+            <h4>3 · Component</h4>
+            <div class="hint">Scoped to one component.</div>
+            <div id="component"></div>
+          </div>
+        </div>
+
+        <div class="tok-out">
+          <div class="tok-preview" id="tok-preview"></div>
+          <div>
+            <div class="bar-row" style="margin-bottom:8px">
+              <b>Generated code</b>
+              <div class="seg" id="code-seg"></div>
+            </div>
+            <pre class="code" id="tok-code"></pre>
+          </div>
+        </div>
+      </div>
+      <ul class="bullets" style="margin-top:16px">
+        <li>Components use <b>semantic</b> tokens, never raw hex. That's what makes dark mode and rebrands cheap.</li>
+        <li>One JSON source → <b>Style Dictionary</b> generates CSS, iOS and Android values.</li>
+      </ul>
+    </section>
+
+    <!-- ================= LEARN: ATOMIC + PROPS ================= -->
+    <section class="section" id="atomic">
+      <span class="step-label">⚛️ Components</span>
+      <h2>Atomic design</h2>
+      <p class="sub">Brad Frost's model: small parts combine into bigger ones. Tap each level.</p>
+      <div class="card">
+        <div class="levels" id="levels"></div>
+        <div class="atomic-body">
+          <div class="stage" id="atomic-stage"></div>
+          <div id="atomic-info"></div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:40px">Figma variants = React props</h2>
+      <p class="sub">Change the properties like a designer. Read the code like a developer.</p>
+      <div class="props">
+        <div class="figma-panel" id="figma-panel"></div>
+        <div class="card">
+          <div class="props-stage" id="props-stage"></div>
+          <pre class="code" id="props-code"></pre>
+          <div class="map-rows">
+            <div><span>Variant property</span><span>→</span><span>enum prop</span></div>
+            <div><span>Boolean property</span><span>→</span><span>boolean prop</span></div>
+            <div><span>Text property</span><span>→</span><span>children / string prop</span></div>
+            <div><span>Instance swap</span><span>→</span><span>icon / slot prop</span></div>
+            <div><span>Hover · Pressed variants</span><span>→</span><span>CSS states, not props</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: GOVERNANCE ================= -->
+    <section class="section" id="governance">
+      <span class="step-label">🏛️ Governance</span>
+      <h2>Run it like a product</h2>
+      <p class="sub">How a change travels from Figma to every app. Tap each stop.</p>
+      <div class="pipe" id="pipe"></div>
+      <div class="pipe-detail" id="pipe-detail"></div>
+
+      <div class="card models">
+        <h3>📦 Version it like an API (semver)</h3>
+        <div class="semver">
+          <span class="ma">2<small>MAJOR</small></span><span class="dot">.</span>
+          <span class="mi">4<small>MINOR</small></span><span class="dot">.</span>
+          <span class="pa">1<small>PATCH</small></span>
+        </div>
+        <div class="grid grid-3">
+          <ul class="bullets"><li><b>Major:</b> breaks existing usage. Teams must change code.</li></ul>
+          <ul class="bullets"><li><b>Minor:</b> new things added. Safe to upgrade.</li></ul>
+          <ul class="bullets"><li><b>Patch:</b> fixes only. Upgrade right away.</li></ul>
+        </div>
+      </div>
+
+      <div class="grid grid-3 models">
+        <div class="card">
+          <h3>🏢 Centralized</h3>
+          <ul class="bullets"><li>One core team owns everything</li><li>✅ Consistent, high quality</li><li>⚠️ Can become a bottleneck</li></ul>
+        </div>
+        <div class="card">
+          <h3>🌐 Federated</h3>
+          <ul class="bullets"><li>Product teams contribute</li><li>✅ Scales, close to real needs</li><li>⚠️ Quality drifts without review</li></ul>
+        </div>
+        <div class="card">
+          <h3>🤝 Hybrid</h3>
+          <ul class="bullets"><li>Small core team + contributions</li><li>✅ Most common at scale</li><li>⚠️ Needs a clear contribution process</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Tokenize this component</h2>
+      <p class="sub">A developer hardcoded every value. Tap a value, then tap the token it should use.</p>
+      <div class="tok-try">
+        <div class="card">
+          <h4 class="mini-h">OrderCard.css (hardcoded)</h4>
+          <div class="hc-list" id="hc-list"></div>
+        </div>
+        <div class="card">
+          <h4 class="mini-h">Design tokens</h4>
+          <div class="tok-list" id="tok-list"></div>
+        </div>
+      </div>
+      <div class="try-bar">
+        <button class="btn primary" id="tok-check">Check</button>
+        <button class="btn" id="tok-reset">Reset</button>
+        <span class="try-msg" id="tok-msg"></span>
+      </div>
+
+      <h2 style="margin-top:48px">Major, minor or patch?</h2>
+      <p class="sub">You're writing the release notes for <code>@foodhub/ui</code>.</p>
+      <div class="card sv-card" id="semver-quiz"></div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the team says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>A design system = <b>tokens + components + rules</b>, owned like a product.</li>
+          <li><b>Tokens are the contract</b>: change one, every screen and theme follows.</li>
+          <li>Treat it like an <b>API</b>: version it, document it, announce breaking changes.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    /* ---------- Explore: rebrand ---------- */
+    const BRANDS = [["Purple", "#5b4bdb"], ["Teal", "#0f8b8d"], ["Orange", "#e8590c"], ["Pink", "#d6336c"]];
+    let brand = 0;
+    const swEl = document.getElementById("brand-swatches");
+    function renderBrand() {
+      swEl.innerHTML = BRANDS.map(([n, c], i) =>
+        `<button class="swatch-btn ${i === brand ? "active" : ""}" data-b="${i}" style="background:${c}" aria-label="${n}" title="${n}"></button>`).join("");
+      const c = BRANDS[brand][1];
+      document.getElementById("sys").style.setProperty("--ds-primary", c);
+      // Search-and-replace only catches the one exact hex used in the header
+      document.getElementById("drift-bar").style.background = c;
+      const changed = brand !== 0;
+      document.getElementById("drift-score").textContent = changed
+        ? "😬 Without: header changed, 3 buttons still old purple. 14 hardcoded values to hunt."
+        : "Without: 4 different purples, 4 radii, 3 greys";
+      document.getElementById("sys-score").textContent = changed
+        ? "✅ With: 1 token changed → every button, header and link updated"
+        : "With: 1 primary token, 1 radius, 1 grey";
+    }
+    swEl.onclick = e => { const b = e.target.closest("[data-b]"); if (b) { brand = +b.dataset.b; renderBrand(); } };
+    document.getElementById("flag-drift").onchange = e => document.getElementById("drift").classList.toggle("flag", e.target.checked);
+    renderBrand();
+
+    /* ---------- Learn: building blocks ---------- */
+    const BLOCKS = [
+      ["🎟️", "Design tokens", "The smallest decisions", ["Color, spacing, type, radius, shadow, motion", "Stored as JSON, shipped as CSS variables", "One change updates everything"]],
+      ["🧩", "Components", "Reusable UI pieces", ["Button, Input, Modal, Table…", "Exists twice: Figma library + code package", "Has variants, states and props"]],
+      ["🧭", "Patterns", "Proven combinations", ["Forms, empty states, onboarding, search", "Answers 'how do we usually do X?'", "Stops every team reinventing it"]],
+      ["📏", "Guidelines", "When and how to use things", ["Do / Don't examples", "Voice and tone, accessibility rules", "Why primary buttons appear once per screen"]],
+      ["📚", "Documentation", "Where people learn it", ["Storybook, zeroheight or a docs site", "Live examples + copy-paste code", "If it isn't documented, it isn't used"]],
+      ["🏛️", "Governance", "Who decides and how it changes", ["Ownership, contribution, review", "Versioning and release notes", "Adoption tracking across products"]],
+    ];
+    document.getElementById("blocks").innerHTML = BLOCKS.map(([i, t, q, b]) => `
+      <div class="card block"><div class="icon">${i}</div><h3>${t}</h3><p class="q">${q}</p>
+      <ul class="bullets more">${b.map(x => `<li>${x}</li>`).join("")}</ul></div>`).join("");
+    document.querySelectorAll(".block").forEach(el => el.onclick = () => el.classList.toggle("open"));
+
+    /* ---------- Learn: token tiers ---------- */
+    const PRIM = {
+      "violet-600": "#5b4bdb", "teal-600": "#0f8b8d", "orange-600": "#e8590c", "pink-600": "#d6336c",
+      "white": "#ffffff", "gray-50": "#f6f5f1", "gray-200": "#e1e1ea", "gray-400": "#a0a0ab",
+      "gray-600": "#5f5f6a", "gray-800": "#34343e", "gray-900": "#1c1c22", "gray-950": "#121216",
+    };
+    const BRAND_PRIMS = ["violet-600", "teal-600", "orange-600", "pink-600"];
+    const THEMES = {
+      light: { "color-surface-page": "gray-50", "color-surface-card": "white", "color-text-default": "gray-900", "color-text-muted": "gray-600", "color-border-subtle": "gray-200" },
+      dark:  { "color-surface-page": "gray-950", "color-surface-card": "gray-900", "color-text-default": "gray-50", "color-text-muted": "gray-400", "color-border-subtle": "gray-800" },
+    };
+    const COMP = [["button-bg", "color-action-primary"], ["button-text", "color-text-on-action"], ["card-bg", "color-surface-card"], ["card-text", "color-text-default"], ["card-border", "color-border-subtle"]];
+    let tokBrand = "violet-600", theme = "light", codeTab = "css";
+
+    function semanticMap() {
+      return { "color-action-primary": tokBrand, "color-text-on-action": "white", ...THEMES[theme] };
+    }
+    function renderTokens() {
+      const sem = semanticMap();
+      const used = new Set(Object.values(sem));
+      const hex = name => PRIM[sem[name]];
+      document.getElementById("theme-seg").innerHTML = ["light", "dark"].map(t =>
+        `<button class="btn ${t === theme ? "active" : ""}" data-theme-pick="${t}">${t === "light" ? "☀️ Light" : "🌙 Dark"}</button>`).join("");
+      document.getElementById("code-seg").innerHTML = [["css", "CSS variables"], ["json", "JSON (W3C)"]].map(([k, l]) =>
+        `<button class="btn ${k === codeTab ? "active" : ""}" data-code="${k}">${l}</button>`).join("");
+      document.getElementById("prims").innerHTML = Object.entries(PRIM).map(([n, c]) => {
+        const isBrand = BRAND_PRIMS.includes(n);
+        return `<button class="prim ${isBrand ? "brand" : ""} ${n === tokBrand ? "active" : ""} ${used.has(n) ? "used" : ""}"
+          ${isBrand ? `data-prim="${n}"` : "tabindex='-1'"} style="background:${c}" title="${n}" aria-label="${n}"></button>`;
+      }).join("");
+      document.getElementById("semantic").innerHTML = Object.entries(sem).map(([k, v]) =>
+        `<div class="trow"><i style="background:${PRIM[v]}"></i><b>${k}</b><span>${v}</span></div>`).join("");
+      document.getElementById("component").innerHTML = COMP.map(([k, v]) =>
+        `<div class="trow"><i style="background:${hex(v)}"></i><b>${k}</b><span>${v.replace("color-", "")}</span></div>`).join("");
+
+      document.getElementById("tok-preview").style.background = hex("color-surface-page");
+      document.getElementById("tok-preview").innerHTML = `
+        <div class="tok-card" style="background:${hex("color-surface-card")};color:${hex("color-text-default")};border-color:${hex("color-border-subtle")}">
+          <h5>Pizza Palace</h5>
+          <p style="color:${hex("color-text-muted")}">Delivery in 25 min · ⭐ 4.8</p>
+          <button style="background:${hex("color-action-primary")};color:#fff">Order now</button>
+        </div>`;
+
+      const light = { "color-action-primary": tokBrand, "color-text-on-action": "white", ...THEMES.light };
+      const usedPrims = [...new Set([tokBrand, "white", ...Object.values(THEMES.light), ...Object.values(THEMES.dark)])];
+      let out;
+      if (codeTab === "css") {
+        out = `<span class="c">/* 1 · primitives */</span>\n:root {\n${usedPrims.map(p => `  <span class="k">--${p}</span>: <span class="s">${PRIM[p]}</span>;`).join("\n")}\n\n` +
+          `  <span class="c">/* 2 · semantic (light) */</span>\n${Object.entries(light).map(([k, v]) => `  <span class="k">--${k}</span>: var(--${v});`).join("\n")}\n\n` +
+          `  <span class="c">/* 3 · component */</span>\n${COMP.map(([k, v]) => `  <span class="k">--${k}</span>: var(--${v});`).join("\n")}\n}\n\n` +
+          `<span class="c">/* dark theme swaps semantic tokens only */</span>\n[data-theme="dark"] {\n${Object.entries(THEMES.dark).map(([k, v]) => `  <span class="k">--${k}</span>: var(--${v});`).join("\n")}\n}`;
+      } else {
+        const ref = p => { const [fam, step] = p.split("-"); return step ? `{color.${fam}.${step}}` : `{color.${fam}}`; };
+        out = `{\n  <span class="k">"color"</span>: {\n` +
+          usedPrims.slice(0, 3).map(p => { const [fam, step] = p.split("-");
+            return step ? `    <span class="k">"${fam}"</span>: { <span class="k">"${step}"</span>: { <span class="k">"$value"</span>: <span class="s">"${PRIM[p]}"</span>, <span class="k">"$type"</span>: <span class="s">"color"</span> } },`
+                        : `    <span class="k">"${fam}"</span>: { <span class="k">"$value"</span>: <span class="s">"${PRIM[p]}"</span>, <span class="k">"$type"</span>: <span class="s">"color"</span> },`; }).join("\n") +
+          `\n    <span class="c">…</span>\n  },\n  <span class="k">"action"</span>: {\n    <span class="k">"primary"</span>: { <span class="k">"$value"</span>: <span class="s">"${ref(tokBrand)}"</span>, <span class="k">"$type"</span>: <span class="s">"color"</span> }\n  },\n` +
+          `  <span class="k">"button"</span>: {\n    <span class="k">"bg"</span>: { <span class="k">"$value"</span>: <span class="s">"{action.primary}"</span> }\n  }\n}`;
+      }
+      document.getElementById("tok-code").innerHTML = out;
+    }
+    document.getElementById("tokens").onclick = e => {
+      const p = e.target.closest("[data-prim]"), t = e.target.closest("[data-theme-pick]"), c = e.target.closest("[data-code]");
+      if (p) tokBrand = p.dataset.prim;
+      if (t) theme = t.dataset.themePick;
+      if (c) codeTab = c.dataset.code;
+      if (p || t || c) renderTokens();
+    };
+    renderTokens();
+
+    /* ---------- Learn: atomic design ---------- */
+    const searchMol = `<div class="tagged" data-tag="molecule" style="border:1.5px dashed #5b4bdb"><div class="a-lbl">Search</div><div class="row"><span class="a-in">🔍 Pizza, sushi…</span><button class="a-btn">Go</button></div></div>`;
+    const header = (tag) => `<div class="hdr ${tag ? "tagged" : ""}" data-tag="organism" style="${tag ? "border:1.5px dashed #5b4bdb" : ""}">
+      <span class="logo">FoodHub</span><span class="nav"><span>Home</span><span>Orders</span></span><span class="grow"></span>
+      <span class="row"><span class="a-in">🔍 Search</span></span><span class="a-av">🙂</span></div>`;
+    const LEVELS = [
+      { e: "⚛️", name: "Atoms", html: `<div class="row" style="flex-wrap:wrap;justify-content:center;gap:14px">
+          <span class="a-lbl">Label</span><span class="a-in">Input</span><button class="a-btn">Button</button><span style="font-size:22px">🔍</span><span class="a-av">🙂</span></div>`,
+        what: ["Smallest building blocks", "Can't be broken down further"], code: "<Button /> <Input /> <Icon />", owner: "Design system" },
+      { e: "🧪", name: "Molecules", html: searchMol,
+        what: ["Atoms working together as one unit", "Label + input + button = search field"], code: "<SearchField />", owner: "Design system" },
+      { e: "🦠", name: "Organisms", html: header(true),
+        what: ["Distinct sections of an interface", "Logo + nav + search + avatar = header"], code: "<SiteHeader />", owner: "Design system or product team" },
+      { e: "📐", name: "Templates", html: `<div class="tpl">${header(false)}<div class="ph" style="height:56px"></div>
+          <div class="cards3"><div class="ph" style="height:64px"></div><div class="ph" style="height:64px"></div><div class="ph" style="height:64px"></div></div></div>`,
+        what: ["Page layout with placeholder content", "Shows structure, not real data"], code: "<HomeLayout />", owner: "Product team" },
+      { e: "📱", name: "Pages", html: `<div class="tpl">${header(false)}<div class="hero">Hungry? Order in 20 min<small>Free delivery over $15</small></div>
+          <div class="cards3"><div class="food"><div class="em">🍕</div>Pizza Palace</div><div class="food"><div class="em">🍜</div>Noodle Bar</div><div class="food"><div class="em">🥗</div>Green Bowl</div></div></div>`,
+        what: ["Template + real content", "Where you test with real data and edge cases"], code: "<HomePage data={restaurants} />", owner: "Product team" },
+    ];
+    let lvl = 0;
+    function renderAtomic() {
+      document.getElementById("levels").innerHTML = LEVELS.map((l, i) =>
+        `<button class="level ${i === lvl ? "active" : ""}" data-lvl="${i}"><span class="e">${l.e}</span><b>${l.name}</b></button>`).join("");
+      const l = LEVELS[lvl];
+      document.getElementById("atomic-stage").innerHTML = l.html;
+      document.getElementById("atomic-info").innerHTML = `
+        <h4 class="mini-h">What it is</h4><ul class="bullets">${l.what.map(x => `<li>${x}</li>`).join("")}</ul>
+        <h4 class="mini-h" style="margin-top:14px">In code</h4><pre class="code">${esc(l.code)}</pre>
+        <h4 class="mini-h" style="margin-top:14px">Usually owned by</h4><div>${l.owner}</div>`;
+    }
+    document.getElementById("levels").onclick = e => { const b = e.target.closest("[data-lvl]"); if (b) { lvl = +b.dataset.lvl; renderAtomic(); } };
+    renderAtomic();
+
+    /* ---------- Learn: props playground ---------- */
+    const P = { variant: "primary", size: "md", disabled: false, icon: true, label: "Add to cart" };
+    const OPTS = { variant: ["primary", "secondary", "ghost", "danger"], size: ["sm", "md", "lg"] };
+    function renderProps() {
+      const seg = (k, vals, labels) => `<div class="seg">${vals.map((v, i) =>
+        `<button class="btn ${P[k] === v ? "active" : ""}" data-prop="${k}" data-val="${v}">${labels ? labels[i] : v}</button>`).join("")}</div>`;
+      const cap = s => s[0].toUpperCase() + s.slice(1);
+      document.getElementById("figma-panel").innerHTML = `
+        <div class="ttl"><i>◆</i> Button <span style="color:#999;font-weight:500">· component properties</span></div>
+        <div class="fp-row"><label>Variant</label>${seg("variant", OPTS.variant, OPTS.variant.map(cap))}</div>
+        <div class="fp-row"><label>Size</label>${seg("size", OPTS.size, ["S", "M", "L"])}</div>
+        <div class="fp-row"><label>Disabled</label>${seg("disabled", [false, true], ["Off", "On"])}</div>
+        <div class="fp-row"><label>Icon</label>${seg("icon", [false, true], ["Off", "On"])}</div>
+        <div class="fp-row"><label>Label</label><input type="text" id="label-in" value="${esc(P.label)}" maxlength="24"></div>`;
+      renderPropsOut();
+    }
+    function renderPropsOut() {
+      document.getElementById("props-stage").innerHTML =
+        `<button class="pbtn ${P.variant} ${P.size}" ${P.disabled ? "disabled" : ""}>${P.icon ? "＋" : ""}${esc(P.label)}</button>`;
+      const attrs = [`variant=<span class="s">"${P.variant}"</span>`, `size=<span class="s">"${P.size}"</span>`];
+      if (P.disabled) attrs.push(`disabled`);
+      if (P.icon) attrs.push(`icon={<span class="k">&lt;PlusIcon /&gt;</span>}`);
+      document.getElementById("props-code").innerHTML =
+        `<span class="k">&lt;Button</span>\n  ${attrs.join("\n  ")}\n<span class="k">&gt;</span>\n  ${esc(P.label)}\n<span class="k">&lt;/Button&gt;</span>`;
+    }
+    document.getElementById("figma-panel").addEventListener("click", e => {
+      const b = e.target.closest("[data-prop]");
+      if (!b) return;
+      const k = b.dataset.prop, v = b.dataset.val;
+      P[k] = v === "true" ? true : v === "false" ? false : v;
+      renderProps();
+    });
+    document.getElementById("figma-panel").addEventListener("input", e => {
+      if (e.target.id === "label-in") { P.label = e.target.value || "Button"; renderPropsOut(); }
+    });
+    renderProps();
+
+    /* ---------- Governance pipeline ---------- */
+    const PIPE = [
+      { e: "🎨", t: "Figma library", s: "Designers", who: "Design system designers", tool: "Figma components, variables, styles", out: "Published library update + changelog" },
+      { e: "🎟️", t: "Tokens", s: "JSON", who: "Design + frontend together", tool: "Tokens Studio → Style Dictionary", out: "CSS variables, iOS and Android values" },
+      { e: "📦", t: "Code package", s: "npm", who: "Design system engineers", tool: "React/Web Components, CI, semver", out: "@foodhub/ui v2.4.1 + release notes" },
+      { e: "📚", t: "Storybook", s: "Docs", who: "Everyone reads it", tool: "Storybook + visual regression tests", out: "Live, interactive source of truth" },
+      { e: "🚀", t: "Products", s: "Apps", who: "Product teams", tool: "Upgrade the package version", out: "Consistent UI; adoption tracked" },
+    ];
+    let pipeI = 0;
+    function renderPipe() {
+      document.getElementById("pipe").innerHTML = PIPE.map((p, i) =>
+        `<button class="pnode ${i === pipeI ? "active" : ""}" data-pipe="${i}"><span class="e">${p.e}</span><b>${p.t}</b><small>${p.s}</small></button>`).join("");
+      const p = PIPE[pipeI];
+      document.getElementById("pipe-detail").innerHTML = `
+        <div><h4 class="mini-h">👤 Who</h4>${p.who}</div>
+        <div><h4 class="mini-h">🛠️ Tools</h4>${p.tool}</div>
+        <div><h4 class="mini-h">📤 Output</h4>${p.out}</div>`;
+    }
+    document.getElementById("pipe").onclick = e => { const b = e.target.closest("[data-pipe]"); if (b) { pipeI = +b.dataset.pipe; renderPipe(); } };
+    renderPipe();
+
+    /* ---------- Try: tokenize ---------- */
+    const HC = [
+      ["background", "#FFFFFF", "color-surface-card", true],
+      ["color", "#1C1C22", "color-text-default", true],
+      ["border", "1px solid #E1E1EA", "color-border-subtle", true],
+      ["button bg", "#5B4BDB", "color-action-primary", true],
+      ["padding", "16px", "space-4", false],
+      ["border-radius", "12px", "radius-md", false],
+      ["font-size", "14px", "font-size-sm", false],
+    ];
+    const TOKS = ["color-action-primary", "color-surface-card", "color-text-default", "color-border-subtle",
+                  "color-feedback-error", "space-4", "space-8", "radius-md", "radius-full", "font-size-sm"];
+    let assign, hcSel, tokChecked;
+    function resetTok() { assign = HC.map(() => null); hcSel = 0; tokChecked = false; document.getElementById("tok-msg").textContent = ""; renderTok(); }
+    function renderTok() {
+      document.getElementById("hc-list").innerHTML = HC.map(([prop, val, , isColor], i) => {
+        const st = tokChecked ? (assign[i] === HC[i][2] ? "ok" : "no") : hcSel === i ? "sel" : "";
+        const sw = isColor ? `<i class="sw" style="background:${val.match(/#\w+/)[0]}"></i>` : "";
+        return `<button class="hc ${st}" data-hc="${i}"><span class="prop">${prop}</span>${sw}<span class="val">${val}</span>
+          <span class="to">${assign[i] ? "→ " + assign[i] : ""}</span></button>`;
+      }).join("");
+      const taken = new Set(assign.filter(Boolean));
+      const list = document.getElementById("tok-list");
+      list.classList.toggle("ready", hcSel !== null);
+      list.innerHTML = TOKS.map(t => `<button class="tchip ${taken.has(t) ? "taken" : ""}" data-tok="${t}">${t}</button>`).join("");
+    }
+    document.getElementById("hc-list").onclick = e => {
+      const b = e.target.closest("[data-hc]"); if (!b) return;
+      const i = +b.dataset.hc; tokChecked = false;
+      hcSel = hcSel === i ? null : i; renderTok();
+    };
+    document.getElementById("tok-list").onclick = e => {
+      const b = e.target.closest("[data-tok]"); if (!b || hcSel === null) return;
+      assign[hcSel] = b.dataset.tok;
+      // Jump to the next unassigned value to keep tapping fast
+      const next = assign.findIndex((a, i) => a === null && i > hcSel);
+      hcSel = next >= 0 ? next : assign.indexOf(null) >= 0 ? assign.indexOf(null) : null;
+      tokChecked = false; renderTok();
+    };
+    document.getElementById("tok-check").onclick = () => {
+      tokChecked = true; hcSel = null; renderTok();
+      const right = assign.filter((a, i) => a === HC[i][2]).length;
+      document.getElementById("tok-msg").textContent = `${right === HC.length ? "🏆" : "👀"} ${right} / ${HC.length} correct`;
+    };
+    document.getElementById("tok-reset").onclick = resetTok;
+    resetTok();
+
+    /* ---------- Try: semver quiz ---------- */
+    const SV = [
+      ["Rename Button prop `type` to `variant`", "Major", "Every team using `type` must change their code."],
+      ["Add a new size option: `xl`", "Minor", "New capability, nothing existing breaks."],
+      ["Fix the focus ring color in dark mode", "Patch", "A bug fix with no API change."],
+      ["Remove the `Card.Header` component", "Major", "Removing anything public is breaking."],
+      ["Add a brand-new `Tooltip` component", "Minor", "Additive, so it's safe to upgrade."],
+      ["Change `color-action-primary` from purple to teal", "Major", "Debatable! Visual changes everyone sees usually ship as major, or with loud notice."],
+    ];
+    let svi = 0, svr = [];
+    const svEl = document.getElementById("semver-quiz");
+    function renderSv(fb) {
+      const dots = SV.map((_, i) => `<i class="${svr[i] === true ? "good" : svr[i] === false ? "bad" : ""}"></i>`).join("");
+      if (svi >= SV.length) {
+        const s = svr.filter(Boolean).length;
+        svEl.innerHTML = `<div class="dots">${dots}</div><div class="sv-q">${s >= 5 ? "🏆" : "👍"} ${s} / ${SV.length}</div>
+          <p style="color:var(--muted)">Breaking changes need a migration guide and a heads-up to every team.</p>
+          <button class="btn primary" data-sv-retry>Try again</button>`;
+        return;
+      }
+      svEl.innerHTML = `<div class="dots">${dots}</div>
+        <div class="sv-q"><span>${esc(SV[svi][0]).replace(/`([^`]+)`/g, "<code>$1</code>")}</span></div>
+        <div class="sv-btns">${["Major", "Minor", "Patch"].map(x => `<button class="btn" data-sv="${x}">${x}</button>`).join("")}</div>
+        <div class="sv-fb ${fb ? fb.cls : ""}">${fb ? fb.text : ""}</div>`;
+    }
+    svEl.onclick = e => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.hasAttribute("data-sv-retry")) { svi = 0; svr = []; return renderSv(); }
+      const [, ans, why] = SV[svi], ok = b.dataset.sv === ans;
+      svr[svi] = ok; svi++;
+      renderSv({ cls: ok ? "good" : "bad", text: `${ok ? "✓ Correct!" : "✗ It's " + ans + "."} ${esc(why).replace(/`([^`]+)`/g, "<code>$1</code>")}` });
+    };
+    renderSv();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"Is it in the design system?\"", "Does a ready-made, tested component already exist?", "If not, is this a one-off or should it be added for everyone?"],
+      ["\"That's a one-off.\"", "A custom element used in only one place.", "Is it worth the maintenance cost, or can an existing component work?"],
+      ["\"We need a new token.\"", "A new named value, e.g. a warning color or spacing step.", "Is it semantic (meaning) or just a new raw value? Who approves it?"],
+      ["\"That's a breaking change.\"", "Upgrading will force teams to change their code.", "Is there a migration guide, a deprecation period and a major version?"],
+      ["\"Let's detach the component.\"", "In Figma: break the link to the library and edit it freely.", "Will developers build a custom version? It won't get future updates."],
+      ["\"Is it in Storybook?\"", "Is the coded component documented with live examples?", "Does the Storybook version match the Figma one?"],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(8);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

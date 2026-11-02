@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>User Research · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Explore: interview simulator ---------- */
+    .sim { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (max-width: 700px) { .sim { grid-template-columns: 1fr; } }
+    .chat { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .chat-head { display: flex; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: var(--accent-soft); flex: none; }
+    .chat-head b { display: block; }
+    .chat-head small { color: var(--muted); }
+    .chat-log { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px; min-height: 340px; max-height: 420px; overflow-y: auto; }
+    .bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 15px; animation: pop .3s ease; }
+    .bubble.q { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+    .bubble.a { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 4px; }
+    .bubble .tag { display: inline-block; margin-top: 6px; }
+    .chat-empty { margin: auto; text-align: center; color: var(--muted); font-size: 14px; }
+    .chat-empty div { font-size: 34px; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+    .tag { font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; letter-spacing: .03em; }
+    .tag.good { background: var(--good-soft); color: var(--good); }
+    .tag.bad { background: var(--bad-soft); color: var(--bad); }
+
+    .side { display: flex; flex-direction: column; gap: 14px; }
+    .qlist { display: flex; flex-direction: column; gap: 8px; }
+    .qbtn { text-align: left; font-weight: 600; font-size: 14px; }
+    .qbtn:disabled { opacity: .4; cursor: default; }
+    .meter-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .meter-lbl b { color: var(--text); }
+    .meter { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--good)); transition: width .6s; }
+    .why { font-size: 14px; min-height: 44px; margin-top: 10px; }
+    .insights { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .insights div { font-size: 13px; background: var(--good-soft); padding: 6px 10px; border-radius: 10px; animation: pop .3s ease; }
+    .sim-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+    /* ---------- Learn: methods landscape ---------- */
+    .land { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .land { grid-template-columns: 1fr; } }
+    .plot { position: relative; aspect-ratio: 1 / .85; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
+    .plot .qd { position: absolute; width: 50%; height: 50%; padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+    .plot .qd:nth-child(1) { left: 0; top: 0; }
+    .plot .qd:nth-child(2) { right: 0; top: 0; text-align: right; background: var(--surface-2); }
+    .plot .qd:nth-child(3) { left: 0; bottom: 0; display: flex; align-items: flex-end; background: var(--surface-2); }
+    .plot .qd:nth-child(4) { right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: flex-end; }
+    .axis-x, .axis-y { position: absolute; background: var(--line); }
+    .axis-x { left: 0; right: 0; top: 50%; height: 2px; }
+    .axis-y { top: 0; bottom: 0; left: 50%; width: 2px; }
+    .ax-lbl { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--accent); margin: 8px 4px 0; }
+    .ax-lbl.v { margin: 0 4px 8px; }
+    .dot {
+      position: absolute; transform: translate(-50%, -50%);
+      font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+      padding: 5px 10px; border-radius: 999px; border: 1.5px solid var(--accent);
+      background: var(--surface); color: var(--text); transition: background .2s, color .2s, box-shadow .2s;
+    }
+    /* Invisible padding grows each pill to a ≥44px touch target without changing its look */
+    .dot::after { content: ""; position: absolute; inset: -9px -4px; }
+    .dot:hover { box-shadow: 0 0 0 4px var(--accent-soft); }
+    .toggle { min-height: 44px; }
+    .dot.active { background: var(--accent); color: #fff; box-shadow: 0 0 0 5px var(--accent-soft); }
+    .m-panel h3 { margin: 0 0 4px; font-size: 22px; }
+    .m-panel .ans { color: var(--muted); margin-bottom: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .stat { background: var(--surface-2); border-radius: 12px; padding: 10px; text-align: center; }
+    .stat b { display: block; font-size: 15px; }
+    .stat span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+    .m-panel .row { display: flex; gap: 10px; margin: 8px 0; font-size: 14px; }
+    .m-panel .row > span:first-child { flex: none; }
+    .saydo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 24px; }
+    .sd { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+    .sd > div { padding: 12px 14px; font-size: 14px; }
+    .sd .say { background: var(--surface); }
+    .sd .do { background: var(--bad-soft); }
+    .sd small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+
+    /* ---------- Learn 2: artifacts ---------- */
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tabs .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .persona-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .persona-wrap { grid-template-columns: 1fr; } }
+    .persona { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .persona-top { display: flex; gap: 14px; align-items: center; padding: 18px; background: var(--accent-soft); }
+    .persona-top .avatar { width: 64px; height: 64px; font-size: 34px; background: var(--surface); }
+    .persona-top h3 { margin: 0; }
+    .persona-top q { font-style: italic; color: var(--muted); font-size: 14px; }
+    .persona-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
+    .persona-grid > div { background: var(--surface); padding: 14px; }
+    .persona-grid h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+    .persona-grid ul { margin: 0; padding-left: 18px; font-size: 14px; }
+    .src { font-size: 11px; font-weight: 700; margin-left: 4px; white-space: nowrap; text-transform: none; letter-spacing: 0; }
+    .src.real { color: var(--good); }
+    .src.fake { color: var(--warn); }
+    .persona-src { padding: 10px 18px; font-size: 13px; font-weight: 700; }
+    .persona-src.real { background: var(--good-soft); color: var(--good); }
+    .persona-src.fake { background: var(--bad-soft); color: var(--bad); }
+    .vs-list { display: flex; flex-direction: column; gap: 10px; }
+    .vs-list .card { padding: 14px; }
+    .vs-list h4 { margin: 0 0 6px; }
+
+    .jm svg { width: 100%; height: auto; display: block; }
+    .jm .curve { fill: none; stroke: var(--accent); stroke-width: 3; }
+    .jm .zero { stroke: var(--line); stroke-dasharray: 4 6; }
+    .jm .pt { stroke: var(--surface); stroke-width: 3; transition: r .2s; pointer-events: none; }
+    .jm .hit { fill: transparent; cursor: pointer; }
+    .jm .pt.pos { fill: var(--good); }
+    .jm .pt.neg { fill: var(--bad); }
+    .jm .pt.neu { fill: var(--muted); }
+    .jm .pt.active { stroke: var(--accent); stroke-width: 4; }
+    .jm text { fill: var(--text); font-family: var(--font); font-size: 13px; font-weight: 700; }
+    .jm .face { font-size: 20px; }
+    .jm .muted-t { fill: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+    .jm-detail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    @media (max-width: 700px) { .jm-detail { grid-template-columns: 1fr 1fr; } }
+    .jm-detail > div { background: var(--surface-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+    .jm-detail h4 { margin: 0 0 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .jm-detail .pain { background: var(--bad-soft); }
+    .jm-detail .opp { background: var(--good-soft); }
+
+    .jtbd-formula { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 6px 0 18px; }
+    .jtbd-formula > div { flex: 1 1 200px; border-radius: var(--radius); padding: 16px; text-align: center; border: 1px solid var(--line); }
+    .jtbd-formula small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--accent); margin-bottom: 6px; }
+    .jtbd-formula b { font-size: 17px; }
+    .jtbd-formula > div:nth-child(1) { background: var(--accent-soft); }
+    .jtbd-formula > div:nth-child(2) { background: var(--surface-2); }
+    .jtbd-formula > div:nth-child(3) { background: var(--good-soft); }
+    .jtbd-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .jtbd-compare .card { padding: 14px; }
+    .jtbd-compare h4 { margin: 0 0 6px; }
+    .center { text-align: center; }
+
+    /* ---------- Try: spot the bad question ---------- */
+    .quiz-card { text-align: center; max-width: 620px; margin: 0 auto; }
+    .quiz-q { font-size: 21px; font-weight: 700; min-height: 80px; display: grid; place-items: center; margin: 12px 0 20px; }
+    .quiz-btns { display: flex; gap: 12px; justify-content: center; }
+    .quiz-btns .btn { min-width: 130px; font-size: 17px; }
+    .quiz-fb { min-height: 52px; margin-top: 16px; font-weight: 600; }
+    .quiz-fb.good { color: var(--good); }
+    .quiz-fb.bad { color: var(--bad); }
+    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- Try: how many users ---------- */
+    .nn { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+    @media (max-width: 700px) { .nn { grid-template-columns: 1fr; } }
+    .nn svg { width: 100%; height: auto; display: block; }
+    .nn .grid-l { stroke: var(--line); }
+    .nn .area { fill: var(--accent-soft); }
+    .nn .curve { fill: none; stroke: var(--accent); stroke-width: 3; }
+    .nn .guide { stroke: var(--accent); stroke-dasharray: 4 5; }
+    .nn .mark { fill: var(--accent); stroke: var(--surface); stroke-width: 3; }
+    .nn .five { fill: var(--good); }
+    .nn text { fill: var(--muted); font-family: var(--font); font-size: 12px; }
+    .big { font-size: 56px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+    .big small { font-size: 18px; color: var(--muted); font-weight: 600; letter-spacing: 0; }
+    .nn input[type=range] { width: 100%; height: 44px; accent-color: var(--accent); margin: 6px 0 0; }
+    .nn-msg { font-size: 15px; font-weight: 600; min-height: 46px; }
+    .rounds { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .round { flex: 1; min-width: 90px; text-align: center; padding: 10px; border-radius: 12px; background: var(--surface-2); font-size: 13px; }
+    .round b { display: block; font-size: 15px; }
+    .vs-sep { align-self: center; font-weight: 800; color: var(--muted); padding: 0 4px; }
+
+    /* ---------- TPM lens ---------- */
+    .say-t { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 02 User Research</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 02 · User Research</div>
+      <h1>Watch what they do,<br>not what they say.</h1>
+      <p>How teams learn what users actually need, and how to tell good evidence from opinion.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Methods</a>
+        <a href="#artifacts">🗂️ Artifacts</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Run a user interview</h2>
+      <p class="sub">You have 10 minutes with a real customer. Pick your questions and watch the insight meter.</p>
+
+      <div class="sim">
+        <div class="card chat">
+          <div class="chat-head">
+            <div class="avatar">🧑‍💼</div>
+            <div><b>Sam, 34</b><small>Orders food delivery 3× a week · works from home</small></div>
+          </div>
+          <div class="chat-log" id="chat-log"></div>
+        </div>
+
+        <div class="side">
+          <div class="card">
+            <div class="meter-lbl"><span>💡 Insight meter</span><b id="ins-val">0%</b></div>
+            <div class="meter"><i id="ins-bar"></i></div>
+            <div class="why" id="why">Pick a question to ask Sam ↓</div>
+            <div class="insights" id="insights"></div>
+          </div>
+          <div class="card">
+            <div class="qlist" id="qlist"></div>
+            <div class="sim-foot" style="margin-top:12px">
+              <small style="color:var(--muted)" id="q-left"></small>
+              <button class="btn" id="sim-reset">↺ Restart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: METHODS ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>The research methods map</h2>
+      <p class="sub">Every method sits somewhere on two axes. Tap a method to see when to use it.</p>
+
+      <div class="land">
+        <div>
+          <div class="ax-lbl v"><span>▲ ATTITUDINAL · what people say</span></div>
+          <div class="plot" id="plot">
+            <div class="qd">WHY THEY FEEL IT</div>
+            <div class="qd">HOW MANY FEEL IT</div>
+            <div class="qd">WHY THEY DO IT</div>
+            <div class="qd">HOW MANY DO IT</div>
+            <div class="axis-x"></div><div class="axis-y"></div>
+          </div>
+          <div class="ax-lbl"><span>◀ QUALITATIVE · why</span><span>QUANTITATIVE · how many ▶</span></div>
+          <div class="ax-lbl"><span>▼ BEHAVIORAL · what people do</span></div>
+        </div>
+        <div class="card m-panel" id="m-panel"></div>
+      </div>
+
+      <h2 style="margin-top:40px">Say ≠ Do</h2>
+      <p class="sub">The #1 rule of research. Combine both kinds of method to see the full picture.</p>
+      <div class="saydo">
+        <div class="sd"><div class="say"><small>🗣️ THEY SAY</small>"I always compare prices."</div><div class="do"><small>👀 THEY DO</small>Reorder the same place every time.</div></div>
+        <div class="sd"><div class="say"><small>🗣️ THEY SAY</small>"I'd pay for faster delivery."</div><div class="do"><small>👀 THEY DO</small>Pick the free, slower option.</div></div>
+        <div class="sd"><div class="say"><small>🗣️ THEY SAY</small>"The app is easy to use."</div><div class="do"><small>👀 THEY DO</small>Take 4 tries to find order history.</div></div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN: ARTIFACTS ================= -->
+    <section class="section" id="artifacts">
+      <span class="step-label">🗂️ Artifacts</span>
+      <h2>What research turns into</h2>
+      <p class="sub">The deliverables you'll see in design reviews, and how to judge them.</p>
+      <div class="tabs" id="art-tabs"></div>
+      <div class="card" id="art-body"></div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Good question or bad question?</h2>
+      <p class="sub">8 interview questions. Judge each one fast.</p>
+      <div class="card quiz-card" id="quiz"></div>
+
+      <h2 style="margin-top:48px">How many users do you need?</h2>
+      <p class="sub">Drag the slider. This is the curve behind "test with 5 users".</p>
+      <div class="card nn">
+        <svg viewBox="0 0 520 300" id="nn-svg" role="img" aria-label="Usability problems found vs number of users"></svg>
+        <div>
+          <div class="big"><span id="nn-pct">85%</span> <small>of problems found</small></div>
+          <input type="range" min="1" max="15" value="5" id="nn-range" aria-label="Number of test users">
+          <div style="font-weight:700;margin-bottom:8px">👥 <span id="nn-n">5</span> users tested</div>
+          <div class="nn-msg" id="nn-msg"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <b>💡 Same budget, better result: 15 users</b>
+        <div class="rounds">
+          <div class="round" style="background:var(--bad-soft)"><b>1 × 15 users</b>One big test. Late, expensive, repetitive findings.</div>
+          <div class="vs-sep">vs</div>
+          <div class="round" style="background:var(--good-soft)"><b>Round 1 · 5</b>Find the big problems</div>
+          <div class="round" style="background:var(--good-soft)"><b>Round 2 · 5</b>Check the fixes worked</div>
+          <div class="round" style="background:var(--good-soft)"><b>Round 3 · 5</b>Find deeper issues</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When someone says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>Watch what users <b>do</b>, not just what they <b>say</b>.</li>
+          <li>Ask about <b>past behavior</b>, never future wishes or features.</li>
+          <li><b>Qual finds the why</b> (5 users), <b>quant measures how many</b> (hundreds). You need both.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    /* ---------- Explore: interview simulator ---------- */
+    const QS = [
+      { q: "Would you use a feature to schedule orders in advance?", type: "Hypothetical", good: false, pts: 0,
+        a: "Oh sure, that sounds useful!",
+        why: "People are bad at predicting their future behavior. A polite \"yes\" isn't usage." },
+      { q: "Don't you hate it when delivery is late?", type: "Leading", good: false, pts: 0,
+        a: "Uh… yeah, I guess so?",
+        why: "It puts the answer in Sam's mouth. You learn your own opinion back." },
+      { q: "Do you like our app?", type: "Closed", good: false, pts: 0,
+        a: "Yeah, it's fine.",
+        why: "Yes/no questions end the conversation. And people are polite to your face." },
+      { q: "Tell me about the last time you ordered food.", type: "Open · past behavior", good: true, pts: 35,
+        a: "Last Tuesday. I had 10 minutes between calls and the kids were hungry. I scrolled forever, gave up and just reordered the same pizza.",
+        insight: "Decision fatigue: under time pressure, Sam reorders instead of choosing.",
+        why: "A specific, real past moment produces stories and real details." },
+      { q: "What was the hardest part of that?", type: "Follow-up probe", good: true, pts: 35,
+        a: "Honestly? The total. The fees only showed up at the very end and I almost cancelled.",
+        insight: "Hidden fees at checkout create anxiety and near-abandonment.",
+        why: "Probing deeper on a real story is where the gold is." },
+      { q: "Could you show me how you usually reorder?", type: "Observation", good: true, pts: 30,
+        a: "[opens app] I go to Profile… Orders… scroll… hmm, where's the button? Oh, it's hidden in here.",
+        insight: "Reorder exists but is hard to find. Sam never mentioned that until doing it.",
+        why: "Watching beats asking. Say ≠ do, live." },
+    ];
+    let asked = [], insight = 0;
+    const log = document.getElementById("chat-log");
+    function renderSim(last) {
+      document.getElementById("qlist").innerHTML = QS.map((x, i) =>
+        `<button class="btn qbtn" data-q="${i}" ${asked.includes(i) ? "disabled" : ""}>💬 ${x.q}</button>`).join("");
+      document.getElementById("q-left").textContent = `${QS.length - asked.length} questions left`;
+      document.getElementById("ins-val").textContent = insight + "%";
+      document.getElementById("ins-bar").style.width = insight + "%";
+      log.innerHTML = asked.length ? asked.map(i => {
+        const x = QS[i];
+        return `<div class="bubble q">${x.q}</div>
+          <div class="bubble a">${x.a}<br><span class="tag ${x.good ? "good" : "bad"}">${x.good ? "✓" : "✗"} ${x.type}</span></div>`;
+      }).join("") : `<div class="chat-empty"><div>🎙️</div>Your interview transcript will appear here</div>`;
+      log.scrollTop = log.scrollHeight;
+      const why = document.getElementById("why");
+      if (last === undefined) why.textContent = "Pick a question to ask Sam ↓";
+      else {
+        const x = QS[last];
+        why.innerHTML = `<span class="tag ${x.good ? "good" : "bad"}">${x.good ? "+" + x.pts + "% insight" : "+0% insight"}</span> ${x.why}`;
+      }
+      if (asked.length === QS.length) why.innerHTML += `<br><br><b>🏁 3 open questions found 3 real problems. 3 closed ones found nothing.</b>`;
+      document.getElementById("insights").innerHTML = asked.filter(i => QS[i].insight).map(i => `<div>💡 ${QS[i].insight}</div>`).join("");
+    }
+    document.getElementById("qlist").onclick = e => {
+      const b = e.target.closest("[data-q]");
+      if (!b || b.disabled) return;
+      const i = +b.dataset.q;
+      asked.push(i); insight += QS[i].pts;
+      renderSim(i);
+    };
+    document.getElementById("sim-reset").onclick = () => { asked = []; insight = 0; renderSim(); };
+    renderSim();
+
+    /* ---------- Learn: methods map ---------- */
+    // x: 0 = qualitative, 100 = quantitative · y: 0 = attitudinal, 100 = behavioral
+    const METHODS = [
+      { name: "Interviews", x: 20, y: 18, ans: "What do users need, and why?", n: "5–8 / segment", time: "1–2 weeks", cost: "$",
+        when: "Early discovery, before any design", warn: "What people say ≠ what they do" },
+      { name: "Surveys", x: 78, y: 14, ans: "How many users feel this way?", n: "100+", time: "1–2 weeks", cost: "$",
+        when: "Measuring at scale what interviews found", warn: "Bad questions give you bad data at scale" },
+      { name: "Card sorting", x: 50, y: 33, ans: "How do users group and name content?", n: "15–30", time: "Days", cost: "$",
+        when: "Designing navigation and menus", warn: "Open sort to explore, closed sort to validate" },
+      { name: "Diary study", x: 27, y: 48, ans: "How does behavior change over days or weeks?", n: "10–15", time: "2–4 weeks", cost: "$$",
+        when: "Habits and long journeys", warn: "Participants drop out, so recruit extra" },
+      { name: "Usability test", x: 22, y: 68, ans: "Can users complete key tasks? Where do they struggle?", n: "5 / round", time: "Days", cost: "$–$$",
+        when: "Before building (prototype) and after shipping", warn: "Finds problems, not percentages" },
+      { name: "Field study", x: 15, y: 86, ans: "How do users work in their real environment?", n: "4–12", time: "Weeks", cost: "$$$",
+        when: "Complex workflows, B2B, unfamiliar domains", warn: "Expensive, but uncovers what no one thinks to mention" },
+      { name: "Eye-tracking", x: 56, y: 82, ans: "Where do people actually look?", n: "~30 for heatmaps", time: "1–2 weeks", cost: "$$$",
+        when: "Fine-tuning landing pages and dense layouts", warn: "Rarely worth it for most teams" },
+      { name: "A/B test", x: 80, y: 66, ans: "Which version performs better?", n: "Thousands", time: "1–4 weeks", cost: "$$",
+        when: "Optimizing a live product with real traffic", warn: "Tells you what wins, never why" },
+      { name: "Analytics", x: 84, y: 88, ans: "What are users doing, at scale?", n: "All users", time: "Ongoing", cost: "$",
+        when: "Spotting drop-offs, then asking why with qual", warn: "Only as good as your event tracking" },
+    ];
+    let mActive = 4;
+    const plot = document.getElementById("plot");
+    plot.insertAdjacentHTML("beforeend", METHODS.map((m, i) =>
+      `<button class="dot" data-m="${i}" style="left:${m.x}%;top:${m.y}%">${m.name}</button>`).join(""));
+    function renderMethod() {
+      plot.querySelectorAll(".dot").forEach(d => d.classList.toggle("active", +d.dataset.m === mActive));
+      const m = METHODS[mActive];
+      document.getElementById("m-panel").innerHTML = `
+        <h3>${m.name}</h3>
+        <div class="ans">❓ ${m.ans}</div>
+        <div class="stats">
+          <div class="stat"><b>${m.n}</b><span>Users</span></div>
+          <div class="stat"><b>${m.time}</b><span>Time</span></div>
+          <div class="stat"><b>${m.cost}</b><span>Cost</span></div>
+        </div>
+        <div class="row"><span>✅</span><span><b>Use when:</b> ${m.when}</span></div>
+        <div class="row"><span>⚠️</span><span><b>Watch out:</b> ${m.warn}</span></div>`;
+    }
+    plot.onclick = e => { const d = e.target.closest("[data-m]"); if (d) { mActive = +d.dataset.m; renderMethod(); } };
+    renderMethod();
+
+    /* ---------- Learn 2: artifacts ---------- */
+    let artTab = 0, realPersona = true, jmActive = 3, jtbdI = 0;
+    const PERSONA = {
+      goals: ["Feed the family fast on workdays", "Avoid the mental load of choosing"],
+      pains: ["Surprise fees at checkout", "Too many options under time pressure"],
+      behav: ["Orders 3× a week, mostly 6–7pm", "Reorders favorites 70% of the time"],
+      context: ["Phone in one hand, laptop open", "Has 5–10 minutes between meetings"],
+    };
+    const JM = [
+      { s: "Hungry", e: 0, face: "😐", doing: "Realizes there's no dinner plan", think: "\"Ugh, what are we eating?\"", pain: "No quick idea of what to eat", opp: "Smart suggestions at 6pm" },
+      { s: "Browse", e: 1, face: "🙂", doing: "Opens the app, scrolls restaurants", think: "\"So many choices…\"", pain: "Endless scrolling", opp: "Personal favorites first" },
+      { s: "Choose", e: -1, face: "😕", doing: "Switches between 4 menus", think: "\"I don't have time for this.\"", pain: "Decision fatigue", opp: "One-tap reorder" },
+      { s: "Checkout", e: -2, face: "😠", doing: "Sees fees appear at the last step", think: "\"Why is it $9 more?!\"", pain: "Hidden fees, almost cancels", opp: "Show the full price upfront" },
+      { s: "Wait", e: -1, face: "😟", doing: "Checks the app 6 times", think: "\"Where is it?\"", pain: "No live updates", opp: "Live tracking map" },
+      { s: "Eat", e: 2, face: "😋", doing: "Family eats together", think: "\"Finally.\"", pain: "None, but no prompt to rate", opp: "One-tap rating and reorder" },
+    ];
+    const JTBD = [
+      ["When I'm hungry with no time to decide", "I want to get a meal I know I'll like", "so I can get back to work without stress"],
+      ["When my order is running late", "I want to know exactly where it is", "so I can plan the next 20 minutes"],
+      ["When I'm feeding my family on a budget", "I want to see the full price before I commit", "so I don't feel tricked"],
+    ];
+    function renderArt() {
+      document.getElementById("art-tabs").innerHTML = ["👤 Persona", "🗺️ Journey map", "🎯 Jobs to be Done"].map((t, i) =>
+        `<button class="btn ${i === artTab ? "active" : ""}" data-tab="${i}">${t}</button>`).join("");
+      const body = document.getElementById("art-body");
+      if (artTab === 0) {
+        const src = realPersona ? `<span class="src real">📊 data</span>` : `<span class="src fake">⚠️ guess</span>`;
+        const list = (k) => `<ul>${PERSONA[k].map(x => `<li>${x}</li>`).join("")}</ul>`;
+        body.innerHTML = `
+          <div style="display:flex;justify-content:center;margin-bottom:16px">
+            <label class="toggle"><input type="checkbox" id="p-toggle" ${realPersona ? "checked" : ""}><span class="track"></span>${realPersona ? "📊 Research-based persona" : "⚠️ Proto-persona (assumptions)"}</label>
+          </div>
+          <div class="persona-wrap">
+            <div class="persona">
+              <div class="persona-top"><div class="avatar">🧑‍💼</div>
+                <div><h3>"Time-starved Sam"</h3><q>I just want dinner sorted without thinking.</q></div></div>
+              <div class="persona-grid">
+                <div><h4>🎯 Goals ${src}</h4>${list("goals")}</div>
+                <div><h4>😤 Frustrations ${src}</h4>${list("pains")}</div>
+                <div><h4>📱 Behaviors ${src}</h4>${list("behav")}</div>
+                <div><h4>📍 Context ${src}</h4>${list("context")}</div>
+              </div>
+              <div class="persona-src ${realPersona ? "real" : "fake"}">${realPersona
+                ? "✓ Based on 12 interviews + order analytics · updated Oct 2026"
+                : "✗ Written in a workshop from team assumptions · never validated"}</div>
+            </div>
+            <div class="vs-list">
+              <div class="card"><h4>📊 Research-based</h4><ul class="bullets"><li>Built from real interviews and data</li><li>Safe to make decisions with</li></ul></div>
+              <div class="card"><h4>⚠️ Proto-persona</h4><ul class="bullets"><li>A team's best guess, made in hours</li><li>Fine to start with, but validate it</li></ul></div>
+              <div class="card"><h4>🚩 Red flag</h4><ul class="bullets"><li>Lots of demographics, no behaviors</li><li>"Loves yoga and lattes" adds nothing</li></ul></div>
+            </div>
+          </div>`;
+      } else if (artTab === 1) {
+        const W = 700, X0 = 60, step = (W - 2 * X0) / (JM.length - 1);
+        const pts = JM.map((j, i) => ({ x: X0 + i * step, y: 120 - j.e * 40 }));
+        const d = pts.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} C ${pts[i - 1].x + step / 2} ${pts[i - 1].y}, ${p.x - step / 2} ${p.y}, ${p.x} ${p.y}`, "");
+        const j = JM[jmActive];
+        body.innerHTML = `
+          <div class="jm">
+            <svg viewBox="0 0 ${W} 250" role="img" aria-label="Customer journey emotion curve">
+              <text class="muted-t" x="6" y="44">😊 HAPPY</text>
+              <text class="muted-t" x="6" y="204">😠 UPSET</text>
+              <line class="zero" x1="${X0 - 20}" x2="${W - X0 + 20}" y1="120" y2="120"/>
+              <path class="curve" d="${d}"/>
+              ${pts.map((p, i) => `
+                <text class="face" x="${p.x}" y="${p.y - 18}" text-anchor="middle">${JM[i].face}</text>
+                <circle class="pt ${JM[i].e > 0 ? "pos" : JM[i].e < 0 ? "neg" : "neu"} ${i === jmActive ? "active" : ""}" cx="${p.x}" cy="${p.y}" r="${i === jmActive ? 11 : 8}"/>
+                <rect class="hit" data-jm="${i}" x="${p.x - step / 2}" y="20" width="${step}" height="230"/>
+                <text x="${p.x}" y="240" text-anchor="middle" style="${i === jmActive ? "fill:var(--accent)" : ""}">${JM[i].s}</text>`).join("")}
+            </svg>
+            <div class="jm-detail">
+              <div><h4>🏃 Doing</h4>${j.doing}</div>
+              <div><h4>💭 Thinking</h4>${j.think}</div>
+              <div class="pain"><h4>😤 Pain point</h4>${j.pain}</div>
+              <div class="opp"><h4>✨ Opportunity</h4>${j.opp}</div>
+            </div>
+            <p class="center" style="color:var(--muted);font-size:13px;margin:14px 0 0">Tap any stage. The lowest points are where to invest first.</p>
+          </div>`;
+      } else {
+        const [w, i2, s] = JTBD[jtbdI];
+        body.innerHTML = `
+          <div class="jtbd-formula">
+            <div><small>WHEN…</small><b>${w}</b></div>
+            <div><small>I WANT TO…</small><b>${i2}</b></div>
+            <div><small>SO I CAN…</small><b>${s}</b></div>
+          </div>
+          <div class="center" style="margin-bottom:18px"><button class="btn" id="jtbd-next">↻ Another job (${jtbdI + 1}/${JTBD.length})</button></div>
+          <div class="jtbd-compare">
+            <div class="card"><h4>📝 User story</h4><ul class="bullets"><li>"As a parent, I want filters…"</li><li>Starts from a <b>person</b> and a feature</li></ul></div>
+            <div class="card"><h4>🎯 Job story (JTBD)</h4><ul class="bullets"><li>Starts from the <b>situation</b> and motivation</li><li>Leaves room for better solutions</li></ul></div>
+            <div class="card"><h4>🔩 The classic line</h4><ul class="bullets"><li>"People don't want a ¼-inch drill. They want a ¼-inch hole."</li><li>Theodore Levitt</li></ul></div>
+          </div>`;
+      }
+    }
+    const artSec = document.getElementById("artifacts");
+    artSec.addEventListener("click", e => {
+      const t = e.target.closest("[data-tab]"), p = e.target.closest("[data-jm]");
+      if (t) { artTab = +t.dataset.tab; renderArt(); }
+      if (p) { jmActive = +p.dataset.jm; renderArt(); }
+      if (e.target.closest("#jtbd-next")) { jtbdI = (jtbdI + 1) % JTBD.length; renderArt(); }
+    });
+    artSec.addEventListener("change", e => { if (e.target.id === "p-toggle") { realPersona = e.target.checked; renderArt(); } });
+    renderArt();
+
+    /* ---------- Try: good or bad question ---------- */
+    const QUIZ = [
+      ["\"How often do you order food delivery?\"", true, "A simple factual warm-up. Fine to start with."],
+      ["\"Wouldn't one-tap reorder make things easier?\"", false, "Leading and hypothetical. You've already given the answer."],
+      ["\"Walk me through the last time a delivery went wrong.\"", true, "A specific past event. You'll get real details."],
+      ["\"How much would you pay for premium delivery?\"", false, "People can't predict what they'd pay. Test with real prices instead."],
+      ["\"What do you do when you can't decide what to eat?\"", true, "Open and about behavior. Lets them tell their own story."],
+      ["\"Do you like the new design, yes or no?\"", false, "Closed and about opinion. Observe them using it instead."],
+      ["\"Why did you pick that restaurant?\"", true, "A good probe into their reasoning, right after a real action."],
+      ["\"What features should we build next?\"", false, "Users are experts in their problems, not in solutions. Ask about pains."],
+    ];
+    let qi = 0, results = [];
+    const quiz = document.getElementById("quiz");
+    function renderQuiz(fb) {
+      const dots = QUIZ.map((_, i) => `<i class="${results[i] === true ? "good" : results[i] === false ? "bad" : ""}"></i>`).join("");
+      if (qi >= QUIZ.length) {
+        const score = results.filter(Boolean).length;
+        quiz.innerHTML = `<div class="dots">${dots}</div>
+          <div class="quiz-q">${score >= 7 ? "🏆" : score >= 5 ? "👍" : "🌱"} ${score} / ${QUIZ.length}</div>
+          <p style="color:var(--muted)">Rule of thumb: <b>past, specific, open</b> = good. <b>Future, leading, yes/no</b> = bad.</p>
+          <button class="btn primary" data-retry>Try again</button>`;
+        return;
+      }
+      quiz.innerHTML = `<div class="dots">${dots}</div>
+        <div class="quiz-q">${QUIZ[qi][0]}</div>
+        <div class="quiz-btns">
+          <button class="btn" data-answer="1">👍 Good</button>
+          <button class="btn" data-answer="0">👎 Bad</button>
+        </div>
+        <div class="quiz-fb ${fb ? fb.cls : ""}">${fb ? fb.text : ""}</div>`;
+    }
+    quiz.onclick = e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.answer !== undefined) {
+        const [, good, why] = QUIZ[qi];
+        const ok = (btn.dataset.answer === "1") === good;
+        results[qi] = ok; qi++;
+        renderQuiz({ cls: ok ? "good" : "bad", text: `${ok ? "✓ Right!" : "✗ Not quite."} ${good ? "Good question:" : "Bad question:"} ${why}` });
+      }
+      if (btn.hasAttribute("data-retry")) { qi = 0; results = []; renderQuiz(); }
+    };
+    renderQuiz();
+
+    /* ---------- Try: how many users (Nielsen & Landauer, L = 31%) ---------- */
+    const found = n => 1 - Math.pow(1 - 0.31, n);
+    const svg = document.getElementById("nn-svg");
+    const PX = { l: 44, r: 500, t: 16, b: 260 };
+    const sx = n => PX.l + (n / 15) * (PX.r - PX.l);
+    const sy = p => PX.b - p * (PX.b - PX.t);
+    function renderNN() {
+      const n = +document.getElementById("nn-range").value;
+      const p = found(n);
+      const curve = [...Array(151)].map((_, i) => `${i ? "L" : "M"} ${sx(i / 10)} ${sy(found(i / 10))}`).join(" ");
+      const area = [...Array(n * 10 + 1)].map((_, i) => `L ${sx(i / 10)} ${sy(found(i / 10))}`).join(" ");
+      svg.innerHTML = `
+        ${[0, .25, .5, .75, 1].map(v => `<line class="grid-l" x1="${PX.l}" x2="${PX.r}" y1="${sy(v)}" y2="${sy(v)}"/><text x="${PX.l - 8}" y="${sy(v) + 4}" text-anchor="end">${v * 100}%</text>`).join("")}
+        ${[0, 5, 10, 15].map(v => `<text x="${sx(v)}" y="${PX.b + 20}" text-anchor="middle">${v}</text>`).join("")}
+        <text x="${(PX.l + PX.r) / 2}" y="${PX.b + 38}" text-anchor="middle">users tested</text>
+        <path class="area" d="M ${sx(0)} ${sy(0)} ${area} L ${sx(n)} ${sy(0)} Z"/>
+        <path class="curve" d="${curve}"/>
+        <circle class="five" cx="${sx(5)}" cy="${sy(found(5))}" r="5"/>
+        <line class="guide" x1="${sx(n)}" x2="${sx(n)}" y1="${sy(0)}" y2="${sy(p)}"/>
+        <line class="guide" x1="${PX.l}" x2="${sx(n)}" y1="${sy(p)}" y2="${sy(p)}"/>
+        <circle class="mark" cx="${sx(n)}" cy="${sy(p)}" r="8"/>`;
+      document.getElementById("nn-pct").textContent = Math.round(p * 100) + "%";
+      document.getElementById("nn-n").textContent = n;
+      document.getElementById("nn-msg").innerHTML =
+        n < 3 ? "🌱 Even 1 user beats zero. You'll already spot the worst issues."
+        : n <= 5 ? "🎯 The sweet spot. Nielsen's rule: 5 users find about 85% of problems."
+        : n <= 8 ? "📉 Diminishing returns. You mostly see the same issues again."
+        : "💸 Mostly repeats now. Better to fix, then test 5 more.";
+    }
+    document.getElementById("nn-range").oninput = renderNN;
+    renderNN();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"We need more research.\"", "Uncertainty is still too high to commit.", "Which decision is blocked, and what's the smallest study that unblocks it?"],
+      ["\"5 users isn't statistically significant.\"", "True for quant. But usability tests find problems, not percentages.", "Are we trying to measure how many, or find out why?"],
+      ["\"That's just anecdotal.\"", "One story isn't a pattern yet.", "How many participants showed this? Can analytics confirm it?"],
+      ["\"Let's just send a survey.\"", "Fast and at scale, but only as good as its questions.", "What did interviews already tell us that this survey will quantify?"],
+      ["\"The persona says…\"", "Arguing from a representative user.", "Is this persona from research or assumptions? When was it last updated?"],
+      ["\"Users said they want X.\"", "A feature request, which may hide the real need.", "What problem were they trying to solve when they asked for X?"],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say-t">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(2);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Foundations · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Explore: 2x2 demo ---------- */
+    .controls { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    .demo-stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .demo-stage { grid-template-columns: 1fr; } }
+    .stage-box { background: var(--surface-2); border-radius: var(--radius); padding: 28px 16px; display: grid; place-items: center; min-height: 380px; }
+    .verdict h3 { margin: 0 0 8px; }
+    .verdict .score { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .tag.good { background: var(--good-soft); color: var(--good); }
+    .tag.bad { background: var(--bad-soft); color: var(--bad); }
+    .matrix { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 16px; max-width: 260px; }
+    .matrix div { font-size: 12px; text-align: center; padding: 8px 4px; border-radius: 8px; background: var(--surface-2); color: var(--muted); }
+    .matrix div.on { background: var(--accent); color: #fff; font-weight: 700; }
+
+    /* Four mock signup forms. These deliberately ignore the design tokens. */
+    .f { width: 100%; max-width: 300px; color: #222; }
+    .f input { width: 100%; display: block; }
+    /* ugly + bad UX */
+    .f-ub { background: #ddd; border: 2px solid #888; padding: 10px; font-family: "Times New Roman", serif; font-size: 13px; }
+    .f-ub input { margin: 2px 0; border: 1px solid #777; padding: 2px; font-family: inherit; }
+    .f-ub button { font-size: 11px; padding: 1px 4px; margin-top: 4px; }
+    .f-ub .err { color: #c00; font-size: 10px; }
+    /* pretty + bad UX */
+    .f-pb { background: linear-gradient(160deg, #1b1340, #5b2a86); padding: 24px; border-radius: 22px; color: #fff; font-family: system-ui; box-shadow: 0 20px 40px rgba(60,20,120,.4); }
+    .f-pb h4 { margin: 0 0 14px; font-size: 22px; font-weight: 300; letter-spacing: .3em; text-transform: uppercase; }
+    .f-pb input { background: rgba(255,255,255,.08); border: 0; border-bottom: 1px solid rgba(255,255,255,.2); color: #fff; padding: 10px 2px; margin-bottom: 6px; font-size: 14px; }
+    .f-pb input::placeholder { color: rgba(255,255,255,.25); }
+    .f-pb .row { display: flex; justify-content: flex-end; margin-top: 14px; }
+    .f-pb button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: linear-gradient(135deg,#ff6ec4,#7873f5); color: #fff; font-size: 18px; cursor: pointer; }
+    .f-pb small { display: block; color: rgba(255,255,255,.3); font-size: 10px; margin-top: 10px; }
+    /* ugly + good UX */
+    .f-ug { background: #fff; border: 1px solid #999; padding: 14px; font-family: Arial, sans-serif; font-size: 15px; }
+    .f-ug label { display: block; font-weight: bold; margin-top: 10px; }
+    .f-ug input { border: 1px solid #555; padding: 8px; font-size: 15px; margin-top: 4px; }
+    .f-ug .help { font-size: 13px; color: #333; }
+    .f-ug button { width: 100%; margin-top: 14px; padding: 12px; font-size: 16px; background: #0645ad; color: #fff; border: 0; }
+    /* pretty + good UX */
+    .f-pg { background: #fff; border-radius: 18px; padding: 24px; font-family: system-ui; box-shadow: 0 16px 40px rgba(30,30,80,.15); }
+    .f-pg h4 { margin: 0 0 4px; font-size: 22px; }
+    .f-pg p { margin: 0 0 14px; color: #666; font-size: 14px; }
+    .f-pg label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 6px; color: #333; }
+    .f-pg input { border: 1.5px solid #d6d6e0; border-radius: 10px; padding: 11px 12px; font-size: 15px; }
+    .f-pg input:focus { outline: none; border-color: #5b4bdb; box-shadow: 0 0 0 3px #e9e6ff; }
+    .f-pg .help { font-size: 12px; color: #1f9d63; margin-top: 6px; }
+    .f-pg button { width: 100%; margin-top: 16px; padding: 13px; border: 0; border-radius: 10px; background: #5b4bdb; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .f-pg .alt { text-align: center; font-size: 13px; color: #666; margin-top: 12px; }
+
+    /* ---------- Learn: iceberg ---------- */
+    .iceberg { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+    .ice-top { background: linear-gradient(#cfe9ff, #a9d6ff); padding: 24px; text-align: center; color: #0c2e4e; }
+    .ice-bottom { background: linear-gradient(#1f5f99, #0a2440); padding: 24px; color: #e6f2ff; }
+    .ice-top h3, .ice-bottom h3 { margin: 0 0 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .chips span { background: rgba(255,255,255,.55); padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+    .ice-bottom .chips span { background: rgba(255,255,255,.12); }
+    .waterline { height: 6px; background: repeating-linear-gradient(90deg, #fff 0 12px, #7ec0ff 12px 24px); }
+
+    /* ---------- Learn: discipline cards ---------- */
+    .disc { cursor: pointer; transition: border-color .2s, transform .2s; }
+    .disc:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .disc .icon { font-size: 34px; }
+    .disc h3 { margin: 6px 0 2px; }
+    .disc .q { color: var(--muted); font-size: 14px; margin: 0; }
+    .disc .more { display: none; margin-top: 12px; }
+    .disc.open .more { display: block; }
+    .disc.open { border-color: var(--accent); }
+
+    /* ---------- Learn: team ---------- */
+    .team { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 20px; }
+    @media (max-width: 760px) { .team { grid-template-columns: 1fr; } }
+    .roles { display: flex; flex-direction: column; gap: 8px; }
+    .role-btn { text-align: left; display: flex; gap: 10px; align-items: center; }
+    .role-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .role-panel h3 { margin: 0 0 4px; font-size: 22px; }
+    .role-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 14px; }
+    .role-cols h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+
+    /* ---------- Try: quiz ---------- */
+    .quiz-card { text-align: center; max-width: 560px; margin: 0 auto; }
+    .quiz-q { font-size: 22px; font-weight: 700; min-height: 70px; display: grid; place-items: center; margin: 12px 0 20px; }
+    .quiz-btns { display: flex; gap: 12px; justify-content: center; }
+    .quiz-btns .btn { min-width: 120px; font-size: 18px; }
+    .quiz-fb { min-height: 48px; margin-top: 16px; font-weight: 600; }
+    .quiz-fb.good { color: var(--good); }
+    .quiz-fb.bad { color: var(--bad); }
+    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .dots i.good { background: var(--good); }
+    .dots i.bad { background: var(--bad); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 00 Foundations</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 00 · Foundations</div>
+      <h1>UX ≠ UI</h1>
+      <p>Pretty and usable are two different things. Feel the difference first.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#learn">💡 Learn</a>
+        <a href="#team">👥 The Team</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>One signup form, four versions</h2>
+      <p class="sub">Flip the switches and try typing in each version.</p>
+
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="t-ui"><span class="track"></span>✨ Beautiful UI</label>
+        <label class="toggle"><input type="checkbox" id="t-ux"><span class="track"></span>🧠 Thoughtful UX</label>
+      </div>
+
+      <div class="demo-stage">
+        <div class="stage-box" id="stage"></div>
+        <div class="card verdict" id="verdict"></div>
+      </div>
+    </section>
+
+    <!-- ================= LEARN ================= -->
+    <section class="section" id="learn">
+      <span class="step-label">💡 Learn</span>
+      <h2>UI is the tip of the iceberg</h2>
+      <p class="sub">Users see the top. Most of the design work happens underneath.</p>
+
+      <div class="iceberg">
+        <div class="ice-top">
+          <h3>👀 UI: what users see</h3>
+          <div class="chips"><span>Colors</span><span>Typography</span><span>Buttons</span><span>Icons</span><span>Spacing</span><span>Animations</span></div>
+        </div>
+        <div class="waterline"></div>
+        <div class="ice-bottom">
+          <h3>🧠 UX: what makes it work</h3>
+          <div class="chips"><span>User research</span><span>Personas</span><span>Journey maps</span><span>Information architecture</span><span>User flows</span><span>Wireframes</span><span>Usability testing</span><span>Accessibility</span><span>Content strategy</span><span>Metrics</span></div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:40px">The four disciplines</h2>
+      <p class="sub">Click a card to open it.</p>
+      <div class="grid grid-2" id="disciplines"></div>
+    </section>
+
+    <!-- ================= TEAM ================= -->
+    <section class="section" id="team">
+      <span class="step-label">👥 The Team</span>
+      <h2>Who's who on a design team</h2>
+      <p class="sub">Pick a role to see what they do and what to ask them.</p>
+      <div class="team">
+        <div class="roles" id="roles"></div>
+        <div class="card role-panel" id="role-panel"></div>
+      </div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>UX or UI?</h2>
+      <p class="sub">8 quick calls. Trust your gut.</p>
+      <div class="card quiz-card" id="quiz"></div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>UI = how it <b>looks</b>. UX = how it <b>works and feels</b>.</li>
+          <li>A beautiful product can still fail its users.</li>
+          <li>Your job as TPM is to ask "<b>what problem does this solve, and how do we know?</b>"</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <script type="text/page-script">
+    /* ---------- Explore: 2x2 demo ---------- */
+    const FORMS = {
+      "0-0": {
+        html: `<div class="f f-ub">
+          REGISTRATION FORM<br>
+          <input placeholder="Name"><input placeholder="Email"><input placeholder="Email again">
+          <input placeholder="Phone"><input placeholder="Company"><input type="password" placeholder="Pwd">
+          <span class="err">Error 422: invalid input</span><br><button>Submit</button></div>`,
+        title: "😖 Ugly and confusing",
+        tags: [["UI", false], ["UX", false]],
+        points: ["6 fields to sign up (why a phone number?)", "Labels disappear when you type", "Vague error: 'Error 422'", "Tiny button that's easy to miss"],
+      },
+      "1-0": {
+        html: `<div class="f f-pb"><h4>Join</h4>
+          <input placeholder="name"><input placeholder="email"><input placeholder="confirm email">
+          <input placeholder="phone"><input type="password" placeholder="password">
+          <div class="row"><button>→</button></div>
+          <small>by continuing you accept terms, privacy, cookies & marketing</small></div>`,
+        title: "😍 Gorgeous, but frustrating",
+        tags: [["UI", true], ["UX", false]],
+        points: ["Low-contrast text, hard to read", "Icon-only '→' button: what does it do?", "Still too many fields", "Consent hidden in faint small print"],
+      },
+      "0-1": {
+        html: `<div class="f f-ug"><b>Create your account</b>
+          <label>Email</label><input type="email" value="">
+          <label>Password</label><input type="password">
+          <div class="help">At least 8 characters</div>
+          <button>Create account</button></div>`,
+        title: "🙂 Plain, but it works",
+        tags: [["UI", false], ["UX", true]],
+        points: ["Only 2 fields needed", "Labels always visible", "Password rule shown upfront", "Button says exactly what happens"],
+      },
+      "1-1": {
+        html: `<div class="f f-pg"><h4>Create your account</h4><p>Start free. No card needed.</p>
+          <label>Email</label><input type="email" placeholder="you@company.com">
+          <label>Password</label><input type="password" placeholder="8+ characters">
+          <div class="help">✓ Use 8 or more characters</div>
+          <button>Create account</button>
+          <div class="alt">Already have an account? <u>Log in</u></div></div>`,
+        title: "🤩 Delightful and effective",
+        tags: [["UI", true], ["UX", true]],
+        points: ["Clear hierarchy and good contrast", "Lowers anxiety: 'No card needed'", "Visible focus states", "Easy way out for returning users"],
+      },
+    };
+    const tUI = document.getElementById("t-ui"), tUX = document.getElementById("t-ux");
+    function renderDemo() {
+      const key = `${+tUI.checked}-${+tUX.checked}`;
+      const f = FORMS[key];
+      document.getElementById("stage").innerHTML = f.html;
+      document.getElementById("verdict").innerHTML = `
+        <h3>${f.title}</h3>
+        <div class="score">${f.tags.map(([n, ok]) => `<span class="tag ${ok ? "good" : "bad"}">${ok ? "✓" : "✗"} ${n}</span>`).join("")}</div>
+        <ul class="bullets">${f.points.map(p => `<li>${p}</li>`).join("")}</ul>
+        <div class="matrix">
+          ${["1-0", "1-1", "0-0", "0-1"].map(k => `<div class="${k === key ? "on" : ""}">${
+            { "1-0": "Pretty · Painful", "1-1": "Pretty · Usable", "0-0": "Ugly · Painful", "0-1": "Ugly · Usable" }[k]}</div>`).join("")}
+        </div>`;
+    }
+    tUI.onchange = tUX.onchange = renderDemo;
+    renderDemo();
+
+    /* ---------- Learn: disciplines ---------- */
+    const DISC = [
+      { icon: "🧠", name: "UX Design", q: "Does it solve the user's problem?",
+        b: ["Research, flows, structure, testing", "Output: personas, journeys, wireframes", "Analogy: an architect's floor plan"] },
+      { icon: "🎨", name: "UI Design", q: "Does it look and feel right?",
+        b: ["Visual style, layout, components", "Output: hi-fi mockups, style guides", "Analogy: the interior designer"] },
+      { icon: "📦", name: "Product Design", q: "Does it work for users and the business?",
+        b: ["UX + UI + business strategy", "Owns features end to end", "Most common title at startups"] },
+      { icon: "🌐", name: "Service Design", q: "Does the whole experience work, online and offline?",
+        b: ["Every touchpoint: app, email, support, store", "Output: service blueprints", "Analogy: designing the whole restaurant, not just the menu"] },
+    ];
+    document.getElementById("disciplines").innerHTML = DISC.map(d => `
+      <div class="card disc">
+        <div class="icon">${d.icon}</div>
+        <h3>${d.name}</h3>
+        <p class="q">${d.q}</p>
+        <ul class="bullets more">${d.b.map(x => `<li>${x}</li>`).join("")}</ul>
+      </div>`).join("");
+    document.querySelectorAll(".disc").forEach(el => el.onclick = () => el.classList.toggle("open"));
+
+    /* ---------- Team ---------- */
+    const ROLES = [
+      { icon: "🔍", name: "UX Researcher", tagline: "The voice of the user",
+        does: ["Interviews and surveys", "Usability tests", "Turns data into insights"],
+        delivers: ["Research reports", "Personas", "Journey maps"],
+        ask: ["What evidence supports this?", "How many users did we test with?"] },
+      { icon: "🧩", name: "UX Designer", tagline: "Architect of flows",
+        does: ["Maps user flows", "Structures information", "Wireframes and prototypes"],
+        delivers: ["User flows", "Wireframes", "Clickable prototypes"],
+        ask: ["What's the happy path and what are the edge cases?", "What happens on error?"] },
+      { icon: "🎨", name: "UI / Visual Designer", tagline: "Look and feel",
+        does: ["Color, type, layout", "Component styling", "Brand consistency"],
+        delivers: ["Hi-fi mockups", "Style guides", "Icon sets"],
+        ask: ["Does this use existing components?", "How does it look on mobile?"] },
+      { icon: "✋", name: "Interaction Designer", tagline: "How things move and respond",
+        does: ["States and transitions", "Microinteractions", "Feedback patterns"],
+        delivers: ["Motion specs", "State diagrams", "Interactive prototypes"],
+        ask: ["What are the loading, empty and error states?", "Is the animation essential?"] },
+      { icon: "✍️", name: "UX Writer", tagline: "Words in the interface",
+        does: ["Button labels, errors, onboarding", "Voice and tone", "Microcopy"],
+        delivers: ["Copy docs", "Content guidelines"],
+        ask: ["Is the copy final or placeholder?", "Does it need localization?"] },
+      { icon: "⚙️", name: "Design Ops", tagline: "Keeps the design machine running",
+        does: ["Tools and processes", "Design system upkeep", "Team workflows"],
+        delivers: ["Design system", "Handoff process"],
+        ask: ["Where is the source of truth?", "How do design changes reach developers?"] },
+    ];
+    const rolesEl = document.getElementById("roles"), panel = document.getElementById("role-panel");
+    function showRole(i) {
+      const r = ROLES[i];
+      [...rolesEl.children].forEach((b, j) => b.classList.toggle("active", i === j));
+      const list = a => `<ul class="bullets">${a.map(x => `<li>${x}</li>`).join("")}</ul>`;
+      panel.innerHTML = `
+        <div style="font-size:40px">${r.icon}</div>
+        <h3>${r.name}</h3><div style="color:var(--muted)">${r.tagline}</div>
+        <div class="role-cols">
+          <div><h4>Does</h4>${list(r.does)}</div>
+          <div><h4>Delivers</h4>${list(r.delivers)}</div>
+          <div><h4>💬 You ask</h4>${list(r.ask)}</div>
+        </div>`;
+    }
+    rolesEl.innerHTML = ROLES.map((r, i) => `<button class="btn role-btn" data-i="${i}"><span>${r.icon}</span>${r.name}</button>`).join("");
+    rolesEl.onclick = e => { const b = e.target.closest(".role-btn"); if (b) showRole(+b.dataset.i); };
+    showRole(0);
+
+    /* ---------- Try: quiz ---------- */
+    const QUIZ = [
+      ["Choosing the brand's primary color", "UI", "Visual styling is UI."],
+      ["Interviewing 5 users about their pain points", "UX", "Research is core UX."],
+      ["Reducing checkout from 5 steps to 3", "UX", "Simplifying the flow is UX."],
+      ["Picking a font for headings", "UI", "Typography is UI."],
+      ["Deciding where 'Settings' lives in the menu", "UX", "That's information architecture, which is UX."],
+      ["Designing a hover effect on buttons", "UI", "Visual feedback styling is UI (interaction design overlaps here)."],
+      ["Writing a clearer error message", "UX", "UX writing is about understanding."],
+      ["Making icons consistent in one style", "UI", "Visual consistency is UI."],
+    ];
+    let qi = 0, results = [];
+    const quiz = document.getElementById("quiz");
+    function renderQuiz(fb) {
+      const dots = QUIZ.map((_, i) => `<i class="${results[i] === true ? "good" : results[i] === false ? "bad" : ""}"></i>`).join("");
+      if (qi >= QUIZ.length) {
+        const score = results.filter(Boolean).length;
+        quiz.innerHTML = `<div class="dots">${dots}</div>
+          <div class="quiz-q">${score >= 7 ? "🏆" : score >= 5 ? "👍" : "🌱"} ${score} / ${QUIZ.length}</div>
+          <p style="color:var(--muted)">Reality check: in real teams, UX and UI overlap a lot.</p>
+          <button class="btn primary" data-retry>Try again</button>`;
+        return;
+      }
+      quiz.innerHTML = `<div class="dots">${dots}</div>
+        <div class="quiz-q">${QUIZ[qi][0]}</div>
+        <div class="quiz-btns">
+          <button class="btn" data-answer="UX">🧠 UX</button>
+          <button class="btn" data-answer="UI">🎨 UI</button>
+        </div>
+        <div class="quiz-fb ${fb ? fb.cls : ""}">${fb ? fb.text : ""}</div>`;
+    }
+    function answer(a) {
+      const [, correct, why] = QUIZ[qi];
+      const ok = a === correct;
+      results[qi] = ok;
+      qi++;
+      renderQuiz({ cls: ok ? "good" : "bad", text: `${ok ? "✓ Correct!" : "✗ It's " + correct + "."} ${why}` });
+    }
+    quiz.onclick = e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.answer) answer(btn.dataset.answer);
+      if (btn.hasAttribute("data-retry")) { qi = 0; results = []; renderQuiz(); }
+    };
+    renderQuiz();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"We need to do discovery first.\"", "Research before designing, to understand the problem.", "How long, what will we learn, and what decision does it unblock?"],
+      ["\"This is just lo-fi.\"", "A rough sketch to test structure. Not final visuals.", "What feedback do you need from me at this stage?"],
+      ["\"It's not on-brand.\"", "It breaks the visual identity rules.", "Which guideline does it break? Is there an existing component?"],
+      ["\"Let's validate with users.\"", "Test the design with real people before building.", "How many users, which segment, and by when?"],
+      ["\"That's a pixel-perfect mockup.\"", "Final visuals, ready for development.", "Are all the states covered: empty, loading, error, mobile?"],
+      ["\"Users have a mental model of…\"", "What users already expect from experience.", "Where does that expectation come from: research or assumption?"],
+    ];
+    document.getElementById("lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(0);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

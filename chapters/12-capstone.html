@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Capstone · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Brief ---------- */
+    .scenario { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+    @media (max-width: 700px) { .scenario { grid-template-columns: 1fr; } }
+    .scenario h3 { margin: 0 0 6px; font-size: 22px; }
+    .scenario .quote { background: var(--bad-soft); color: var(--text); border-left: 4px solid var(--bad); padding: 12px 14px; border-radius: 10px; margin: 12px 0 0; font-weight: 600; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .stat { background: var(--surface-2); border-radius: 12px; padding: 14px; text-align: center; }
+    .stat b { display: block; font-size: 28px; letter-spacing: -0.02em; }
+    .stat span { font-size: 13px; color: var(--muted); }
+    .stat.alert b { color: var(--bad); }
+
+    .people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    @media (max-width: 700px) { .people { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .person { font: inherit; color: var(--text); text-align: left; cursor: pointer; min-height: 96px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px;
+      display: flex; flex-direction: column; gap: 4px; transition: border-color .2s, background .2s; }
+    .person .who { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+    .person .who span { font-size: 24px; }
+    .person .want { font-size: 14px; color: var(--muted); }
+    .person .tap { font-size: 12px; color: var(--accent); font-weight: 700; margin-top: auto; }
+    .person.open { border-color: var(--accent); background: var(--accent-soft); }
+    .person.open .want { color: var(--text); }
+    .start-row { text-align: center; margin-top: 24px; }
+    .start-row a { display: inline-block; text-decoration: none; min-height: 44px; }
+
+    /* ---------- Project simulation ---------- */
+    .rail { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; margin-bottom: 20px; position: relative; }
+    .rail::before { content: ""; position: absolute; left: 5%; right: 5%; top: 22px; height: 3px; background: var(--line); border-radius: 3px; }
+    .rail-step { font: inherit; background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; min-height: 44px; }
+    .rail-step:disabled { cursor: default; }
+    .rail-step .dot { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 20px;
+      background: var(--surface); border: 3px solid var(--line); transition: border-color .2s, background .2s; }
+    .rail-step .lbl { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.2; }
+    .rail-step.done .dot { border-color: var(--good); background: var(--good-soft); }
+    .rail-step.done.meh .dot { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 18%, var(--surface)); }
+    .rail-step.done.miss .dot { border-color: var(--bad); background: var(--bad-soft); }
+    .rail-step.current .dot { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 20%, transparent); }
+    .rail-step.current .lbl { color: var(--accent); }
+    .rail-step:disabled .dot { opacity: .45; }
+    @media (max-width: 600px) { .rail-step .lbl { display: none; } .rail-step .dot { width: 34px; height: 34px; font-size: 16px; } .rail::before { top: 17px; } }
+
+    .proj { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 700px) { .proj { grid-template-columns: 1fr; } }
+    .stage-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .stage-num { font-size: 12px; font-weight: 800; letter-spacing: .1em; color: var(--accent); text-transform: uppercase; }
+    .ch-ref { font-size: 13px; font-weight: 700; text-decoration: none; background: var(--surface-2); color: var(--text);
+      padding: 6px 12px; border-radius: 999px; min-height: 32px; display: inline-flex; align-items: center; }
+    .stage-title { margin: 8px 0 10px; font-size: 24px; }
+    .situation { background: var(--surface-2); border-radius: 12px; padding: 12px 14px 12px 32px; margin: 0 0 14px; }
+    .situation li { margin: 3px 0; }
+    .q { font-weight: 800; font-size: 17px; margin: 0 0 10px; }
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt { font: inherit; text-align: left; cursor: pointer; color: var(--text); min-height: 48px;
+      background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
+      display: flex; gap: 10px; align-items: flex-start; transition: border-color .2s, background .2s; }
+    .opt:not(:disabled):hover { border-color: var(--accent); }
+    .opt .k { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+    .opt:disabled { cursor: default; }
+    .opt.best { border-color: var(--good); background: var(--good-soft); }
+    .opt.pick-meh { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, var(--surface)); }
+    .opt.pick-bad { border-color: var(--bad); background: var(--bad-soft); }
+    .opt.faded { opacity: .55; }
+    .fb { margin-top: 14px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); animation: pop .35s ease; }
+    .fb h4 { margin: 0 0 6px; }
+    .fb .why { margin: 0 0 10px; }
+    .fb-actions { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .fb-actions .btn { min-height: 44px; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+
+    .board { position: sticky; top: 72px; }
+    @media (max-width: 700px) { .board { position: static; } }
+    .board h3 { margin: 0 0 4px; font-size: 18px; }
+    .health-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .health-lbl b { color: var(--text); }
+    .meter { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 6px 0 14px; }
+    .meter i { display: block; height: 100%; transition: width .5s, background .5s; }
+    .artifacts { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; }
+    @media (max-width: 700px) { .artifacts { max-height: none; } }
+    .art { border: 1px solid var(--line); border-left: 4px solid var(--good); border-radius: 10px; padding: 10px 12px; background: var(--surface); animation: pop .35s ease; }
+    .art.meh { border-left-color: var(--warn); }
+    .art.miss { border-left-color: var(--bad); }
+    .art .t { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); display: flex; justify-content: space-between; gap: 6px; }
+    .art .c { font-size: 14px; margin-top: 4px; }
+    .art .c ul { margin: 0; padding-left: 16px; }
+    .empty-board { border: 2px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* ---------- Report card ---------- */
+    .locked-report { border: 2px dashed var(--line); border-radius: var(--radius); padding: 32px 16px; text-align: center; color: var(--muted); }
+    .locked-report b { display: block; font-size: 40px; }
+    .report-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 700px) { .report-top { grid-template-columns: 1fr; } }
+    .big { text-align: center; padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+    .big b { display: block; font-size: 34px; letter-spacing: -0.02em; }
+    .big span { font-size: 13px; color: var(--muted); }
+    .big.good b { color: var(--good); }
+    .decisions { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+    .dec { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+    .dec .ico { font-size: 20px; flex: none; }
+    .dec .n { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); }
+    .dec .t { font-weight: 700; font-size: 14px; }
+    .report-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+    .report-actions .btn { min-height: 44px; text-decoration: none; }
+
+    /* ---------- Cheat sheet ---------- */
+    .sheet { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 1000px) { .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .sheet { grid-template-columns: 1fr; } }
+    .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .tile .h { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+    .tile .h span { font-size: 20px; }
+    .tile .h small { color: var(--accent); font-size: 11px; letter-spacing: .08em; margin-left: auto; }
+    .terms { display: flex; flex-wrap: wrap; gap: 4px; }
+    .terms i { font-style: normal; font-size: 12px; font-weight: 600; background: var(--surface-2); padding: 2px 8px; border-radius: 999px; }
+    .tile .ask { font-size: 14px; background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; margin-top: auto; }
+    .sheet-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+    .sheet-actions .btn { min-height: 44px; }
+    .copied { color: var(--good); font-weight: 700; }
+
+    @media print {
+      .topbar, .footer, #app > section:not(#lens), .sheet-actions, .step-label { display: none !important; }
+      body { background: #fff; color: #000; }
+      .tile { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 12 Capstone</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 12 · Capstone</div>
+      <h1>You're the TPM.<br>Ship it end to end.</h1>
+      <p>One feature, nine decisions, every chapter in play.</p>
+      <nav class="stepper">
+        <a href="#brief">🧭 Brief</a>
+        <a href="#project">🛠️ Project</a>
+        <a href="#report">📊 Report</a>
+        <a href="#lens">🗣️ Cheat Sheet</a>
+      </nav>
+    </section>
+
+    <!-- ================= BRIEF ================= -->
+    <section class="section" id="brief">
+      <span class="step-label">🧭 Explore</span>
+      <h2>The brief lands on your desk</h2>
+      <p class="sub">Read the numbers. Tap each stakeholder to hear what they want.</p>
+
+      <div class="scenario">
+        <div class="card">
+          <h3>🏥 CareSlot: clinic booking app</h3>
+          <ul class="bullets">
+            <li>Patients book appointments in the app</li>
+            <li>Many never show up, and the slot is wasted</li>
+            <li>You lead design + engineering for the fix</li>
+          </ul>
+          <div class="quote">💬 Clinic director: "Just add SMS reminders. Push, email, everything. By next month."</div>
+        </div>
+        <div class="stats">
+          <div class="stat alert"><b>22%</b><span>no-show rate</span></div>
+          <div class="stat"><b>1,200</b><span>appointments / month</span></div>
+          <div class="stat alert"><b>264</b><span>empty slots / month</span></div>
+          <div class="stat alert"><b>$21k</b><span>lost / month (at $80)</span></div>
+        </div>
+      </div>
+
+      <div class="people" id="people"></div>
+
+      <div class="start-row"><a class="btn primary" href="#project">Start the project ↓</a></div>
+    </section>
+
+    <!-- ================= PROJECT ================= -->
+    <section class="section" id="project">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Nine decisions, brief to launch</h2>
+      <p class="sub">Choose what you'd do. Each choice builds an artifact on your project board.</p>
+
+      <div class="rail" id="rail"></div>
+      <div class="proj">
+        <div class="card" id="stage"></div>
+        <aside class="card board">
+          <h3>📋 Project board</h3>
+          <div class="health-lbl"><span>Project health</span><b id="health-val">–</b></div>
+          <div class="meter"><i id="health-bar" style="width:0%"></i></div>
+          <div class="artifacts" id="artifacts"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= REPORT ================= -->
+    <section class="section" id="report">
+      <span class="step-label">📊 Report</span>
+      <h2>Launch report card</h2>
+      <p class="sub">What your decisions did to the metric that matters.</p>
+      <div id="report-body"></div>
+    </section>
+
+    <!-- ================= CHEAT SHEET ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>Your UX cheat sheet</h2>
+      <p class="sub">The whole journey on one page: key terms + the question to ask.</p>
+      <div class="sheet" id="sheet"></div>
+      <div class="sheet-actions">
+        <button class="btn" id="copy-sheet">📋 Copy as text</button>
+        <button class="btn" id="print-sheet">🖨️ Print / save PDF</button>
+        <span class="copied" id="copied"></span>
+      </div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li>UX is a <b>process</b> from problem to measured outcome, not a set of screens.</li>
+          <li>Your superpower as TPM: asking the <b>right question at each stage</b>.</li>
+          <li>Always close the loop: <b>metric before, metric after</b>.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    /* ---------- Brief: stakeholders ---------- */
+    const PEOPLE = [
+      ["👩‍⚕️", "Clinic director", "Fewer empty slots, more revenue. Wants it fast."],
+      ["☎️", "Front desk", "Fewer phone calls. Lines are jammed at lunch."],
+      ["🩺", "Doctors", "A full schedule. No idle 20-minute gaps."],
+      ["🧑‍🍼", "Patients", "Easy changes. Afraid of cancellation fees."],
+      ["🎨", "Designer", "Time to research before drawing screens."],
+      ["💻", "Engineers", "Clear specs, realistic scope, no surprises."],
+    ];
+    const peopleEl = document.getElementById("people");
+    peopleEl.innerHTML = PEOPLE.map(([e, who, want], i) => `
+      <button class="person" data-p="${i}">
+        <span class="who"><span>${e}</span>${who}</span>
+        <span class="want" hidden>${want}</span>
+        <span class="tap">Tap to hear them</span>
+      </button>`).join("");
+    peopleEl.onclick = e => {
+      const p = e.target.closest(".person");
+      if (!p) return;
+      const open = p.classList.toggle("open");
+      p.querySelector(".want").hidden = !open;
+      p.querySelector(".tap").textContent = open ? "Tap to hide" : "Tap to hear them";
+    };
+
+    /* ---------- Project: stages ---------- */
+    // q: 2 = best, 1 = partly right, 0 = wrong move
+    const STAGES = [
+      { ch: 1, emoji: "📣", short: "Brief", title: "Brief & stakeholders",
+        situation: ["Director wants SMS reminders by next month", "Nobody has asked why patients don't show"],
+        question: "What's your first move?",
+        opts: [
+          ["Start building SMS reminders right away", 0, "Solution-first. You'd be Team Rush from Chapter 01."],
+          ["Align stakeholders on the outcome (fewer no-shows); treat reminders as one hypothesis", 2, "Outcome over output. Everyone agrees on what success means before anyone builds."],
+          ["Ask the UI designer to refresh the app's look", 0, "A prettier UI doesn't fix a behavior problem. Remember UX ≠ UI."],
+          ["Send all patients a survey: 'Would reminders help?'", 1, "Some signal, but it's a leading, hypothetical question."],
+        ],
+        art: ["🎯 Outcome", "<b>No-shows 22% → under 12%</b> in 3 months. Reminders = hypothesis #1, not the plan."] },
+      { ch: 2, emoji: "🔍", short: "Research", title: "Discovery",
+        situation: ["You have 2 weeks for discovery", "Analytics show <i>what</i> happens, not <i>why</i>"],
+        question: "How do you learn why patients miss appointments?",
+        opts: [
+          ["Interview 6 patients who missed a slot + shadow the front desk for a day", 2, "Behavioral, qualitative, small sample. Five to eight people reveal the main patterns."],
+          ["Survey: 'Would you use reminders?'", 0, "Hypothetical questions get polite yeses. Watch what people do."],
+          ["Skip research, analytics are enough", 0, "Analytics tell you when people drop off, never why."],
+          ["Interview 50 patients before deciding anything", 1, "Thorough, but slow. Returns diminish after ~5–8 interviews per segment."],
+        ],
+        art: ["🔍 Insights", "<ul><li>Booked weeks ahead → forgot</li><li>Rescheduling = phone call only; lines busy</li><li>Fear of a cancellation fee → just don't show</li></ul>"] },
+      { ch: 1, emoji: "🎯", short: "Define", title: "Define the problem",
+        situation: ["Key insight: patients who can't reschedule easily simply don't come", "Freed slots could go to the waitlist"],
+        question: "Which How Might We guides the team best?",
+        opts: [
+          ["HMW send more reminders?", 0, "A solution is baked into the question. No room to explore."],
+          ["HMW make it effortless to reschedule or cancel early, so the slot can be reused?", 2, "Grounded in the insight, open to solutions, and tied to the outcome."],
+          ["HMW make the app beautiful?", 0, "Not connected to any insight or metric."],
+          ["HMW reduce no-shows?", 1, "Right goal, but too broad to guide design."],
+        ],
+        art: ["❓ HMW", "How might we make it <b>effortless to reschedule or cancel early</b>, so the slot can be reused?"] },
+      { ch: 3, emoji: "🗂️", short: "Flow", title: "IA & user flow",
+        situation: ["Today 'Manage booking' is buried in Settings → Account → History", "Where should rescheduling live?"],
+        question: "Where do you put the reschedule action?",
+        opts: [
+          ["Keep it in Settings → Account → Bookings → Manage", 0, "Four levels deep. Users won't look under Settings for this."],
+          ["On the reminder itself + the 'Next appointment' card on home", 2, "Put the action where the need appears. Fewest steps, user's language."],
+          ["A new 'Other' item in the hamburger menu", 0, "Hidden and vaguely labeled. 'Other' is where features go to die."],
+          ["Only by calling the front desk", 0, "That's the current pain point."],
+        ],
+        art: ["🔀 User flow", "Reminder → <b>Reschedule</b> → pick slot → confirm → old slot → waitlist<br><small>Edge cases: no slots left · inside 24h window · network error</small>"] },
+      { ch: 4, emoji: "✏️", short: "Wireframe", title: "Wireframe review",
+        situation: ["Designer shares a lo-fi wireframe of the reschedule screen", "Greyscale boxes, real labels, one happy path"],
+        question: "What feedback do you give?",
+        opts: [
+          ["\"The blue feels too dark.\"", 0, "Wrong stage. Lo-fi is about structure and flow, not color."],
+          ["\"What do users see when no slots are free, while slots load, or if it fails?\"", 2, "Missing states become engineering surprises later. Ask now while it's cheap."],
+          ["\"Can it look like Apple's Health app?\"", 0, "Copying visuals skips the actual problem."],
+          ["\"Looks great, ship it.\"", 0, "Lo-fi is for learning, not shipping."],
+        ],
+        art: ["🧩 States", "Ideal · <b>Empty</b> (no slots) · <b>Loading</b> · <b>Error</b> · Partial (only far dates)"] },
+      { ch: 7, emoji: "♿", short: "A11y", title: "Visual & accessibility review",
+        situation: ["Hi-fi mockup: light grey text on pale buttons", "'Reschedule' link is 12px; status shown by color only"],
+        question: "What do you ask for before approval?",
+        opts: [
+          ["Approve it, the brand team loves it", 0, "Many patients are older or on the move. This fails them and WCAG."],
+          ["Contrast ≥ 4.5:1, tap targets ≥ 44px, and status with text/icons, not color alone", 2, "WCAG AA basics. Accessible design helps every patient, not just some."],
+          ["Add more animations to make it delightful", 0, "Delight comes after usable."],
+          ["Do dark mode first", 1, "Nice to have, but doesn't fix the contrast or size issues."],
+        ],
+        art: ["✅ A11y criteria", "<ul><li>Text contrast ≥ 4.5:1 (AA)</li><li>Tap targets ≥ 44×44px</li><li>Status = icon + text, not color only</li></ul>"] },
+      { ch: 9, emoji: "🤝", short: "Handoff", title: "Design system & handoff",
+        situation: ["Design is approved", "Two developers start next sprint"],
+        question: "How do you hand off?",
+        opts: [
+          ["Devs build new custom buttons and cards for this screen", 0, "Creates design debt and inconsistent UI."],
+          ["Use design system components + tokens; states annotated in Dev Mode; 30-min walkthrough with devs", 2, "One source of truth, reusable parts, and a conversation, not just a file."],
+          ["Email PNG screenshots to the devs", 0, "No specs, no states, no tokens. Guaranteed drift."],
+          ["Let devs eyeball spacing from the mockup", 1, "It'll be close, but small gaps add up across screens."],
+        ],
+        art: ["📝 Acceptance criteria", "<b>Given</b> a reminder · <b>When</b> I tap Reschedule · <b>Then</b> I can confirm a new slot in ≤ 3 taps, and the old slot is released"] },
+      { ch: 10, emoji: "🧪", short: "Test", title: "Test & measure",
+        situation: ["Prototype test: 4 of 5 users rescheduled", "1 user wasn't sure it worked: no confirmation shown"],
+        question: "What's next?",
+        opts: [
+          ["Launch to 100% of patients now", 0, "Ships a known issue and gives you no comparison group."],
+          ["Add a clear confirmation, then A/B test with 20% of patients and track no-shows", 2, "Fix the issue (visibility of system status), then measure against a control."],
+          ["Test with 200 more users first", 1, "Diminishing returns. Ship to a slice and measure real behavior."],
+          ["Let stakeholders vote on whether it works", 0, "Opinions aren't data."],
+        ],
+        art: ["📊 Metrics", "<ul><li><b>Primary:</b> no-show rate</li><li><b>Secondary:</b> reschedule completion, front-desk calls</li><li><b>Guardrail:</b> late cancellations</li></ul>"] },
+      { ch: 11, emoji: "💼", short: "Present", title: "Present to leadership",
+        situation: ["A/B results are in", "You have 10 minutes with the director and CFO"],
+        question: "How do you present?",
+        opts: [
+          ["Walk through all 40 Figma screens", 0, "Leaders want the outcome, not the artifacts."],
+          ["Problem → evidence → solution → result in $ → next steps", 2, "A story in their language: money, risk, and what's next."],
+          ["Explain the tech stack and architecture", 0, "Wrong audience."],
+          ["Show the pixel details you're proud of", 0, "Save it for the design critique."],
+        ],
+        art: null }, // the exec summary is computed from your score
+    ];
+    const MAX = STAGES.length * 2;
+    const KEY = "uxui-capstone";
+    let state = load();
+    function load() {
+      try {
+        const s = JSON.parse(localStorage.getItem(KEY));
+        if (s && Array.isArray(s.answers) && s.answers.length === STAGES.length) return s;
+      } catch {}
+      return { answers: STAGES.map(() => null), current: 0 };
+    }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+
+    const quality = i => state.answers[i] === null ? null : STAGES[i].opts[state.answers[i]][1];
+    const points = () => state.answers.reduce((s, a, i) => s + (a === null ? 0 : quality(i)), 0);
+    const answered = () => state.answers.filter(a => a !== null).length;
+    const health = () => answered() ? Math.round(points() / (answered() * 2) * 100) : null;
+    const allDone = () => answered() === STAGES.length;
+    // Final outcome scales with how well you played the whole project
+    function outcome() {
+      const h = points() / MAX;
+      const noShow = Math.round(22 - h * 12);
+      const slots = Math.round((22 - noShow) / 100 * 1200);
+      return { noShow, slots, money: slots * 80 };
+    }
+    const cls = q => q === 2 ? "" : q === 1 ? "meh" : "miss";
+    const chLink = n => `<a class="ch-ref" href="${chapterUrl(CHAPTERS[n])}">📘 Ch ${String(n).padStart(2, "0")} · ${CHAPTERS[n].title}</a>`;
+
+    function renderRail() {
+      const firstOpen = state.answers.findIndex(a => a === null);
+      const reach = firstOpen === -1 ? STAGES.length - 1 : firstOpen;
+      document.getElementById("rail").innerHTML = STAGES.map((s, i) => {
+        const q = quality(i);
+        const c = [q !== null ? "done " + cls(q) : "", i === state.current ? "current" : ""].join(" ");
+        return `<button class="rail-step ${c}" data-go="${i}" ${i > reach ? "disabled" : ""} aria-label="Stage ${i + 1}: ${s.title}">
+          <span class="dot">${q === 2 ? "✓" : s.emoji}</span><span class="lbl">${s.short}</span></button>`;
+      }).join("");
+    }
+
+    function renderStage() {
+      const i = state.current, s = STAGES[i], a = state.answers[i];
+      const bestIdx = s.opts.findIndex(o => o[1] === 2);
+      const optHtml = s.opts.map((o, j) => {
+        let c = "";
+        if (a !== null) c = j === bestIdx ? "best" : j === a ? (o[1] === 1 ? "pick-meh" : "pick-bad") : "faded";
+        return `<button class="opt ${c}" data-opt="${j}" ${a !== null ? "disabled" : ""}>
+          <span class="k">${"ABCD"[j]}</span><span>${o[0]}</span></button>`;
+      }).join("");
+      let fb = "";
+      if (a !== null) {
+        const q = s.opts[a][1];
+        const head = q === 2 ? "✅ Great call" : q === 1 ? "🟡 Partly right" : "❌ Risky move";
+        const last = i === STAGES.length - 1;
+        fb = `<div class="fb">
+          <h4>${head}</h4>
+          <p class="why">${s.opts[a][2]}${q !== 2 ? `<br><b>Best:</b> ${s.opts[bestIdx][0]}. ${s.opts[bestIdx][2]}` : ""}</p>
+          <div class="fb-actions">${chLink(s.ch)}
+            <button class="btn primary" id="next-stage">${last ? "See report card ↓" : "Next stage →"}</button></div>
+        </div>`;
+      }
+      document.getElementById("stage").innerHTML = `
+        <div class="stage-head"><span class="stage-num">Stage ${i + 1} / ${STAGES.length}</span></div>
+        <h3 class="stage-title">${s.emoji} ${s.title}</h3>
+        <ul class="situation">${s.situation.map(x => `<li>${x}</li>`).join("")}</ul>
+        <p class="q">${s.question}</p>
+        <div class="opts">${optHtml}</div>${fb}`;
+    }
+
+    function execSummary() {
+      const o = outcome();
+      return ["💼 Exec summary", `No-shows <b>22% → ${o.noShow}%</b> · ~${o.slots} slots/month reused · <b>≈ $${o.money.toLocaleString()}/month</b> recovered`];
+    }
+
+    function renderBoard() {
+      const h = health();
+      document.getElementById("health-val").textContent = h === null ? "–" : h + "%";
+      const bar = document.getElementById("health-bar");
+      bar.style.width = (h || 0) + "%";
+      bar.style.background = h === null ? "var(--line)" : h >= 75 ? "var(--good)" : h >= 50 ? "var(--warn)" : "var(--bad)";
+      const items = STAGES.map((s, i) => {
+        const q = quality(i);
+        if (q === null) return "";
+        const [t, c] = s.art || execSummary();
+        const tag = q === 2 ? "✓ solid" : q === 1 ? "⚠ revised" : "✗ fixed late";
+        return `<div class="art ${cls(q)}"><div class="t"><span>${t}</span><span>${tag}</span></div><div class="c">${c}</div></div>`;
+      }).filter(Boolean).reverse();
+      document.getElementById("artifacts").innerHTML = items.length ? items.join("")
+        : `<div class="empty-board">📭 Artifacts appear here as you decide: outcome, insights, HMW, flow, states, criteria, metrics.</div>`;
+    }
+
+    function renderReport() {
+      const el = document.getElementById("report-body");
+      if (!allDone()) {
+        el.innerHTML = `<div class="locked-report"><b>🔒</b>Finish all ${STAGES.length} stages to unlock your report card<br>
+          <span style="font-weight:700;color:var(--text)">${answered()} / ${STAGES.length} done</span></div>`;
+        return;
+      }
+      const o = outcome(), h = health();
+      const grade = h >= 90 ? "A" : h >= 75 ? "B" : h >= 55 ? "C" : "D";
+      el.innerHTML = `
+        <div class="report-top">
+          <div class="big ${o.noShow <= 12 ? "good" : ""}"><b>22% → ${o.noShow}%</b><span>no-show rate ${o.noShow <= 12 ? "· goal hit 🎉" : "· goal was < 12%"}</span></div>
+          <div class="big"><b>$${o.money.toLocaleString()}</b><span>recovered per month</span></div>
+          <div class="big"><b>${grade} · ${h}%</b><span>project health</span></div>
+        </div>
+        <div class="decisions">${STAGES.map((s, i) => {
+          const q = quality(i);
+          return `<div class="dec"><span class="ico">${q === 2 ? "✅" : q === 1 ? "🟡" : "❌"}</span>
+            <div><div class="n">STAGE ${i + 1} · CH ${String(s.ch).padStart(2, "0")}</div><div class="t">${s.title}</div></div></div>`;
+        }).join("")}</div>
+        <div class="report-actions">
+          <button class="btn" id="restart">↺ Restart project</button>
+          <a class="btn primary" href="#lens">Get the cheat sheet ↓</a>
+        </div>`;
+    }
+
+    function renderAll() { renderRail(); renderStage(); renderBoard(); renderReport(); }
+
+    document.getElementById("project").addEventListener("click", e => {
+      const go = e.target.closest("[data-go]"), opt = e.target.closest("[data-opt]");
+      if (go && !go.disabled) { state.current = +go.dataset.go; save(); renderAll(); return; }
+      if (opt && state.answers[state.current] === null) {
+        state.answers[state.current] = +opt.dataset.opt; save(); renderAll(); return;
+      }
+      if (e.target.closest("#next-stage")) {
+        if (state.current < STAGES.length - 1) {
+          state.current++; save(); renderAll();
+          document.getElementById("rail").scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          document.getElementById("report").scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    });
+    document.getElementById("report").addEventListener("click", e => {
+      if (!e.target.closest("#restart")) return;
+      state = { answers: STAGES.map(() => null), current: 0 };
+      save(); renderAll();
+      document.getElementById("project").scrollIntoView({ behavior: "smooth" });
+    });
+    renderAll();
+
+    /* ---------- Cheat sheet ---------- */
+    const SHEET = [
+      [0, ["UX vs UI", "Product design", "Service design"], "What problem does this solve, and how do we know?"],
+      [1, ["Double Diamond", "HMW", "Design Sprint", "Lean UX"], "Do we agree on the problem before discussing solutions?"],
+      [2, ["Interviews", "Persona", "Journey map", "n = 5"], "What did users do, not just say?"],
+      [3, ["Sitemap", "Card sort", "Tree test", "User flow"], "Where would users look for this, in their words?"],
+      [4, ["Lo-fi / hi-fi", "Prototype", "Auto layout", "5 states"], "What feedback do you need now? Are all states designed?"],
+      [5, ["Hierarchy", "Type scale", "8pt grid", "60-30-10"], "What should users notice first?"],
+      [6, ["Nielsen's 10", "Fitts's law", "Hick's law", "Affordance"], "Which heuristic does this break?"],
+      [7, ["WCAG AA", "4.5:1 contrast", "Keyboard", "Screen reader"], "Can someone use this with only a keyboard?"],
+      [8, ["Tokens", "Components", "Variants", "Atomic design"], "Existing component, or new design debt?"],
+      [9, ["Dev Mode", "Specs", "Edge cases", "Acceptance criteria"], "Is this the source of truth, with states annotated?"],
+      [10, ["Usability test", "A/B test", "SUS", "Guardrail metric"], "Which metric proves it worked, and what must not get worse?"],
+      [11, ["Stakeholder map", "ROI", "Design critique"], "What's the impact, in the language of the business?"],
+    ];
+    document.getElementById("sheet").innerHTML = SHEET.map(([n, terms, ask]) => `
+      <div class="tile">
+        <div class="h"><span>${CHAPTERS[n].emoji}</span>${CHAPTERS[n].title}<small>CH ${String(n).padStart(2, "0")}</small></div>
+        <div class="terms">${terms.map(t => `<i>${t}</i>`).join("")}</div>
+        <div class="ask">💬 ${ask}</div>
+      </div>`).join("");
+
+    const copiedEl = document.getElementById("copied");
+    document.getElementById("copy-sheet").onclick = async () => {
+      const text = "UX/UI CHEAT SHEET FOR TPMs\n\n" + SHEET.map(([n, terms, ask]) =>
+        `${String(n).padStart(2, "0")} ${CHAPTERS[n].title}\n  Terms: ${terms.join(", ")}\n  Ask: ${ask}`).join("\n\n");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // Fallback for non-secure contexts (e.g. LAN IP on an iPad)
+        const ta = document.createElement("textarea");
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); } catch {}
+        ta.remove();
+      }
+      copiedEl.textContent = "✓ Copied";
+      setTimeout(() => copiedEl.textContent = "", 2000);
+    };
+    document.getElementById("print-sheet").onclick = () => window.print();
+
+    initChapter(12);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

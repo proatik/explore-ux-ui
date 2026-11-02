@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <title>Interaction & Heuristics · UX/UI</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style data-page>
+    /* ---------- Shared bits ---------- */
+    .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 700px) { .row2 { grid-template-columns: 1fr; } }
+    .mini-h { margin: 0 0 4px; font-size: 18px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+    .seg .btn { min-height: 44px; padding: 8px 14px; }
+    .seg .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+    .pill.good { background: var(--good-soft); color: var(--good); }
+    .pill.bad { background: var(--bad-soft); color: var(--bad); }
+
+    /* ---------- Explore: Fitts ---------- */
+    .arena {
+      position: relative; height: 340px; border-radius: var(--radius);
+      background: radial-gradient(circle at center, var(--accent-soft) 0, transparent 70%), var(--surface-2);
+      overflow: hidden; touch-action: manipulation; user-select: none;
+    }
+    .arena .home, .arena .target {
+      position: absolute; transform: translate(-50%, -50%);
+      border-radius: 50%; border: 0; cursor: pointer; font: inherit; font-weight: 800; color: #fff;
+    }
+    .arena .home { width: 64px; height: 64px; background: var(--text); color: var(--bg); font-size: 13px; }
+    .arena .target { background: var(--accent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent); animation: pop .2s ease; }
+    @keyframes pop { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } }
+    .arena .msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; }
+    .arena .msg b { font-size: 20px; display: block; margin-bottom: 10px; }
+    .fitts-out { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .fitts-out[hidden] { display: none; }
+    @media (max-width: 700px) { .fitts-out { grid-template-columns: 1fr; } }
+    .plot svg { width: 100%; height: auto; display: block; }
+    .plot .ax { stroke: var(--line); }
+    .plot text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+    .plot .dot { fill: var(--accent); }
+    .plot .trend { stroke: var(--good); stroke-width: 2; stroke-dasharray: 6 5; }
+    .size-bars .b { display: grid; grid-template-columns: 70px 1fr 64px; gap: 8px; align-items: center; margin: 8px 0; font-size: 14px; }
+    .size-bars .track { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .size-bars .track i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .5s; }
+    .formula { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--surface-2); padding: 8px 12px; border-radius: 10px; display: inline-block; margin-top: 8px; }
+
+    /* ---------- Explore: Hick ---------- */
+    .hick-stage { min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+    .hick-ask { font-size: 20px; font-weight: 800; }
+    .hick-grid { display: grid; gap: 8px; width: 100%; max-width: 640px; }
+    .hick-grid.n4 { grid-template-columns: repeat(2, 1fr); max-width: 360px; }
+    .hick-grid.n16 { grid-template-columns: repeat(4, 1fr); }
+    .hick-grid button { min-height: 48px; font: inherit; font-size: 14px; font-weight: 600; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+    .hick-grid button.wrong { animation: shake .3s; border-color: var(--bad); }
+    @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .hick-res { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 520px; }
+    .hick-res .card { text-align: center; padding: 16px; }
+    .hick-res .big { font-size: 30px; font-weight: 800; }
+
+    /* ---------- Learn: Nielsen's 10 ---------- */
+    .h-chips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+    @media (max-width: 700px) { .h-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .h-chip { min-height: 56px; text-align: left; display: flex; gap: 8px; align-items: center; font: inherit; font-size: 13px; font-weight: 700; padding: 8px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+    .h-chip .n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-size: 12px; }
+    .h-chip.active { border-color: var(--accent); background: var(--accent-soft); }
+    .h-chip.active .n { background: var(--accent); color: #fff; }
+    .h-head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+    .h-head h3 { margin: 0; font-size: 22px; }
+    .h-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0 16px; }
+    @media (max-width: 700px) { .h-points { grid-template-columns: 1fr; } }
+    .h-points > div { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+    .h-points h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+    .demo { border-radius: 14px; padding: 16px; min-height: 170px; display: flex; flex-direction: column; gap: 10px; }
+    .demo.bad { background: var(--bad-soft); }
+    .demo.good { background: var(--good-soft); }
+    .demo .lbl { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .demo.bad .lbl { color: var(--bad); }
+    .demo.good .lbl { color: var(--good); }
+    .demo .stage { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; background: var(--surface); border-radius: 10px; padding: 12px; position: relative; }
+    .mbtn { min-height: 44px; font: inherit; font-weight: 700; padding: 8px 16px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; cursor: pointer; align-self: flex-start; }
+    .mbtn.ghost { background: var(--surface-2); color: var(--text); }
+    .mbtn.danger { background: var(--bad); }
+    .mbtn:disabled { opacity: .7; cursor: default; }
+    .minput { font: inherit; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); width: 100%; }
+    .mail { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .mail button { min-width: 44px; min-height: 44px; border: 0; background: transparent; font-size: 18px; cursor: pointer; }
+    .toast { background: var(--text); color: var(--bg); border-radius: 10px; padding: 8px 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .toast button { min-height: 36px; border: 0; background: transparent; color: var(--accent); font: inherit; font-weight: 800; cursor: pointer; }
+    .stepper-q { display: inline-flex; align-items: center; gap: 0; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; align-self: flex-start; }
+    .stepper-q button { width: 48px; height: 44px; border: 0; background: var(--surface-2); color: var(--text); font-size: 20px; cursor: pointer; }
+    .stepper-q span { width: 56px; text-align: center; font-weight: 800; }
+    .chipset { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chipset button { min-height: 40px; font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; }
+    .errbox { font-size: 14px; padding: 10px; border-radius: 10px; }
+    .errbox.raw { font-family: ui-monospace, Consolas, monospace; background: #1b1b1b; color: #ff6b6b; }
+    .help-bubble { background: var(--accent); color: #fff; font-size: 13px; padding: 8px 12px; border-radius: 10px; }
+    .qmark { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); font-weight: 800; font-size: 18px; cursor: pointer; flex: none; }
+    .dlg { border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13px; }
+    .dlg .btns { display: flex; gap: 6px; margin-top: 8px; }
+    .dlg .btns span { padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 12px; }
+    .clutter { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
+    .clutter span { background: var(--surface-2); padding: 3px 6px; border-radius: 4px; }
+    .clutter span:nth-child(3n) { background: #ffd23f; color: #222; }
+    .clutter span:nth-child(4n) { background: #ff5d8f; color: #fff; }
+
+    /* ---------- Learn 2: interaction basics ---------- */
+    .sig-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+    .sig { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 120px; }
+    .sig .t-plain { min-height: 44px; display: grid; place-items: center; padding: 0 12px; cursor: pointer; font-weight: 600; background: none; border: 0; color: var(--text); font: inherit; }
+    .sig .t-link { min-height: 44px; padding: 0 12px; cursor: pointer; color: var(--accent); text-decoration: underline; background: none; border: 0; font: inherit; font-weight: 600; }
+    .anatomy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+    .anatomy div { border-radius: 12px; padding: 10px; background: var(--surface-2); font-size: 13px; border: 2px solid transparent; transition: border-color .2s, background .2s; }
+    .anatomy div b { display: block; font-size: 14px; }
+    .anatomy div.lit { border-color: var(--accent); background: var(--accent-soft); }
+    .like-wrap { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 6px; }
+    .like { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 32px; cursor: pointer; transition: border-color .2s; }
+    .like.on { border-color: var(--bad); }
+    .like.burst { animation: burst .45s ease; }
+    @keyframes burst { 40% { transform: scale(1.3); } }
+    .like-count { font-size: 22px; font-weight: 800; min-width: 40px; }
+    .rt-screen { min-height: 120px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; text-align: center; padding: 12px; margin: 12px 0; }
+    .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: rot .8s linear infinite; margin: 0 auto 6px; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    .pbar { width: 220px; max-width: 100%; height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 6px auto; }
+    .pbar i { display: block; height: 100%; background: var(--accent); width: 0; }
+    .rt-scale { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .rt-scale div { border-radius: 12px; padding: 10px; background: var(--surface-2); font-size: 13px; border: 2px solid transparent; }
+    .rt-scale div b { display: block; font-size: 16px; }
+    .rt-scale div.lit { border-color: var(--accent); background: var(--accent-soft); }
+    .law .e { font-size: 28px; }
+    .law h3 { margin: 4px 0 4px; font-size: 17px; }
+    .law p { margin: 0; font-size: 14px; }
+    .law .tpm { margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+    /* ---------- Try: heuristic evaluation ---------- */
+    .eval { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 700px) { .eval { grid-template-columns: 1fr; } }
+    .phone { background: var(--surface); border: 8px solid var(--text); border-radius: 30px; padding: 14px; max-width: 340px; margin: 0 auto; width: 100%; font-size: 14px; }
+    .ph-top { display: flex; align-items: center; justify-content: center; font-weight: 800; padding: 8px; border-bottom: 1px solid var(--line); }
+    .hs { cursor: pointer; border-radius: 8px; position: relative; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .2s; }
+    .hs.picked { outline-color: var(--accent); }
+    .hs.found::after { content: attr(data-n); position: absolute; top: -10px; right: -10px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; z-index: 1; }
+    .hs.right::after { background: var(--good); }
+    .hs.wrongh::after { background: var(--bad); }
+    .ph-banners { margin: 10px 0; }
+    .ph-item { display: flex; gap: 10px; align-items: center; padding: 10px 6px; border-bottom: 1px solid var(--line); }
+    .ph-item .pic { width: 44px; height: 44px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; font-size: 22px; flex: none; }
+    .ph-item small { color: var(--muted); display: block; font-size: 11px; }
+    .ph-promo { margin: 12px 0 8px; }
+    .ph-promo label { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .ph-promo input { pointer-events: none; }
+    .ph-err { font-family: ui-monospace, Consolas, monospace; color: var(--bad); font-size: 12px; padding: 8px; background: var(--bad-soft); border-radius: 8px; margin: 8px 0; }
+    .ph-total { display: flex; justify-content: space-between; font-weight: 800; padding: 8px 4px; }
+    .ph-btns { display: flex; gap: 8px; }
+    .ph-btns > * { flex: 1; min-height: 48px; display: grid; place-items: center; border-radius: 12px; font-weight: 800; }
+    .ph-remove { background: var(--accent); color: #fff; }
+    .ph-pay { background: var(--line); color: var(--muted); }
+    .ev-panel h3 { margin: 0 0 6px; }
+    .ev-sel { font-weight: 800; color: var(--accent); }
+    .ev-label { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+    .ev-h { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .ev-h button, .ev-sev button { min-height: 44px; font: inherit; font-size: 13px; font-weight: 600; text-align: left; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+    .ev-h button.on, .ev-sev button.on { border-color: var(--accent); background: var(--accent-soft); }
+    .ev-sev { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    .ev-sev button { text-align: center; padding: 6px 2px; }
+    .ev-sev button small { display: block; font-size: 10px; color: var(--muted); font-weight: 600; }
+    .ev-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+    .ev-actions .btn { min-height: 44px; }
+    .ev-score { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 8px 0 4px; }
+    .ev-score i { display: block; height: 100%; background: var(--accent); transition: width .4s; }
+    .ev-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .ev-list li { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+    .ev-list li.right { background: var(--good-soft); }
+    .ev-list li.wrongh { background: var(--bad-soft); }
+    .ev-list li small { display: block; color: var(--muted); }
+
+    /* ---------- TPM lens ---------- */
+    .say { font-size: 20px; font-weight: 700; }
+    #lens .flip, #lens .flip-inner { min-height: 230px; }
+    .flip-back .lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+    .flip-back .lbl:first-child { margin-top: 0; }
+    .flip-back p { margin: 2px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 06 Interaction &amp; Heuristics</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="hero">
+      <div class="kicker">Chapter 06 · Interaction &amp; Heuristics</div>
+      <h1>Feel it.<br>Then name it.</h1>
+      <p>The laws and checklists designers use to judge whether an interface is easy to use.</p>
+      <nav class="stepper">
+        <a href="#explore">🧭 Explore</a>
+        <a href="#heuristics">💡 10 Heuristics</a>
+        <a href="#interaction">✋ Interaction</a>
+        <a href="#try">🛠️ Try</a>
+        <a href="#lens">🗣️ TPM Lens</a>
+      </nav>
+    </section>
+
+    <!-- ================= EXPLORE ================= -->
+    <section class="section" id="explore">
+      <span class="step-label">🧭 Explore</span>
+      <h2>Fitts's law: tap the targets</h2>
+      <p class="sub">Tap the black dot, then the purple target, as fast as you can. 9 rounds.</p>
+
+      <div class="arena" id="fitts-arena"></div>
+      <div class="fitts-out" id="fitts-out" hidden>
+        <div class="card plot">
+          <h3 class="mini-h">Your results</h3>
+          <div class="muted">Each dot is one tap. Harder (smaller + farther) → slower.</div>
+          <div id="fitts-plot"></div>
+        </div>
+        <div class="card">
+          <h3 class="mini-h">Average time by size</h3>
+          <div class="size-bars" id="fitts-bars"></div>
+          <ul class="bullets" style="margin-top:12px">
+            <li>Time grows with <b>distance</b>, shrinks with <b>size</b></li>
+            <li>Primary buttons: big and close to the thumb</li>
+            <li>Screen edges and corners are easy targets</li>
+          </ul>
+          <div class="formula">T = a + b · log₂(D / W + 1)</div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:48px">Hick's law: find the dish</h2>
+      <p class="sub">First from 4 options, then from 16. 3 rounds each.</p>
+      <div class="card hick-stage" id="hick"></div>
+    </section>
+
+    <!-- ================= HEURISTICS ================= -->
+    <section class="section" id="heuristics">
+      <span class="step-label">💡 Learn</span>
+      <h2>Nielsen's 10 usability heuristics</h2>
+      <p class="sub">The industry's shared checklist. Pick one and try the broken version and the fixed version.</p>
+      <div class="h-chips" id="h-chips"></div>
+      <div class="card" id="h-panel"></div>
+    </section>
+
+    <!-- ================= INTERACTION ================= -->
+    <section class="section" id="interaction">
+      <span class="step-label">✋ Interaction</span>
+      <h2>Affordances &amp; signifiers</h2>
+      <p class="sub">Which of these can you tap? Try each one.</p>
+      <div class="card">
+        <div class="sig-row" id="sig-row">
+          <div class="sig"><button class="t-plain" data-sig="0">Continue</button><span class="pill">?</span></div>
+          <div class="sig"><button class="t-link" data-sig="1">Continue</button><span class="pill">?</span></div>
+          <div class="sig"><button class="mbtn" data-sig="2" style="align-self:center">Continue</button><span class="pill">?</span></div>
+        </div>
+        <div class="muted" id="sig-msg" style="text-align:center;margin-top:12px;min-height:22px"></div>
+        <ul class="bullets" style="margin-top:10px">
+          <li><b>Affordance</b>: what an element can do (it can be tapped)</li>
+          <li><b>Signifier</b>: the visual clue that tells you so (shape, color, underline, shadow)</li>
+        </ul>
+      </div>
+
+      <div class="row2" style="margin-top:24px">
+        <div class="card">
+          <h3 class="mini-h">Microinteraction anatomy</h3>
+          <div class="muted">Tap the heart and watch each part light up.</div>
+          <div class="like-wrap">
+            <button class="like" id="like" aria-label="Like">🤍</button>
+            <span class="like-count" id="like-count">128</span>
+          </div>
+          <div class="anatomy" id="anatomy">
+            <div><b>1 · Trigger</b>User taps the heart</div>
+            <div><b>2 · Rules</b>Toggle liked, count ±1</div>
+            <div><b>3 · Feedback</b>Pop, color, new number</div>
+            <div><b>4 · Loops &amp; modes</b>Tap again to undo</div>
+          </div>
+          <ul class="bullets" style="margin-top:14px;font-size:14px">
+            <li>Everyday examples: toggle slide, pull-to-refresh, typing dots</li>
+            <li>Each one is a small spec: trigger, states, timing, easing</li>
+            <li>Easy to drop from tickets. Ask for them explicitly</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 class="mini-h">Response time limits</h3>
+          <div class="muted">Pick a delay, choose feedback on or off, then load.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">
+            <div class="seg" id="rt-delay"></div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;align-items:center">
+            <label class="toggle"><input type="checkbox" id="rt-fb" checked><span class="track"></span>Show feedback</label>
+            <button class="btn primary" id="rt-go" style="min-height:44px">Load</button>
+          </div>
+          <div class="rt-screen" id="rt-screen"><span class="muted">Press Load</span></div>
+          <div class="rt-scale" id="rt-scale">
+            <div><b>0.1s</b>Feels instant</div>
+            <div><b>0.4s</b>Doherty: stays in flow</div>
+            <div><b>1s</b>Notices delay, keeps thought</div>
+            <div><b>10s</b>Attention lost: show progress</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:40px">UX laws you'll hear in meetings</h2>
+      <p class="sub">Short names for patterns you already feel.</p>
+      <div class="grid grid-3" id="laws"></div>
+    </section>
+
+    <!-- ================= TRY ================= -->
+    <section class="section" id="try">
+      <span class="step-label">🛠️ Try</span>
+      <h2>Run a heuristic evaluation</h2>
+      <p class="sub">This checkout screen hides 7 problems. Tap anything that looks wrong, name the heuristic, and rate the severity.</p>
+      <div class="eval">
+        <div class="phone" id="phone">
+          <div class="ph-top hs" data-issue="noback">🛒 Checkout</div>
+          <div class="ph-banners hs" data-issue="clutter">
+            <div class="clutter"><span>🔥 MEGA SALE</span><span>🎁 FREE GIFT!!</span><span>⭐ RATE US</span><span>📣 JOIN NEWSLETTER</span><span>💳 GET OUR CARD</span><span>📱 DOWNLOAD APP</span><span>🍕 2-FOR-1</span></div>
+          </div>
+          <div class="ph-item hs" data-issue="jargon">
+            <div class="pic">🍜</div>
+            <div>Ramen bowl<small>SKU-4471 · qty_node: 2 · fulfilment: WH-3</small></div>
+          </div>
+          <div class="ph-item">
+            <div class="pic">🥟</div>
+            <div>Dumplings<small>6 pieces</small></div>
+          </div>
+          <div class="ph-promo hs" data-issue="recall">
+            <label>Discount</label>
+            <input class="minput" placeholder="Enter the 12-digit code from our email" tabindex="-1">
+          </div>
+          <div class="ph-err hs" data-issue="error">ERR_CC_VAL_04</div>
+          <div class="ph-total"><span>Total</span><span>$24.50</span></div>
+          <div class="ph-btns">
+            <div class="ph-remove hs" data-issue="prevent">Remove all</div>
+            <div class="ph-pay hs" data-issue="status">Pay</div>
+          </div>
+        </div>
+        <div class="card ev-panel" id="ev-panel"></div>
+      </div>
+    </section>
+
+    <!-- ================= TPM LENS ================= -->
+    <section class="section" id="lens">
+      <span class="step-label">🗣️ TPM Lens</span>
+      <h2>When the designer says…</h2>
+      <p class="sub">Flip a card to see what it means and what you should ask.</p>
+      <div class="grid grid-3" id="lens-cards"></div>
+    </section>
+
+    <!-- ================= WRAP ================= -->
+    <section class="section">
+      <div class="done-banner">
+        <h3>🎯 Key takeaways</h3>
+        <ul class="bullets" style="display:inline-block;text-align:left;margin:8px 0 20px">
+          <li><b>Bigger and closer</b> is faster (Fitts). <b>Fewer choices</b> is faster (Hick).</li>
+          <li>The <b>10 heuristics</b> turn "I don't like it" into specific, fixable feedback.</li>
+          <li>Every action needs <b>feedback</b>. Anything over ~1s needs a visible indicator.</li>
+        </ul>
+        <div><button class="btn primary" id="mark-done">Mark chapter as complete</button></div>
+      </div>
+      <nav class="chapter-nav"></nav>
+    </section>
+  </main>
+
+  <footer class="footer">Built step by step · Progress is saved in your browser</footer>
+
+  <script type="text/page-script">
+    const $ = s => document.querySelector(s);
+    const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+
+    /* ---------- Explore: Fitts ---------- */
+    const arena = $("#fitts-arena");
+    const SIZES = [28, 48, 84], DIST = [0.35, 0.65, 1];
+    let fTrials = [], fIdx = 0, fStart = 0, fRes = [];
+    function fittsIntro() {
+      arena.innerHTML = `<div class="msg"><div><b>🎯 Ready?</b><button class="btn primary" id="fitts-start" style="min-height:44px">Start</button></div></div>`;
+    }
+    function fittsHome() {
+      arena.innerHTML = `<button class="home" style="left:50%;top:50%">TAP<br>${fIdx + 1}/${fTrials.length}</button>`;
+    }
+    function fittsTarget() {
+      const [size, df] = fTrials[fIdx];
+      const w = arena.clientWidth, h = arena.clientHeight;
+      const maxR = Math.min(w, h) / 2 - size / 2 - 8;
+      const d = Math.max(60, maxR * df);
+      const ang = Math.random() * Math.PI * 2;
+      // Wide arenas: stretch horizontally so far targets can use the width
+      const sx = Math.min(1.8, (w / 2 - size / 2 - 8) / maxR);
+      const x = w / 2 + Math.cos(ang) * d * sx, y = h / 2 + Math.sin(ang) * d;
+      const realD = Math.hypot(x - w / 2, y - h / 2);
+      arena.innerHTML = `<button class="target" data-d="${realD}" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px"></button>`;
+    }
+    arena.addEventListener("pointerdown", e => {
+      if (e.target.id === "fitts-start") {
+        fTrials = shuffle(SIZES.flatMap(s => DIST.map(d => [s, d])));
+        fIdx = 0; fRes = []; $("#fitts-out").hidden = true;
+        fittsHome();
+      } else if (e.target.classList.contains("home")) {
+        fStart = performance.now();
+        fittsTarget();
+      } else if (e.target.classList.contains("target")) {
+        const t = performance.now() - fStart, size = fTrials[fIdx][0], d = +e.target.dataset.d;
+        fRes.push({ size, d, t, id: Math.log2(d / size + 1) });
+        fIdx++;
+        if (fIdx < fTrials.length) fittsHome(); else fittsDone();
+      }
+    });
+    function fittsDone() {
+      arena.innerHTML = `<div class="msg"><div><b>✅ Done!</b><button class="btn" id="fitts-start" style="min-height:44px">↺ Play again</button></div></div>`;
+      $("#fitts-out").hidden = false;
+      const W = 420, H = 230, P = 34;
+      const maxId = Math.max(...fRes.map(r => r.id)) * 1.1, maxT = Math.max(...fRes.map(r => r.t)) * 1.15;
+      const X = v => P + v / maxId * (W - P - 10), Y = v => H - P - v / maxT * (H - P - 10);
+      // Least-squares trend line
+      const n = fRes.length, mx = fRes.reduce((s, r) => s + r.id, 0) / n, my = fRes.reduce((s, r) => s + r.t, 0) / n;
+      const b = fRes.reduce((s, r) => s + (r.id - mx) * (r.t - my), 0) / (fRes.reduce((s, r) => s + (r.id - mx) ** 2, 0) || 1);
+      const a = my - b * mx, x0 = Math.min(...fRes.map(r => r.id)), x1 = Math.max(...fRes.map(r => r.id));
+      $("#fitts-plot").innerHTML = `<svg viewBox="0 0 ${W} ${H}">
+        <line class="ax" x1="${P}" y1="${H - P}" x2="${W}" y2="${H - P}"/><line class="ax" x1="${P}" y1="0" x2="${P}" y2="${H - P}"/>
+        <text x="${W / 2}" y="${H - 8}" text-anchor="middle">Difficulty (small + far →)</text>
+        <text x="10" y="${H / 2}" transform="rotate(-90 10 ${H / 2})" text-anchor="middle">Time (ms)</text>
+        <text x="${P - 4}" y="${Y(maxT / 1.15) + 4}" text-anchor="end">${Math.round(maxT / 1.15)}</text>
+        <line class="trend" x1="${X(x0)}" y1="${Y(a + b * x0)}" x2="${X(x1)}" y2="${Y(a + b * x1)}"/>
+        ${fRes.map(r => `<circle class="dot" cx="${X(r.id)}" cy="${Y(r.t)}" r="${4 + r.size / 14}" opacity=".8"/>`).join("")}
+      </svg>`;
+      const avg = SIZES.map(s => { const rs = fRes.filter(r => r.size === s); return rs.reduce((x, r) => x + r.t, 0) / rs.length; });
+      const top = Math.max(...avg);
+      $("#fitts-bars").innerHTML = SIZES.map((s, i) => `<div class="b"><span>${["Small", "Medium", "Large"][i]}</span>
+        <span class="track"><i style="width:${avg[i] / top * 100}%"></i></span><b>${Math.round(avg[i])}ms</b></div>`).join("");
+    }
+    fittsIntro();
+
+    /* ---------- Explore: Hick ---------- */
+    const DISHES = ["🍕 Pizza", "🍣 Sushi", "🍔 Burger", "🌮 Tacos", "🍜 Ramen", "🥗 Salad", "🍛 Curry", "🥟 Dumplings",
+      "🌯 Burrito", "🍝 Pasta", "🥙 Kebab", "🍗 Wings", "🥞 Pancakes", "🍤 Tempura", "🥪 Sandwich", "🍲 Stew"];
+    const hick = $("#hick");
+    let hPlan = [], hIdx = 0, hStart = 0, hTimes = { 4: [], 16: [] }, hTarget = "";
+    function hickIntro() {
+      hick.innerHTML = `<div class="hick-ask">🍽️ Find the dish we ask for</div>
+        <div class="muted">The timer starts when the menu appears.</div>
+        <button class="btn primary" data-h="start" style="min-height:44px">Start</button>`;
+    }
+    function hickRound() {
+      const n = hPlan[hIdx];
+      const opts = shuffle(DISHES).slice(0, n);
+      hTarget = opts[Math.floor(Math.random() * n)];
+      hick.innerHTML = `<div class="muted">Round ${hIdx + 1} of ${hPlan.length} · ${n} options</div>
+        <div class="hick-ask">Find: ${hTarget}</div>
+        <div class="hick-grid n${n}">${opts.map(o => `<button data-dish="${o}">${o}</button>`).join("")}</div>`;
+      hStart = performance.now();
+    }
+    function hickDone() {
+      const avg = k => Math.round(hTimes[k].reduce((a, b) => a + b, 0) / hTimes[k].length);
+      const a4 = avg(4), a16 = avg(16);
+      hick.innerHTML = `<div class="hick-res">
+          <div class="card"><div class="muted">4 options</div><div class="big">${a4}ms</div></div>
+          <div class="card"><div class="muted">16 options</div><div class="big">${a16}ms</div></div>
+        </div>
+        <div class="hick-ask">${a16 > a4 ? `16 options took you ${Math.round((a16 / a4 - 1) * 100)}% longer` : "You were fast both times. Most people slow down with 16."}</div>
+        <ul class="bullets" style="text-align:left">
+          <li>Decision time grows with the number of choices: T = b · log₂(n + 1)</li>
+          <li>Fix: fewer options, smart defaults, grouping, progressive disclosure</li>
+        </ul>
+        <button class="btn" data-h="start" style="min-height:44px">↺ Play again</button>`;
+    }
+    hick.addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.h === "start") {
+        hPlan = [4, 4, 4, 16, 16, 16]; hIdx = 0; hTimes = { 4: [], 16: [] };
+        hickRound();
+      } else if (b.dataset.dish) {
+        if (b.dataset.dish !== hTarget) { b.classList.remove("wrong"); void b.offsetWidth; b.classList.add("wrong"); return; }
+        hTimes[hPlan[hIdx]].push(performance.now() - hStart);
+        hIdx++;
+        if (hIdx < hPlan.length) hickRound(); else hickDone();
+      }
+    });
+    hickIntro();
+
+    /* ---------- Learn: Nielsen's 10 ---------- */
+    const H = [
+      { short: "System status", name: "Visibility of system status",
+        means: "Always show what's happening, right away.", eng: "Loading, saving, success and failure are all states to build.",
+        bad: `<button class="mbtn" data-act="save-bad">Save</button><span class="muted" data-out>Tap it. Did it work?</span>`,
+        good: `<button class="mbtn" data-act="save-good">Save</button><span class="muted" data-out>Tap it.</span>` },
+      { short: "Real world", name: "Match between system and the real world",
+        means: "Use the user's words, not internal terms.", eng: "Error codes and DB field names should never reach the UI.",
+        bad: `<div><b>Txn 4f2a</b> committed to ledger_v2</div><div class="muted">status: SETTLED_OK</div>`,
+        good: `<div><b>Payment sent to Alex ✓</b></div><div class="muted">$24.50 · Today, 2:14 PM</div>` },
+      { short: "Control & freedom", name: "User control and freedom",
+        means: "Give a clear exit: undo, cancel, back.", eng: "Undo often beats a confirm dialog. Plan soft-delete in the backend.",
+        bad: `<div data-mails="bad"></div>`,
+        good: `<div data-mails="good"></div>` },
+      { short: "Consistency", name: "Consistency and standards",
+        means: "Same thing, same look, same place. Follow platform norms.", eng: "A shared component library enforces this for free.",
+        bad: `<div class="dlg">Delete file?<div class="btns"><span style="background:var(--bad);color:#fff">Cancel</span><span style="background:var(--surface-2)">OK</span></div></div>
+              <div class="dlg">Discard draft?<div class="btns"><span style="background:var(--surface-2)">Yes</span><span style="background:var(--accent);color:#fff">Keep</span></div></div>`,
+        good: `<div class="dlg">Delete file?<div class="btns"><span style="background:var(--surface-2)">Cancel</span><span style="background:var(--bad);color:#fff">Delete</span></div></div>
+               <div class="dlg">Discard draft?<div class="btns"><span style="background:var(--surface-2)">Cancel</span><span style="background:var(--bad);color:#fff">Discard</span></div></div>` },
+      { short: "Error prevention", name: "Error prevention",
+        means: "Design so mistakes can't happen in the first place.", eng: "Constrained inputs beat validation messages.",
+        bad: `<input class="minput" placeholder="Quantity (type anything)" data-qty><button class="mbtn" data-act="qty-bad">Add to cart</button><span class="muted" data-out></span>`,
+        good: `<div class="stepper-q"><button data-act="dec" aria-label="Less">−</button><span data-q>1</span><button data-act="inc" aria-label="More">+</button></div><span class="muted">Only valid numbers are possible (1–10)</span>` },
+      { short: "Recognition", name: "Recognition rather than recall",
+        means: "Show options. Don't make people remember.", eng: "Recent items, autocomplete and visible menus need data and APIs.",
+        bad: `<input class="minput" placeholder="Type the airport code"><span class="muted">Was it DAC? DHK? 🤔</span>`,
+        good: `<input class="minput" placeholder="From" data-air readonly><div class="chipset"><button data-act="air">✈️ DAC · Dhaka</button><button data-act="air">✈️ DXB · Dubai</button><button data-act="air">✈️ SIN · Singapore</button></div>` },
+      { short: "Efficiency", name: "Flexibility and efficiency of use",
+        means: "Shortcuts for experts that don't confuse beginners.", eng: "Keyboard shortcuts, bulk actions, saved filters, 'reorder'.",
+        bad: `<div class="muted">To reorder last week's meal:</div><div>Home → Orders → Past → Find → Open → Add each item → Cart</div><span class="pill bad">7 steps</span>`,
+        good: `<div class="muted">To reorder last week's meal:</div><button class="mbtn" data-act="reorder">🔁 Reorder Ramen bowl</button><span class="muted" data-out></span>` },
+      { short: "Minimalist", name: "Aesthetic and minimalist design",
+        means: "Every extra element competes with the important one.", eng: "Fewer elements also means less to build, test and maintain.",
+        bad: `<div class="clutter"><span>🔥 SALE</span><span>NEW!</span><span>⭐ 4.8</span><span>FREE SHIP</span><span>LIMITED</span><span>🎁 GIFT</span><span>HOT</span><span>-20%</span></div><b>Ramen bowl $12</b><button class="mbtn">Add</button>`,
+        good: `<b style="font-size:17px">Ramen bowl</b><span class="muted">Rich pork broth · ⭐ 4.8</span><div style="display:flex;justify-content:space-between;align-items:center"><b>$12</b><button class="mbtn">Add</button></div>` },
+      { short: "Recover errors", name: "Help users recognize, diagnose, and recover from errors",
+        means: "Plain words, the cause, and a way forward.", eng: "Map backend error codes to human messages with an action.",
+        bad: `<div class="errbox raw">Error 402: PAYMENT_DECLINED (gw=stripe)</div>`,
+        good: `<div class="errbox" style="background:var(--bad-soft)"><b>Your card was declined.</b><br>Try another card, or check with your bank.</div><button class="mbtn" data-act="retry">Use another card</button><span class="muted" data-out></span>` },
+      { short: "Help & docs", name: "Help and documentation",
+        means: "Help in context, right where people get stuck.", eng: "Tooltips and inline hints beat a separate help center.",
+        bad: `<div style="display:flex;gap:8px;align-items:center"><input class="minput" placeholder="CVV"></div><span class="muted">What's a CVV? Where is it?</span>`,
+        good: `<div style="display:flex;gap:8px;align-items:center"><input class="minput" placeholder="CVV"><button class="qmark" data-act="help" aria-label="Help">?</button></div><div data-help hidden class="help-bubble">3 digits on the back of your card 💳</div>` },
+    ];
+    let hActive = 0;
+    const MAILS = ["📧 Invoice from Acme", "📧 Team lunch Friday", "📧 Your flight is confirmed"];
+    function mailsHtml(kind, list, toast) {
+      return list.map((m, i) => `<div class="mail"><span>${m}</span><button data-act="del-${kind}" data-i="${i}" aria-label="Delete">🗑️</button></div>`).join("")
+        + (kind === "bad" && list.length < MAILS.length ? `<span class="muted">Gone forever. 😬 <button class="mbtn ghost" data-act="mail-reset" style="min-height:36px;padding:4px 10px">↺ reset demo</button></span>` : "")
+        + (toast ? `<div class="toast"><span>Email deleted</span><button data-act="undo">UNDO</button></div>` : "");
+    }
+    let mailBad = [...MAILS], mailGood = [...MAILS], lastDel = null, qty = 1;
+    function renderH() {
+      const h = H[hActive];
+      $("#h-chips").innerHTML = H.map((x, i) => `<button class="h-chip ${i === hActive ? "active" : ""}" data-h="${i}"><span class="n">${i + 1}</span>${x.short}</button>`).join("");
+      $("#h-panel").innerHTML = `
+        <div class="h-head"><span class="pill">#${hActive + 1}</span><h3>${h.name}</h3></div>
+        <div class="h-points">
+          <div><h4>💡 What it means</h4>${h.means}</div>
+          <div><h4>🧑‍💻 Engineering angle</h4>${h.eng}</div>
+        </div>
+        <div class="row2">
+          <div class="demo bad"><span class="lbl">❌ Violation</span><div class="stage">${h.bad}</div></div>
+          <div class="demo good"><span class="lbl">✅ Fixed</span><div class="stage">${h.good}</div></div>
+        </div>`;
+      mailBad = [...MAILS]; mailGood = [...MAILS]; lastDel = null; qty = 1;
+      renderMails();
+    }
+    function renderMails(toast) {
+      const b = $('[data-mails="bad"]'), g = $('[data-mails="good"]');
+      if (b) b.innerHTML = mailsHtml("bad", mailBad);
+      if (g) g.innerHTML = mailsHtml("good", mailGood, toast);
+    }
+    $("#h-chips").addEventListener("click", e => {
+      const c = e.target.closest("[data-h]");
+      if (c) { hActive = +c.dataset.h; renderH(); }
+    });
+    $("#h-panel").addEventListener("click", e => {
+      const b = e.target.closest("[data-act]");
+      if (!b) return;
+      const stage = b.closest(".stage"), out = stage && stage.querySelector("[data-out]");
+      const act = b.dataset.act;
+      if (act === "save-bad") { /* silently saves: nothing visible happens */ }
+      if (act === "save-good") {
+        b.disabled = true; b.textContent = "⏳ Saving…";
+        setTimeout(() => { b.textContent = "✓ Saved"; out.textContent = "Saved 2 seconds ago"; setTimeout(() => { b.disabled = false; b.textContent = "Save"; }, 1500); }, 1000);
+      }
+      if (act === "del-bad") { mailBad.splice(+b.dataset.i, 1); renderMails(); }
+      if (act === "mail-reset") { mailBad = [...MAILS]; renderMails(); }
+      if (act === "del-good") { const i = +b.dataset.i; lastDel = [i, mailGood[i]]; mailGood.splice(i, 1); renderMails(true); }
+      if (act === "undo" && lastDel) { mailGood.splice(lastDel[0], 0, lastDel[1]); lastDel = null; renderMails(); }
+      if (act === "qty-bad") {
+        const v = stage.querySelector("[data-qty]").value.trim();
+        out.textContent = /^\d+$/.test(v) && +v > 0 ? "Added ✓" : `"${v || "(empty)"}" → Invalid input. Try again.`;
+      }
+      if (act === "inc" || act === "dec") { qty = Math.min(10, Math.max(1, qty + (act === "inc" ? 1 : -1))); stage.querySelector("[data-q]").textContent = qty; }
+      if (act === "air") stage.querySelector("[data-air]").value = b.textContent.replace("✈️ ", "");
+      if (act === "reorder") out.textContent = "✓ Added to cart in 1 tap";
+      if (act === "retry") out.textContent = "✓ Card form opened";
+      if (act === "help") { const hb = stage.querySelector("[data-help]"); hb.hidden = !hb.hidden; }
+    });
+    renderH();
+
+    /* ---------- Interaction: signifiers ---------- */
+    const SIG = [["No signifier", "bad"], ["Weak signifier", ""], ["Strong signifier", "good"]];
+    const tried = new Set();
+    $("#sig-row").addEventListener("click", e => {
+      const b = e.target.closest("[data-sig]");
+      if (!b) return;
+      const i = +b.dataset.sig;
+      tried.add(i);
+      const pill = b.parentElement.querySelector(".pill");
+      pill.textContent = "✓ Tappable · " + SIG[i][0];
+      pill.className = "pill " + SIG[i][1];
+      $("#sig-msg").textContent = tried.size === 3
+        ? "All three do the same thing. Only one clearly looks tappable."
+        : "It works! Try the others.";
+    });
+
+    /* ---------- Interaction: like microinteraction ---------- */
+    const like = $("#like"), steps = [...document.querySelectorAll("#anatomy div")];
+    let liked = false, count = 128, stepTimers = [];
+    like.addEventListener("click", () => {
+      stepTimers.forEach(clearTimeout);
+      steps.forEach(s => s.classList.remove("lit"));
+      const at = (i, ms, fn) => stepTimers.push(setTimeout(() => { steps[i].classList.add("lit"); fn && fn(); }, ms));
+      at(0, 0);
+      at(1, 350, () => { liked = !liked; count += liked ? 1 : -1; });
+      at(2, 700, () => {
+        like.textContent = liked ? "❤️" : "🤍"; like.classList.toggle("on", liked);
+        like.classList.remove("burst"); void like.offsetWidth; if (liked) like.classList.add("burst");
+        $("#like-count").textContent = count;
+      });
+      at(3, 1050);
+    });
+
+    /* ---------- Interaction: response time ---------- */
+    const DELAYS = [[100, "0.1s"], [400, "0.4s"], [1000, "1s"], [3000, "3s"], [10000, "10s"]];
+    let rtDelay = 1000, rtTimer = null, rtRaf = null;
+    function renderDelays() {
+      $("#rt-delay").innerHTML = DELAYS.map(([ms, l]) => `<button class="btn ${ms === rtDelay ? "active" : ""}" data-ms="${ms}">${l}</button>`).join("");
+    }
+    $("#rt-delay").addEventListener("click", e => { const b = e.target.closest("[data-ms]"); if (b) { rtDelay = +b.dataset.ms; renderDelays(); } });
+    renderDelays();
+    $("#rt-go").addEventListener("click", () => {
+      clearTimeout(rtTimer); cancelAnimationFrame(rtRaf);
+      const screen = $("#rt-screen"), fb = $("#rt-fb").checked, t0 = performance.now();
+      const lit = rtDelay <= 100 ? 0 : rtDelay <= 400 ? 1 : rtDelay <= 1000 ? 2 : 3;
+      document.querySelectorAll("#rt-scale div").forEach((d, i) => d.classList.toggle("lit", i === lit));
+      if (!fb) screen.innerHTML = `<span class="muted">&nbsp;</span>`;
+      else if (rtDelay > 1000) {
+        screen.innerHTML = `<div><div class="muted">Loading your orders…</div><div class="pbar"><i id="rt-bar"></i></div><div class="muted" id="rt-pct">0%</div></div>`;
+        const tick = () => {
+          const p = Math.min(1, (performance.now() - t0) / rtDelay);
+          $("#rt-bar").style.width = p * 100 + "%"; $("#rt-pct").textContent = Math.round(p * 100) + "%";
+          if (p < 1) rtRaf = requestAnimationFrame(tick);
+        };
+        tick();
+      } else screen.innerHTML = `<div><div class="spin"></div><div class="muted">Loading…</div></div>`;
+      rtTimer = setTimeout(() => {
+        cancelAnimationFrame(rtRaf);
+        const verdict = [
+          "Instant. No indicator needed.",
+          "Still feels responsive.",
+          "Noticeable. A spinner helps.",
+          fb ? "Long, but the progress bar keeps people waiting." : "No feedback for this long? People tap again or leave.",
+        ][lit];
+        screen.innerHTML = `<div><b>✓ 12 orders loaded</b><div class="muted">${verdict}</div></div>`;
+      }, rtDelay);
+    });
+
+    /* ---------- Interaction: laws ---------- */
+    const LAWS = [
+      ["🎯", "Fitts's law", "Bigger, closer targets are faster to hit.", "Ask: is the main action big and reachable by thumb?"],
+      ["🔀", "Hick's law", "More choices = slower decisions.", "Ask: can we cut options or set a smart default?"],
+      ["🌍", "Jakob's law", "Users expect your app to work like the ones they already use.", "Ask: why are we breaking a common convention?"],
+      ["⚡", "Doherty threshold", "Responses under ~400ms keep people in flow.", "Ask: what's our latency budget for this action?"],
+      ["🧩", "Chunking (Miller)", "Memory is limited. Group info into chunks.", "Phone numbers, card numbers, step-by-step forms."],
+      ["⚖️", "Tesler's law", "Complexity can't vanish, only move: to the user or the system.", "Ask: can engineering absorb this complexity instead?"],
+    ];
+    $("#laws").innerHTML = LAWS.map(([e, n, p, t]) => `<div class="card law"><div class="e">${e}</div><h3>${n}</h3><p>${p}</p><div class="tpm">💬 ${t}</div></div>`).join("");
+
+    /* ---------- Try: heuristic evaluation ---------- */
+    const ISSUES = {
+      noback:  { name: "Header with no back / cancel", h: 2, sev: 3, why: "No way out of checkout: user control and freedom." },
+      clutter: { name: "Promo banners", h: 7, sev: 2, why: "Seven banners fight the main task: aesthetic and minimalist design." },
+      jargon:  { name: "Item details", h: 1, sev: 2, why: "SKU, qty_node, WH-3: internal terms, not real-world language." },
+      recall:  { name: "Discount field", h: 5, sev: 2, why: "Users must remember a 12-digit code: recognition rather than recall." },
+      error:   { name: "Error message", h: 8, sev: 3, why: "A raw code with no cause or fix: help users recover from errors." },
+      prevent: { name: "Remove all button", h: 4, sev: 4, why: "Destructive action, styled as primary, right next to Pay: error prevention." },
+      status:  { name: "Greyed-out Pay button", h: 0, sev: 3, why: "Disabled with no reason given: visibility of system status." },
+    };
+    const SEV = ["Not a problem", "Cosmetic", "Minor", "Major", "Catastrophe"];
+    const findings = {};
+    let evSel = null, evH = null, evSev = null, revealed = false;
+    const phone = $("#phone"), panel = $("#ev-panel");
+    function renderEval() {
+      const total = Object.keys(ISSUES).length, found = Object.keys(findings).length;
+      document.querySelectorAll("#phone .hs").forEach(el => {
+        const k = el.dataset.issue, f = findings[k];
+        el.classList.toggle("picked", k === evSel);
+        el.classList.toggle("found", !!f || revealed);
+        if (f) el.dataset.n = Object.keys(findings).indexOf(k) + 1;
+        else if (revealed) el.dataset.n = "!";
+        el.classList.toggle("right", revealed && f && f.h === ISSUES[k].h);
+        el.classList.toggle("wrongh", revealed && (!f || f.h !== ISSUES[k].h));
+      });
+      const form = evSel ? `
+        <div>Selected: <span class="ev-sel">${ISSUES[evSel].name}</span></div>
+        <div class="ev-label">Which heuristic is violated?</div>
+        <div class="ev-h">${H.map((h, i) => `<button data-eh="${i}" class="${evH === i ? "on" : ""}">${i + 1}. ${h.short}</button>`).join("")}</div>
+        <div class="ev-label">Severity</div>
+        <div class="ev-sev">${SEV.map((s, i) => `<button data-es="${i}" class="${evSev === i ? "on" : ""}">${i}<small>${s}</small></button>`).join("")}</div>
+        <div class="ev-actions"><button class="btn primary" data-ev="log" ${evH === null || evSev === null ? "disabled" : ""}>Log finding</button>
+        <button class="btn" data-ev="cancel">Cancel</button></div>`
+        : `<div class="muted">👆 Tap anything on the screen that looks wrong.</div>`;
+      const list = Object.entries(findings).map(([k, f], i) => {
+        const ok = f.h === ISSUES[k].h;
+        return `<li class="${revealed ? (ok ? "right" : "wrongh") : ""}"><b>${i + 1}. ${ISSUES[k].name}</b> · #${f.h + 1} ${H[f.h].short} · severity ${f.sev}
+          ${revealed ? `<small>${ok ? "✓" : `✗ Expected #${ISSUES[k].h + 1} ${H[ISSUES[k].h].short}.`} ${ISSUES[k].why} Typical severity: ${ISSUES[k].sev}.</small>` : ""}</li>`;
+      }).join("");
+      const missed = revealed ? Object.keys(ISSUES).filter(k => !findings[k]).map(k =>
+        `<li class="wrongh"><b>Missed: ${ISSUES[k].name}</b><small>#${ISSUES[k].h + 1} ${H[ISSUES[k].h].short}. ${ISSUES[k].why}</small></li>`).join("") : "";
+      const right = Object.entries(findings).filter(([k, f]) => f.h === ISSUES[k].h).length;
+      panel.innerHTML = `
+        <h3>📋 Your findings</h3>
+        <div class="muted">Found ${found} of ${total}${revealed ? ` · ${right} with the right heuristic` : ""}</div>
+        <div class="ev-score"><i style="width:${found / total * 100}%"></i></div>
+        ${revealed ? "" : form}
+        <ul class="ev-list">${list}${missed}</ul>
+        <div class="ev-actions">
+          ${revealed ? `<button class="btn" data-ev="restart">↺ Start over</button>` : `<button class="btn" data-ev="reveal">Reveal answers</button>`}
+        </div>`;
+    }
+    phone.addEventListener("click", e => {
+      const hs = e.target.closest(".hs");
+      if (!hs || revealed) return;
+      evSel = hs.dataset.issue;
+      const f = findings[evSel];
+      evH = f ? f.h : null; evSev = f ? f.sev : null;
+      renderEval();
+      // On narrow screens the panel sits below the phone, so bring it into view
+      if (window.innerWidth <= 700) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    panel.addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.eh) evH = +b.dataset.eh;
+      if (b.dataset.es) evSev = +b.dataset.es;
+      const a = b.dataset.ev;
+      if (a === "log") { findings[evSel] = { h: evH, sev: evSev }; evSel = null; }
+      if (a === "cancel") evSel = null;
+      if (a === "reveal") { revealed = true; evSel = null; }
+      if (a === "restart") { Object.keys(findings).forEach(k => delete findings[k]); revealed = false; evSel = null; }
+      renderEval();
+    });
+    renderEval();
+
+    /* ---------- TPM Lens ---------- */
+    const LENS = [
+      ["\"Let's do a heuristic evaluation.\"", "2–3 experts check the UI against the 10 heuristics. Fast, no users needed.", "Who evaluates, and how do we prioritize by severity?"],
+      ["\"It needs better affordance.\"", "Usually signifiers: it's not obvious what's tappable.", "Which element confuses people? Can we reuse a known pattern?"],
+      ["\"There's no system feedback.\"", "The user acts and nothing visibly happens.", "Which states are missing from the design and tickets?"],
+      ["\"Follow platform conventions.\"", "Jakob's law: match the iOS, Android and web norms users know.", "Are we breaking a convention on purpose? Why?"],
+      ["\"That's a dark pattern.\"", "A design that tricks users: hidden fees, forced sign-ups, hard cancel.", "What's the legal, trust and churn risk?"],
+      ["\"Let's add a microinteraction.\"", "A small trigger → feedback moment, like a heart pop.", "Real feedback or decoration? What does it cost to build?"],
+    ];
+    $("#lens-cards").innerHTML = LENS.map(([say, means, ask]) => `
+      <div class="flip"><div class="flip-inner">
+        <div class="flip-face"><div class="say">${say}</div><div class="hint">↻ tap to flip</div></div>
+        <div class="flip-face flip-back">
+          <div class="lbl">It means</div><p>${means}</p>
+          <div class="lbl">💬 You ask</div><p>${ask}</p>
+        </div>
+      </div></div>`).join("");
+
+    initChapter(6);
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>
