@@ -6,13 +6,39 @@
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <title>Page not found · UX/UI</title>
   <link rel="stylesheet" href="/assets/style.css">
+  <style data-page>
+    /* Short page: keep the footer at the bottom of the screen */
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    #app { flex: 1; width: 100%; display: grid; align-content: center; }
+    .lost { display: grid; place-content: center; text-align: center; padding: 48px 0; }
+    .lost .node { margin: 0 auto 20px; width: 88px; height: 88px; font-size: 40px; border-style: dashed; }
+    .lost h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.05; margin: 8px 0 12px; letter-spacing: -0.03em; }
+    .lost p { color: var(--muted); margin: 0 auto 28px; max-width: 420px; }
+    .lost .btn { text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; }
+  </style>
 </head>
 <body>
-  <main class="wrap hero" style="min-height:70vh;display:grid;place-content:center">
-    <div class="kicker">404 · Off the trail</div>
-    <h1>This stop doesn't exist.</h1>
-    <p>Head back to the map and pick a chapter.</p>
-    <p style="margin-top:24px"><a class="btn primary" href="/index.html" style="text-decoration:none">🗺️ Back to the journey map</a></p>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="/index.html">UX<span>/</span>UI</a>
+      <span class="crumb">/ 404</span>
+      <div class="spacer"></div>
+      <div class="progress-pill"></div>
+    </div>
+  </header>
+
+  <main class="wrap view" id="app">
+    <section class="lost">
+      <div class="node" aria-hidden="true">🧭</div>
+      <div class="kicker" style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">404 · Off the trail</div>
+      <h1>This stop doesn't exist.</h1>
+      <p>The page may have moved. Head back to the map and pick a chapter.</p>
+      <div><a class="btn primary" href="/index.html">🗺️ Back to the journey map</a></div>
+    </section>
   </main>
+
+  <footer class="footer"></footer>
+
+  <script src="/assets/app.js"></script>
 </body>
 </html>
